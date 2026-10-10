@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support." />
+  <meta name="theme-color" content="#3d5a3d" />
+  <title>My Land, My Plan — Kashmir</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="#home" class="logo" id="logo-link" aria-label="My Land, My Plan home">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-text">My Land, My Plan</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
+          <span class="nav-toggle-bar"></span>
+          <span class="sr-only">Menu</span>
+        </button>
+        <ul class="nav-menu" id="nav-menu">
+          <li><a href="#home" data-nav="home">Home</a></li>
+          <li><a href="#plan" data-nav="plan">Start plan</a></li>
+          <li><a href="#about" data-nav="about">About</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HOME -->
+    <section id="screen-home" class="screen screen-active" aria-labelledby="home-title">
+      <div class="container">
+        <div class="hero">
+          <p class="eyebrow">For farmers in Jammu and Kashmir</p>
+          <h1 id="home-title">My Land, My Plan</h1>
+          <p class="hero-lead">
+            My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.
+          </p>
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" id="btn-start">Start a land plan</button>
+            <button type="button" class="btn btn-secondary" id="btn-demo">Try sample journey</button>
+          </div>
+          <p class="hero-note">No account needed. Your details stay on this device only.</p>
+        </div>
+
+        <div class="home-points">
+          <div class="point">
+            <h2>What you enter</h2>
+            <p>District, village, plot size, water access, terrain, and the main constraint you face. Soil test is optional.</p>
+          </div>
+          <div class="point">
+            <h2>What you get</h2>
+            <p>Two or three activity options to explore, a simple comparison, a next-step checklist, and pointers to official support channels.</p>
+          </div>
+          <div class="point">
+            <h2>Important</h2>
+            <p>This is a hackathon prototype. Recommendations are illustrative. Always confirm with your local agriculture office or Kisan Khidmat Ghar.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORM -->
+    <section id="screen-form" class="screen" aria-labelledby="form-title" hidden>
+      <div class="container narrow">
+        <div class="progress-wrap" aria-hidden="false">
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="20" id="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <p class="progress-label" id="progress-label">Step 1 of 5</p>
+        </div>
+
+        <h1 id="form-title" class="screen-title">Your plot details</h1>
+        <p class="screen-intro">Only what is needed. You can go back and change answers anytime.</p>
+
+        <form id="land-form" novalidate>
+          <fieldset class="form-step" data-step="1" id="step-1">
+            <legend class="step-legend">Location</legend>
+            <div class="field">
+              <label for="district">District <span class="req">required</span></label>
+              <select id="district" name="district" required>
+                <option value="">Select district</option>
+                <option value="Anantnag">Anantnag</option>
+                <option value="Bandipora">Bandipora</option>
+                <option value="Baramulla">Baramulla</option>
+                <option value="Budgam">Budgam</option>
+                <option value="Doda">Doda</option>
+                <option value="Ganderbal">Ganderbal</option>
+                <option value="Jammu">Jammu</option>
+                <option value="Kathua">Kathua</option>
+                <option value="Kishtwar">Kishtwar</option>
+                <option value="Kulgam">Kulgam</option>
+                <option value="Kupwara">Kupwara</option>
+                <option value="Poonch">Poonch</option>
+                <option value="Pulwama">Pulwama</option>
+                <option value="Rajouri">Rajouri</option>
+                <option value="Ramban">Ramban</option>
+                <option value="Reasi">Reasi</option>
+                <option value="Samba">Samba</option>
+                <option value="Shopian">Shopian</option>
+                <option value="Srinagar">Srinagar</option>
+                <option value="Udhampur">Udhampur</option>
+              </select>
+              <p class="field-error" id="err-district" hidden></p>
+            </div>
+            <div class="field">
+              <label for="village">Village or locality <span class="req">required</span></label>
+              <input type="text" id="village" name="village" required maxlength="80" autocomplete="off" placeholder="e.g. Tral, or your village name" />
+              <p class="field-error" id="err-village" hidden></p>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-step" data-step="2" id="step-2" hidden>
+            <legend class="step-legend">Plot size</legend>
+            <div class="field-row">
+              <div class="field">
+                <label for="size">Approximate size <span class="req">required</span></label>
+                <input type="number" id="size" name="size" required min="0.01" max="500" step="0.01" placeholder="e.g. 2" />
+                <p class="field-error" id="err-size" hidden></p>
+              </div>
+              <div class="field">
+                <label for="unit">Unit</label>
+                <select id="unit" name="unit">
+                  <option value="kanal">Kanal</option>
+                  <option value="acre">Acre</option>
+                  <option value="hectare">Hectare</option>
+                  <option value="marla">Marla</option>
+                </select>
+              </div>
+            </div>
+            <p class="hint">You do not need an exact survey figure. A rough estimate is enough for this plan.</p>
+          </fieldset>
+
+          <fieldset class="form-step" data-step="3" id="step-3" hidden>
+            <legend class="step-legend">Current use and water</legend>
+            <div class="field">
+              <span class="label-like">Current land use <span class="req">required</span></span>
+              <div class="radio-group" role="radiogroup" aria-required="true">
+                <label class="radio-card"><input type="radio" name="landUse" value="unused" required /><span>Mostly unused</span></label>
+                <label class="radio-card"><input type="radio" name="landUse" value="partly" /><span>Partly used</span></label>
+                <label class="radio-card"><input type="radio" name="landUse" value="cultivated" /><span>Currently cultivated</span></label>
+              </div>
+              <p class="field-error" id="err-landUse" hidden></p>
+            </div>
+            <div class="field">
+              <span class="label-like">Water access <span class="req">required</span></span>
+              <div class="radio-group" role="radiogroup" aria-required="true">
+                <label class="radio-card"><input type="radio" name="water" value="reliable" required /><span>Reliable</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="seasonal" /><span>Seasonal</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="limited" /><span>Limited</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="unknown" /><span>Not sure</span></label>
+              </div>
+              <p class="field-error" id="err-water" hidden></p>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-step" data-step="4" id="step-4" hidden>
+            <legend class="step-legend">Terrain and soil</legend>
+            <div class="field">
+              <span class="label-like">Terrain <span class="req">required</span></span>
+              <div class="radio-group" role="radiogroup" aria-required="true">
+                <label class="radio-card"><input type="radio" name="terrain" value="flat" required /><span>Mostly flat</span></label>
+                <label class="radio-card"><input type="radio" name="terrain" value="sloped" /><span>Sloped or hilly</span></label>
+                <label class="radio-card"><input type="radio" name="terrain" value="unknown" /><span>Not sure</span></label>
+              </div>
+              <p class="field-error" id="err-terrain" hidden></p>
+            </div>
+            <div class="field">
+              <label for="soil">Soil test (optional)</label>
+              <select id="soil" name="soil">
+                <option value="none">No recent soil test</option>
+                <option value="done">I have a recent soil test</option>
+                <option value="partial">Partial or old results</option>
+              </select>
+              <p class="hint">If you have a test, take it when you visit the agriculture office. This app does not interpret lab reports.</p>
+            </div>
+          </fieldset>
+
+          <fieldset class="form-step" data-step="5" id="step-5" hidden>
+            <legend class="step-legend">Main constraint</legend>
+            <div class="field">
+              <span class="label-like">What limits you most right now? <span class="req">required</span></span>
+              <div class="radio-group" role="radiogroup" aria-required="true">
+                <label class="radio-card"><input type="radio" name="constraint" value="water" required /><span>Water</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="cost" /><span>Cost / investment</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="labour" /><span>Labour</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="advice" /><span>Access to advice</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="market" /><span>Market access</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="unsure" /><span>Not sure</span></label>
+              </div>
+              <p class="field-error" id="err-constraint" hidden></p>
+            </div>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="btn-back" hidden>Back</button>
+            <button type="button" class="btn btn-primary" id="btn-next">Continue</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit" hidden>See options</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="screen-results" class="screen" aria-labelledby="results-title" hidden>
+      <div class="container">
+        <div class="results-header">
+          <h1 id="results-title" class="screen-title">Possible activities to explore</h1>
+          <p class="screen-intro">
+            These are illustrative options based on the details you entered. They are not scientific recommendations or approvals.
+            Confirm suitability, costs, and rules with your local agriculture office or Kisan Khidmat Ghar.
+          </p>
+          <p class="sample-badge" id="results-sample-badge" hidden>Sample / demo data</p>
+        </div>
+        <div id="summary-strip" class="summary-strip" aria-live="polite"></div>
+        <div id="options-list" class="options-list"></div>
+        <div class="results-actions">
+          <button type="button" class="btn btn-secondary" id="btn-edit">Edit details</button>
+          <button type="button" class="btn btn-primary" id="btn-compare">Compare options</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARE -->
+    <section id="screen-compare" class="screen" aria-labelledby="compare-title" hidden>
+      <div class="container">
+        <h1 id="compare-title" class="screen-title">Compare options</h1>
+        <p class="screen-intro">Side-by-side view of the activities above. Still illustrative only.</p>
+        <div class="table-wrap">
+          <table class="compare-table" id="compare-table">
+            <thead><tr><th scope="col">Aspect</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="results-actions">
+          <button type="button" class="btn btn-secondary" id="btn-back-results">Back to options</button>
+          <button type="button" class="btn btn-primary" id="btn-next-steps">Next steps &amp; support</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEXT STEPS -->
+    <section id="screen-next" class="screen" aria-labelledby="next-title" hidden>
+      <div class="container">
+        <h1 id="next-title" class="screen-title">Next steps and local support</h1>
+        <p class="screen-intro">
+          Use this checklist to move from ideas to verification. Scheme details change. Confirm current rules on official portals or at your nearest office.
+        </p>
+        <div class="checklist-card">
+          <h2>Practical checklist</h2>
+          <ul class="checklist" id="checklist"></ul>
+        </div>
+        <div class="schemes-card">
+          <h2>Scheme and support pathway</h2>
+          <p class="schemes-note">
+            The following are general pointers only. This prototype does not verify eligibility, subsidy amounts, deadlines, or documents.
+            Confirm current details with the official portal or local agriculture office.
+          </p>
+          <ul class="schemes-list" id="schemes-list">
+            <li>
+              <strong>Kisan Khidmat Ghar / Agriculture office</strong>
+              <p>Ask about soil testing, crop advisories, and any active schemes for your district. Take your land details and any soil report with you.</p>
+              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
+            </li>
+            <li>
+              <strong>Soil Health / testing services</strong>
+              <p>If you do not have a recent test, request information on how to get one through the local system.</p>
+              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
+            </li>
+            <li>
+              <strong>Central and UT agriculture schemes</strong>
+              <p>Schemes related to irrigation, horticulture, livestock, or farm mechanisation may exist. Rules and availability change by year and location.</p>
+              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
+            </li>
+            <li>
+              <strong>Market and cooperative support</strong>
+              <p>Ask about local mandis, FPOs, or cooperative channels if market access is a concern.</p>
+              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
+            </li>
+          </ul>
+        </div>
+        <div class="results-actions">
+          <button type="button" class="btn btn-secondary" id="btn-back-compare">Back</button>
+          <button type="button" class="btn btn-primary" id="btn-save-plan">Save / print plan summary</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="screen-summary" class="screen" aria-labelledby="summary-title" hidden>
+      <div class="container narrow">
+        <h1 id="summary-title" class="screen-title">Your plan summary</h1>
+        <p class="screen-intro">
+          This summary is stored only on this device (browser storage). You can print it or copy the text.
+          No data is sent to a server in this prototype.
+        </p>
+        <div class="summary-card" id="plan-summary"></div>
+        <div class="results-actions no-print">
+          <button type="button" class="btn btn-secondary" id="btn-print">Print</button>
+          <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
+          <button type="button" class="btn btn-primary" id="btn-done">Done</button>
+        </div>
+        <p class="hint no-print" id="copy-status" hidden></p>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="screen-about" class="screen" aria-labelledby="about-title" hidden>
+      <div class="container narrow">
+        <h1 id="about-title" class="screen-title">About and disclaimer</h1>
+        <div class="about-content">
+          <p><strong>My Land, My Plan</strong> is a hackathon prototype. It is not an official government service of the Union Territory of Jammu and Kashmir or any department.</p>
+          <p>Product idea: My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.</p>
+          <h2>What this app does</h2>
+          <ul>
+            <li>Collects basic, non-identifying plot details you choose to enter</li>
+            <li>Shows illustrative activity options using simple sample logic</li>
+            <li>Provides a comparison view and a practical next-step checklist</li>
+            <li>Points you toward official channels without inventing scheme rules or amounts</li>
+          </ul>
+          <h2>What this app does not do</h2>
+          <ul>
+            <li>Does not verify land ownership or records</li>
+            <li>Does not guarantee crop suitability or yield</li>
+            <li>Does not approve subsidies or determine scheme eligibility</li>
+            <li>Does not collect personal, financial, or land-identification data beyond what you type for this plan</li>
+          </ul>
+          <h2>Data and privacy</h2>
+          <p>Draft plans can be saved in your browser’s local storage. Nothing is uploaded in this prototype. Clear your browser data to remove saved drafts.</p>
+          <h2>Sample data</h2>
+          <p>Recommendations and activity descriptions are marked as sample or illustrative. They are not based on real-time agronomic models or official databases. Always confirm crop choices, costs, water requirements, and current scheme rules with the relevant agriculture office or Kisan Khidmat Ghar.</p>
+          <button type="button" class="btn btn-primary" id="btn-about-home">Back to home</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <p>My Land, My Plan — prototype for farmers in Jammu and Kashmir. Not an official service.</p>
+      <p><a href="#about" data-nav="about">About and disclaimer</a></p>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
