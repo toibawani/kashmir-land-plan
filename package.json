@@ -2,8 +2,9 @@
   "name": "my-land-my-plan",
   "version": "0.1.0",
   "private": true,
-  "description": "My Land, My Plan: a no-build, offline-capable prototype for farmers in Jammu and Kashmir. This file exists only so `npm start` can serve the folder; there are no dependencies and no build step.",
+  "description": "My Land, My Plan: a no-build, offline-capable prototype for farmers in Jammu and Kashmir. This file exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; there are no dependencies and no build step.",
   "scripts": {
-    "start": "python3 -m http.server 8080"
+    "start": "python3 -m http.server 8080",
+    "build": "node tools/verify.js"
   }
 }

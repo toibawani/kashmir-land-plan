@@ -64,7 +64,7 @@ Every option, rating and calendar is labelled as illustrative. The scheme sectio
 
 ## How to run
 
-No build step needed.
+There is nothing to install and nothing to compile.
 
 1. Open `index.html` in any modern browser, **or**
 2. Serve the folder locally:
@@ -77,7 +77,9 @@ npx serve .
 python3 -m http.server 8080
 ```
 
-There are no dependencies to install and nothing to build. The `package.json` exists only so `npm start` can serve the folder; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
+There are no dependencies to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
+
+`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the check that actually matters here: it syntax-checks every JavaScript file the way `node --check` does, confirms every local reference in `index.html` is on disk, and reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first. It uses only Node built-ins and exits non-zero on any problem.
 
 Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
 
