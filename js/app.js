@@ -11,8 +11,8 @@
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "mlmp_draft_v2";
-  var LEGACY_KEYS = ["mlmp_draft_v1"];
+  var STORAGE_KEY = "mlmp_draft_v3";
+  var LEGACY_KEYS = ["mlmp_draft_v2", "mlmp_draft_v1"];
   var TOTAL_STEPS = 5;
 
   var REGIONS = window.MLMP_REGIONS;
@@ -72,7 +72,10 @@
     options: [],
     checklist: [],
     interested: {},
-    weather: { district: "", result: null, error: null, status: "idle" },
+    weather: { district: "", query: "", result: null, error: null, status: "idle" },
+    weatherPlaceMode: "district",
+    weatherCustomPlace: "",
+    planReady: false,
   };
 
   // ------------------------------------------------------------- Helpers
@@ -150,6 +153,85 @@
       if (isCurrent) a.setAttribute("aria-current", "page");
       else a.removeAttribute("aria-current");
     });
+  }
+
+  function reviewBannerHtml(review, extraClass) {
+    extraClass = extraClass || "";
+    var status = review && review.status ? review.status : "not-reviewed";
+    return (
+      '<div class="review-card review-' +
+      escapeHtml(status) +
+      (extraClass ? " " + extraClass : "") +
+      '" role="status">' +
+      '<p class="review-label">' +
+      (status === "reviewed" ? "Officer review" : status === "mixed" ? "Review status" : "Not yet reviewed") +
+      "</p>" +
+      "<p>" +
+      escapeHtml(review.text) +
+      "</p></div>"
+    );
+  }
+
+  function currentReview() {
+    var activities = (state.options || []).map(function (o) {
+      return o.activity;
+    });
+    return ACTIVITIES.reviewFor(activities);
+  }
+
+  function fillReviewSlot(id, extraClass) {
+    var el = $("#" + id);
+    if (!el) return;
+    el.hidden = false;
+    el.innerHTML = reviewBannerHtml(currentReview(), extraClass);
+  }
+
+  function locationContextHtml(opts) {
+    opts = opts || {};
+    var d = state.data;
+    if (!d.district) return "";
+    var zone = REGIONS.zoneFor(d.district);
+    var info = REGIONS.district(d.district) || {};
+    var weatherName = REGIONS.weatherQuery(d.district) || d.district;
+    var parts = [];
+    parts.push("<h2>Location used for this plan</h2>");
+    parts.push('<p class="section-kind"><span class="kind-tag kind-user">Your answers</span> <span class="kind-tag kind-regional">Regional background</span></p>');
+    parts.push("<p><strong>District you selected:</strong> " + escapeHtml(d.district) + (d.village ? ", village " + escapeHtml(d.village) : "") + ".</p>");
+    if (zone) {
+      parts.push(
+        "<p><strong>Regional grouping used:</strong> " +
+          escapeHtml(zone.label) +
+          ". Approximate elevation band for this grouping: " +
+          escapeHtml(zone.elevationBand) +
+          ".</p>"
+      );
+    }
+    parts.push(
+      "<p><strong>Weather, if you check it:</strong> looked up for a nearby town matching <strong>" +
+        escapeHtml(weatherName) +
+        "</strong>, not for your field. The weather screen shows the place actually matched, and its model elevation.</p>"
+    );
+    if (info.spans) {
+      parts.push('<p class="option-note">' + escapeHtml(info.spans) + "</p>");
+    }
+    if (opts.adjust) {
+      parts.push(
+        '<p class="option-note">If the district town is a long way from your village, open weather and name a closer town. The forecast will still be a town grid, not the plot.</p>'
+      );
+    }
+    return parts.join("");
+  }
+
+  function updateFormLocationContext() {
+    var el = $("#form-location-context");
+    if (!el) return;
+    if (!state.data.district) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = locationContextHtml({ adjust: false });
   }
 
   function provenanceLegend(opts) {
@@ -326,6 +408,12 @@
     });
     var wd = $("#weather-district");
     if (wd && d.district) wd.value = d.district;
+    var mode = $("#weather-place-mode");
+    if (mode) mode.value = state.weatherPlaceMode || "district";
+    var custom = $("#weather-custom-place");
+    if (custom) custom.value = state.weatherCustomPlace || "";
+    syncWeatherCustomField();
+    updateFormLocationContext();
   }
 
   // ------------------------------------------------------------- Storage
@@ -340,6 +428,9 @@
           isDemo: state.isDemo,
           checklist: state.checklist || [],
           interested: state.interested || {},
+          planReady: !!state.planReady,
+          weatherPlaceMode: state.weatherPlaceMode || "district",
+          weatherCustomPlace: state.weatherCustomPlace || "",
         })
       );
       return true;
@@ -385,6 +476,9 @@
     state.isDemo = !!parsed.isDemo;
     state.checklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
     state.interested = parsed.interested && typeof parsed.interested === "object" ? parsed.interested : {};
+    state.planReady = !!parsed.planReady;
+    state.weatherPlaceMode = parsed.weatherPlaceMode === "custom" ? "custom" : "district";
+    state.weatherCustomPlace = parsed.weatherCustomPlace || "";
     return true;
   }
 
@@ -404,13 +498,18 @@
     state.options = [];
     state.checklist = [];
     state.interested = {};
+    state.planReady = false;
+    state.weatherPlaceMode = "district";
+    state.weatherCustomPlace = "";
     state.data = blankData();
-    state.weather = { district: "", result: null, error: null, status: "idle" };
+    state.weather = { district: "", query: "", result: null, error: null, status: "idle" };
     var form = $("#land-form");
     if (form) form.reset();
     fillFormFromState();
     var notice = $("#draft-notice");
     if (notice) notice.hidden = true;
+    var openSaved = $("#btn-open-saved-plan");
+    if (openSaved) openSaved.hidden = true;
     setStatus("save-status", "");
     renderWeather();
     showStep(1, { focus: false });
@@ -741,7 +840,8 @@
     var strip = $("#summary-strip");
     if (strip) {
       strip.innerHTML =
-        "<strong>Your answers:</strong> " +
+        '<p class="section-kind"><span class="kind-tag kind-user">Your answers</span></p>' +
+        "<strong>What you entered:</strong> " +
         escapeHtml(d.district) +
         ", " +
         escapeHtml(d.village) +
@@ -801,7 +901,9 @@
         var a = option.activity;
         var isInterested = !!state.interested[a.id];
         return (
-          '<article class="option-card" id="opt-' +
+          '<article class="option-card data-illustrative' +
+          (isInterested ? " is-interested" : "") +
+          '" id="opt-' +
           a.id +
           '">' +
           "<h2>" +
@@ -810,6 +912,9 @@
           escapeHtml(a.title) +
           "</h2>" +
           '<p class="option-meta">Illustrative option, not a verified recommendation</p>' +
+          '<p class="option-confirm">' +
+          escapeHtml(ACTIVITIES.confirmationLine) +
+          "</p>" +
           '<div class="option-section">' +
           "<h3>Why it may be worth exploring</h3>" +
           "<p>" +
@@ -859,7 +964,7 @@
           '" aria-pressed="' +
           (isInterested ? "true" : "false") +
           '">' +
-          (isInterested ? "Marked interested" : "Mark as interested") +
+          (isInterested ? "Interested, included in your plan" : "I want to follow this up") +
           "</button>" +
           "</div>" +
           "</article>"
@@ -867,18 +972,38 @@
       })
       .join("");
 
+    fillReviewSlot("review-banner");
+
+    var loc = $("#results-location");
+    if (loc) {
+      loc.hidden = false;
+      loc.innerHTML = locationContextHtml({ adjust: true });
+    }
+
     var legend = $("#results-provenance");
     if (legend) legend.innerHTML = provenanceLegend({});
 
+    updateInterestedStatus();
+  }
+
+  function interestedCount() {
+    return Object.keys(state.interested).filter(function (k) {
+      return state.interested[k];
+    }).length;
+  }
+
+  function updateInterestedStatus() {
     var count = $("#interested-status");
-    if (count) {
-      var n = Object.keys(state.interested).filter(function (k) {
-        return state.interested[k];
-      }).length;
-      count.textContent = n
-        ? n + (n === 1 ? " option marked interested. " : " options marked interested. ") + "It will be highlighted in your plan summary."
-        : "";
+    if (!count) return;
+    var n = interestedCount();
+    if (!n) {
+      count.textContent = "Mark any option you want to take to the office. That mark is saved in your plan.";
+      return;
     }
+    count.textContent =
+      n === 1
+        ? "1 option marked to follow up. It will be highlighted in your plan summary."
+        : n + " options marked to follow up. They will be highlighted in your plan summary.";
   }
 
   var COMPARE_ROWS = [
@@ -911,6 +1036,7 @@
     if (!table || !stacked || !wrap || !opts.length) return;
 
     if (legend) legend.innerHTML = provenanceLegend({ only: ["illustrative"] });
+    fillReviewSlot("compare-review", "compact");
 
     if (window.matchMedia("(max-width: 700px)").matches) {
       wrap.hidden = true;
@@ -918,11 +1044,15 @@
       stacked.innerHTML = opts
         .map(function (option) {
           var a = option.activity;
+          var isInterested = !!state.interested[a.id];
           return (
-            '<article class="stacked-option">' +
+            '<article class="stacked-option' +
+            (isInterested ? " is-interested" : "") +
+            '">' +
             "<h2>" +
             escapeHtml(a.title) +
             "</h2>" +
+            (isInterested ? '<p class="summary-marked">You want to follow this up.</p>' : "") +
             "<dl>" +
             COMPARE_ROWS.map(function (r) {
               return "<dt>" + escapeHtml(r.label) + "</dt><dd>" + escapeHtml(pretty(r.get(a))) + "</dd>";
@@ -949,7 +1079,7 @@
             "<tr>" +
             '<th scope="row">' +
             escapeHtml(a.title) +
-            (isInterested ? ' <span class="pill">interested</span>' : "") +
+            (isInterested ? ' <span class="pill">follow up</span>' : "") +
             "</th>" +
             COMPARE_ROWS.map(function (r) {
               return "<td>" + escapeHtml(pretty(r.get(a))) + "</td>";
@@ -1070,7 +1200,7 @@
       ">" +
       '<p class="scheme-cat">' +
       escapeHtml(s.category) +
-      (relevant ? ' <span class="pill">likely relevant</span>' : "") +
+      (relevant ? ' <span class="pill">likely relevant to your plan</span>' : "") +
       "</p>" +
       "<strong>" +
       escapeHtml(s.title) +
@@ -1140,6 +1270,8 @@
     var d = state.data;
     var card = $("#plan-summary");
     if (!card) return;
+
+    fillReviewSlot("summary-review");
 
     var date = new Date().toLocaleDateString("en-IN", {
       year: "numeric",
@@ -1212,9 +1344,12 @@
           escapeHtml(a.title) +
           "</h4>" +
           (isInterested
-            ? '<p class="summary-marked">You marked this as interested.</p>'
+            ? '<p class="summary-marked">You want to follow this up.</p>'
             : "") +
           '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+          '<p class="option-confirm">' +
+          escapeHtml(ACTIVITIES.confirmationLine) +
+          "</p>" +
           "<p><strong>Why it may be worth exploring.</strong> " +
           escapeHtml(a.why) +
           "</p>" +
@@ -1254,9 +1389,14 @@
     if (r) {
       weatherBlock =
         "<h3>Weather at the time this plan was made</h3>" +
-        "<p>Live data from Open-Meteo for " +
+        '<p class="section-kind"><span class="kind-tag kind-weather">Live weather</span></p>' +
+        "<p>Live data from Open-Meteo for the nearby town <strong>" +
         escapeHtml(r.place.name) +
+        "</strong>" +
         (r.place.district && r.place.district !== r.place.name ? ", " + escapeHtml(r.place.district) : "") +
+        (r.place.elevation != null
+          ? ", model elevation about " + Math.round(r.place.elevation) + " m"
+          : "") +
         ", recorded " +
         escapeHtml(r.fetchedLabel) +
         " at " +
@@ -1276,7 +1416,9 @@
       escapeHtml(date) +
       (state.isDemo ? " (sample journey)" : "") +
       "</p>" +
-      '<p class="summary-disclaimer"><strong>Illustrative prototype.</strong> Nothing here verifies ownership or suitability, approves a subsidy, or decides scheme eligibility. Confirm everything with the local agriculture office or Kisan Khidmat Ghar.</p>' +
+      '<p class="summary-disclaimer"><strong>Illustrative prototype.</strong> ' +
+      escapeHtml(currentReview().text) +
+      " Nothing here verifies ownership or suitability, approves a subsidy, or decides scheme eligibility. Confirm everything with the local agriculture office or Kisan Khidmat Ghar.</p>" +
       "<h3>Your plot details</h3>" +
       '<p class="section-kind"><span class="kind-tag kind-user">Your answers</span></p>' +
       "<ul>" +
@@ -1299,8 +1441,8 @@
         ? "<p><strong>You marked " +
           interestedIds.length +
           (interestedIds.length === 1 ? " option" : " options") +
-          " as interested.</strong> Take those to the office first.</p>"
-        : "<p>No options were marked as interested. You can go back and mark the ones you want to follow up.</p>") +
+          " to follow up.</strong> Take those to the office first.</p>"
+        : "<p>No options were marked to follow up. You can go back and mark the ones you want to take to the office.</p>") +
       "<h3>Your next steps</h3>" +
       "<ul class=\"summary-checklist\">" +
       checklist
@@ -1380,14 +1522,16 @@
       var detail = (w.error && w.error.message) || "The weather service could not be reached.";
       var hint =
         reason === "not_found"
-          ? "The place name could not be found in the weather service's place list. Try another district, or the nearest large town."
-          : "Weather needs an internet connection. Everything else in this plan works without it, so you can carry on and come back.";
+          ? "The place name could not be found in the weather service's place list. Try another district, or name a nearby town."
+          : reason === "offline"
+            ? "This device is offline. Weather is the only part that needs the internet. Your land plan, options, checklist and summary still work."
+            : "Weather needs an internet connection. Everything else in this plan works without it, so you can carry on and come back.";
       out.innerHTML =
         '<div class="weather-error" role="alert">' +
         "<h2>Weather is not available right now</h2>" +
-        "<p>" +
-        escapeHtml(detail) +
-        "</p>" +
+        // When the device is offline the hint already says so, so the detail
+        // line would just repeat it in different words.
+        (reason === "offline" ? "" : "<p>" + escapeHtml(detail) + "</p>") +
         "<p>" +
         escapeHtml(hint) +
         "</p>" +
@@ -1404,6 +1548,14 @@
 
     var r = w.result;
     if (w.status !== "ok" || !r) {
+      if (WEATHER.isOffline && WEATHER.isOffline()) {
+        out.innerHTML =
+          '<div class="weather-error" role="status">' +
+          "<h2>Weather needs a connection</h2>" +
+          "<p>This device is offline. Weather is the only part of the app that needs the internet. Your land plan, options, checklist and summary still work.</p>" +
+          "</div>";
+        return;
+      }
       out.innerHTML =
         '<p class="weather-status">Choose a district and get the forecast. Weather is the only part of this app that needs the internet.</p>';
       return;
@@ -1421,14 +1573,17 @@
       escapeHtml(r.place.name) +
       "</h2>" +
       '<p class="section-kind"><span class="kind-tag kind-weather">Live weather</span></p>' +
-      "<p class=\"weather-place\">General weather for <strong>" +
+      "<p class=\"weather-place\">This is the weather for the nearby town <strong>" +
       escapeHtml(placeLabel) +
-      "</strong>, updated " +
+      "</strong>, not for your field. Updated " +
       escapeHtml(formatUpdated(r)) +
       ".</p>" +
+      (WEATHER.isOffline && WEATHER.isOffline()
+        ? '<p class="weather-warn">This reading was stored earlier. The device is offline, so it may be out of date.</p>'
+        : "") +
       (r.confidence === "approximate"
         ? '<p class="weather-warn">The weather service matched a place of this name outside Jammu and Kashmir, so check the place name below before reading much into it.</p>'
-        : "") +
+        : '<p class="weather-ok">Matched inside Jammu and Kashmir from the name you gave.</p>') +
       "</div>" +
       '<ul class="weather-now">' +
       '<li><span class="wn-label">Temperature</span><span class="wn-value">' +
@@ -1471,14 +1626,17 @@
       "</ul>" +
       "<h3>About this reading</h3>" +
       "<dl class=\"rating-list\">" +
+      ratingRow("Name you asked for", r.queryUsed || state.weather.query || "not given") +
       ratingRow("Place matched", placeLabel) +
       ratingRow(
         "Approximate elevation",
-        r.place.elevation != null ? Math.round(r.place.elevation) + " m (weather model average)" : "not given"
+        r.place.elevation != null
+          ? Math.round(r.place.elevation) + " m, weather model average for this grid cell"
+          : "not given"
       ) +
       ratingRow("Coordinates used", r.place.latitude.toFixed(2) + ", " + r.place.longitude.toFixed(2)) +
       "</dl>" +
-      '<p class="option-note">This is the weather for the town the service matched, taken from a grid that covers a wide area. It is not a field-level forecast, it does not predict frost at your plot, and it is not a disease or irrigation warning. Elevation is the average for the grid cell, so it can differ from your field.</p>' +
+      '<p class="option-note">The matched place is a town, and the elevation is the average of a wide model grid around it. Your field can sit much higher or lower. This is not a frost warning, an irrigation schedule, or a forecast for the plot. If the town is a long way from your village, name a closer town above and get the forecast again.</p>' +
       '<p class="option-note">' +
       escapeHtml(WEATHER.attribution) +
       "</p>";
@@ -1500,19 +1658,39 @@
     return lo + " to " + hi + "°C";
   }
 
+  function weatherQueryFromUi(districtName) {
+    var district = (districtName || state.data.district || "").trim();
+    if (state.weatherPlaceMode === "custom") {
+      var custom = (state.weatherCustomPlace || "").trim();
+      if (custom) return custom;
+    }
+    return REGIONS.weatherQuery(district) || district;
+  }
+
   function loadWeather(districtName, force) {
-    var name = (districtName || "").trim();
-    if (!name) {
+    var district = (districtName || "").trim();
+    if (!district) {
       setWeatherState("error", { reason: "no_district", message: "No district was selected." });
       renderWeather();
       return Promise.resolve();
     }
 
-    state.weather.district = name;
+    if (state.weatherPlaceMode === "custom" && !(state.weatherCustomPlace || "").trim()) {
+      setWeatherState("error", {
+        reason: "no_district",
+        message: "Enter a nearby town name, or switch back to the district town name.",
+      });
+      renderWeather();
+      return Promise.resolve();
+    }
+
+    var query = weatherQueryFromUi(district);
+    state.weather.district = district;
+    state.weather.query = query;
     setWeatherState("loading");
     renderWeather();
 
-    return WEATHER.get(name, force)
+    return WEATHER.get(query, force)
       .then(function (result) {
         state.weather.result = result;
         setWeatherState("ok");
@@ -1562,6 +1740,8 @@
     lines.push("");
     lines.push("Date: " + date + (state.isDemo ? " (sample journey)" : ""));
     lines.push("");
+    lines.push("Review status: " + currentReview().text);
+    lines.push("");
     lines.push("Illustrative prototype. Nothing here verifies ownership or suitability,");
     lines.push("approves a subsidy, or decides scheme eligibility. Confirm everything with");
     lines.push("the local agriculture office or your Kisan Khidmat Ghar.");
@@ -1605,9 +1785,10 @@
       var a = option.activity;
       var isInterested = !!state.interested[a.id];
       lines.push(
-        i + 1 + ". " + a.title + (isInterested ? "   [MARKED INTERESTED]" : "")
+        i + 1 + ". " + a.title + (isInterested ? "   [FOLLOW UP]" : "")
       );
       lines.push("   Illustrative option, not a verified recommendation.");
+      lines.push("   " + ACTIVITIES.confirmationLine);
       lines.push("   Why it may be worth exploring: " + a.why);
       var zoneNote = a.zoneNotes ? a.zoneNotes[zone ? zone.id : ""] : "";
       if (zoneNote) lines.push("   Why it might fit your area: " + zoneNote);
@@ -1657,8 +1838,8 @@
     });
     lines.push(
       marked.length
-        ? "You marked " + marked.length + (marked.length === 1 ? " option" : " options") + " as interested. Take those to the office first."
-        : "No options were marked as interested."
+        ? "You marked " + marked.length + (marked.length === 1 ? " option" : " options") + " to follow up. Take those to the office first."
+        : "No options were marked to follow up."
     );
     lines.push("");
 
@@ -1727,7 +1908,10 @@
             (day.rainChance != null ? ", " + day.rainChance + "% rain" : "")
         );
       });
-      lines.push("General weather for a town, not for your plot, and it changes.");
+      if (r.place.elevation != null) {
+        lines.push("Model elevation (grid average): about " + Math.round(r.place.elevation) + " m");
+      }
+      lines.push("General weather for a nearby town, not for your plot, and it changes.");
       lines.push(WEATHER.attribution);
       lines.push("");
     } else {
@@ -1800,14 +1984,23 @@
 
     var notice = $("#draft-notice");
     var noticeText = $("#draft-notice-text");
+    var openSaved = $("#btn-open-saved-plan");
     if (notice) {
       notice.hidden = !hadDraft;
       if (hadDraft && noticeText) {
-        noticeText.textContent = state.isDemo
-          ? "These answers are sample data from the demo. Choose Start over to clear them."
-          : "Your saved draft was restored. Continue where you left off, or start over.";
+        if (state.isDemo) {
+          noticeText.textContent =
+            "These answers are sample data from the demo. Choose Start over to clear them.";
+        } else if (state.planReady) {
+          noticeText.textContent =
+            "A saved plan is on this device. Continue editing these answers, open the saved options, or start over.";
+        } else {
+          noticeText.textContent =
+            "Your saved draft was restored. Continue where you left off, or start over.";
+        }
       }
     }
+    if (openSaved) openSaved.hidden = !(hadDraft && state.planReady);
   }
 
   function loadDemo() {
@@ -1828,6 +2021,7 @@
     state.step = 1;
     fillFormFromState();
     computeOptions();
+    state.planReady = true;
     renderResults();
     showScreen("results");
     saveDraft();
@@ -1837,21 +2031,60 @@
     state.interested[id] = !state.interested[id];
     if (!state.interested[id]) delete state.interested[id];
     saveDraft();
+    var on = !!state.interested[id];
     var btn = $('[data-interest="' + id + '"]');
     if (btn) {
-      var on = !!state.interested[id];
       btn.setAttribute("aria-pressed", on ? "true" : "false");
-      btn.textContent = on ? "Marked interested" : "Mark as interested";
+      btn.textContent = on ? "Interested, included in your plan" : "I want to follow this up";
     }
-    var count = $("#interested-status");
-    if (count) {
-      var n = Object.keys(state.interested).filter(function (k) {
-        return state.interested[k];
-      }).length;
-      count.textContent = n
-        ? n + (n === 1 ? " option marked interested. " : " options marked interested. ") + "It will be highlighted in your plan summary."
-        : "";
+    var card = $("#opt-" + id);
+    if (card) {
+      if (on) card.classList.add("is-interested");
+      else card.classList.remove("is-interested");
     }
+    updateInterestedStatus();
+  }
+
+  function confirmStartOver() {
+    var ok = window.confirm(
+      "Start over? This clears the answers and the saved draft on this device. Nothing else is deleted."
+    );
+    if (ok) resetPlan();
+  }
+
+  function syncWeatherCustomField() {
+    var wrap = $("#weather-custom-wrap");
+    var mode = $("#weather-place-mode");
+    if (!wrap) return;
+    var custom = mode && mode.value === "custom";
+    wrap.hidden = !custom;
+  }
+
+  function setAboutReviewStatus() {
+    var el = $("#about-review-status");
+    if (!el) return;
+    var review = ACTIVITIES.reviewFor(
+      ACTIVITIES.ids.map(function (id) {
+        return ACTIVITIES.ALL[id];
+      })
+    );
+    el.innerHTML =
+      '<strong>Current catalogue status.</strong> ' + escapeHtml(review.text);
+  }
+
+  function updateOfflineBanner() {
+    var banner = $("#offline-banner");
+    if (!banner) return;
+    var offline = WEATHER.isOffline ? WEATHER.isOffline() : navigator.onLine === false;
+    banner.hidden = !offline;
+  }
+
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    if (location.protocol === "file:") return;
+    navigator.serviceWorker.register("sw.js").catch(function () {
+      // Installability is optional. The app still works from index.html.
+    });
   }
 
   function bind() {
@@ -1896,6 +2129,7 @@
         // then only ever means "this is where the farmer stopped", which is
         // what makes resuming land on the right screen.
         state.step = 1;
+        state.planReady = true;
         saveDraft();
         renderResults();
         showScreen("results");
@@ -1913,8 +2147,15 @@
         );
       });
 
-    $("#btn-reset-form") && $("#btn-reset-form").addEventListener("click", resetPlan);
-    $("#btn-reset-results") && $("#btn-reset-results").addEventListener("click", resetPlan);
+    $("#btn-reset-form") && $("#btn-reset-form").addEventListener("click", confirmStartOver);
+    $("#btn-reset-results") && $("#btn-reset-results").addEventListener("click", confirmStartOver);
+    $("#btn-open-saved-plan") &&
+      $("#btn-open-saved-plan").addEventListener("click", function () {
+        if (!state.options.length) computeOptions();
+        state.planReady = true;
+        renderResults();
+        showScreen("results");
+      });
 
     $("#btn-download-text") &&
       $("#btn-download-text").addEventListener("click", function () {
@@ -1985,6 +2226,20 @@
       });
 
     $("#btn-done") && $("#btn-done").addEventListener("click", goHome);
+    $("#btn-summary-back") &&
+      $("#btn-summary-back").addEventListener("click", function () {
+        renderChecklist();
+        renderSchemes();
+        showScreen("next");
+      });
+
+    var districtSelectLive = $("#district");
+    if (districtSelectLive) {
+      districtSelectLive.addEventListener("change", function () {
+        readFormIntoState();
+        updateFormLocationContext();
+      });
+    }
 
     var weatherForm = $("#weather-form");
     if (weatherForm) {
@@ -1992,19 +2247,54 @@
         e.preventDefault();
         var select = $("#weather-district");
         var name = select ? select.value : "";
+        var mode = $("#weather-place-mode");
+        var custom = $("#weather-custom-place");
+        state.weatherPlaceMode = mode && mode.value === "custom" ? "custom" : "district";
+        state.weatherCustomPlace = custom ? custom.value.trim() : "";
+        var err = $("#weather-district-error");
+        var customErr = $("#weather-custom-error");
+        if (customErr) {
+          customErr.hidden = true;
+          customErr.textContent = "";
+        }
         if (!name) {
-          var err = $("#weather-district-error");
           if (err) {
             err.textContent = "Please choose a district to check the weather for.";
             err.hidden = false;
           }
-          if (select) select.setAttribute("aria-invalid", "true");
+          if (select) {
+            select.setAttribute("aria-invalid", "true");
+            select.focus();
+          }
           return;
         }
-        var err2 = $("#weather-district-error");
-        if (err2) err2.hidden = true;
+        if (state.weatherPlaceMode === "custom" && !state.weatherCustomPlace) {
+          if (customErr) {
+            customErr.textContent = "Enter a nearby town, or switch back to the district town name.";
+            customErr.hidden = false;
+          }
+          if (custom) {
+            custom.setAttribute("aria-invalid", "true");
+            custom.focus();
+          }
+          return;
+        }
+        if (custom) custom.removeAttribute("aria-invalid");
+        if (err) err.hidden = true;
         if (select) select.removeAttribute("aria-invalid");
         loadWeather(name, true);
+      });
+    }
+
+    var placeMode = $("#weather-place-mode");
+    if (placeMode) {
+      placeMode.addEventListener("change", function () {
+        state.weatherPlaceMode = placeMode.value === "custom" ? "custom" : "district";
+        syncWeatherCustomField();
+        if (placeMode.value === "custom") {
+          var customInput = $("#weather-custom-place");
+          if (customInput) customInput.focus();
+        }
       });
     }
 
@@ -2029,7 +2319,12 @@
 
     $("#btn-weather-home") &&
       $("#btn-weather-home").addEventListener("click", function () {
-        showScreen("home");
+        if (state.planReady) {
+          renderResults();
+          showScreen("results");
+        } else {
+          showScreen("home");
+        }
       });
 
     document.addEventListener("click", function (e) {
@@ -2129,5 +2424,17 @@
     }
 
     bind();
+    setAboutReviewStatus();
+    updateOfflineBanner();
+    registerServiceWorker();
+    window.addEventListener("online", updateOfflineBanner);
+    window.addEventListener("offline", function () {
+      updateOfflineBanner();
+      if ($("#screen-weather") && $("#screen-weather").classList.contains("screen-active")) {
+        if (state.weather.status === "loading" || state.weather.status === "ok") {
+          renderWeather();
+        }
+      }
+    });
   });
 })();

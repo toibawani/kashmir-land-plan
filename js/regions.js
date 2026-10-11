@@ -137,12 +137,23 @@
     return d ? ZONES[d.zone] : null;
   }
 
+  /**
+   * Name sent to the weather geocoder. This is the district name, which in J&K
+   * is also the usual name of the district headquarters town. It is a nearby
+   * town lookup, never a field pin.
+   */
+  function weatherQuery(name) {
+    var d = district(name);
+    return (d && d.weatherQuery) || name || "";
+  }
+
   window.MLMP_REGIONS = {
     ZONES: ZONES,
     DISTRICTS: DISTRICTS,
     SAFFRON_DISTRICTS: SAFFRON_DISTRICTS,
     district: district,
     zoneFor: zoneFor,
+    weatherQuery: weatherQuery,
     /** Flat, ordered list for the district dropdown. */
     names: Object.keys(DISTRICTS).sort(function (a, b) {
       return a.localeCompare(b);

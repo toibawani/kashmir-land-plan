@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="description" content="My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support." />
   <meta name="theme-color" content="#3d5a3d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="My Land, My Plan" />
   <title>My Land, My Plan, Kashmir</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" />
@@ -13,6 +18,10 @@
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
+
+  <div class="offline-banner" id="offline-banner" hidden role="status">
+    You are offline. The land plan still works on this device. Weather needs a connection.
+  </div>
 
   <header class="site-header" role="banner">
     <div class="header-inner">
@@ -63,10 +72,30 @@
           </div>
         </div>
 
+        <div class="home-kinds" aria-label="Four kinds of information">
+          <div class="kind-card kind-card-user">
+            <h2>Your answers</h2>
+            <p>What you type about the plot. Stored on this device only.</p>
+          </div>
+          <div class="kind-card kind-card-illustrative">
+            <h2>Illustrative suggestions</h2>
+            <p>Sample options to discuss. Not an assessment of your land.</p>
+          </div>
+          <div class="kind-card kind-card-regional">
+            <h2>Regional background</h2>
+            <p>Published information about farming in the district, not your field.</p>
+          </div>
+          <div class="kind-card kind-card-weather">
+            <h2>Live weather</h2>
+            <p>A nearby town forecast from Open-Meteo, only when you are online.</p>
+          </div>
+        </div>
+
         <div class="home-note">
-          <h2>What this is not</h2>
+          <h2>What this is, and what it is not</h2>
           <p>
-            This is a working prototype, not a government service. The options it suggests are illustrative.
+            This is a working prototype, not a government service. It helps you prepare questions.
+            It cannot verify land, approve a scheme, or guarantee that a crop will suit your plot.
             Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar.
           </p>
         </div>
@@ -88,7 +117,10 @@
 
         <div class="draft-notice" id="draft-notice" hidden>
           <p id="draft-notice-text">Saved draft restored.</p>
-          <button type="button" class="btn btn-quiet" id="btn-reset-form">Start over</button>
+          <div class="draft-notice-actions">
+            <button type="button" class="btn btn-secondary" id="btn-open-saved-plan" hidden>See saved options</button>
+            <button type="button" class="btn btn-quiet" id="btn-reset-form">Start over</button>
+          </div>
         </div>
 
         <form id="land-form" novalidate>
@@ -104,9 +136,10 @@
             <div class="field">
               <label for="village">Village or locality <span class="req">required</span></label>
               <input type="text" id="village" name="village" required maxlength="80" autocomplete="off" placeholder="e.g. Tral, or your village name" />
-              <p class="hint">This stays on your device. Only the district is used for the regional notes and the weather.</p>
+              <p class="hint">This stays on your device. Only the district is used for the regional notes. Weather is looked up for a nearby town, not this village.</p>
               <p class="field-error" id="err-village" hidden></p>
             </div>
+            <div class="location-context" id="form-location-context" hidden></div>
           </fieldset>
 
           <fieldset class="form-step" data-step="2" id="step-2" hidden>
@@ -211,20 +244,29 @@
         <div class="results-header">
           <h1 id="results-title" class="screen-title">Possible activities to explore</h1>
           <p class="screen-intro">
-            These are illustrative options from simple sample logic, based on what you entered and on general information about your district.
-            They are not a scientific recommendation, an assessment of your plot, or an approval of anything.
-            Confirm suitability, costs, and rules with your local agriculture office or Kisan Khidmat Ghar.
+            These are options to discuss, based on what you entered and on general information about your district.
+            They are not an assessment of your plot, and they are not an approval of anything.
           </p>
           <p class="sample-badge" id="results-sample-badge" hidden>Illustrative options from sample logic</p>
         </div>
 
-        <div id="summary-strip" class="summary-strip" aria-live="polite"></div>
-        <div id="results-zone" class="region-card" hidden></div>
+        <div id="review-banner" class="review-banner" hidden></div>
+        <div class="disclaimer-block compact">
+          <h2>What this is not</h2>
+          <p>
+            This prototype cannot verify land, guarantee suitability, or approve a scheme.
+            Confirm suitability, costs, and current rules with your local agriculture office or Kisan Khidmat Ghar.
+          </p>
+        </div>
 
-        <div class="weather-callout no-print">
-          <h2>Weather around your district</h2>
-          <p>General weather for the nearest town, from Open-Meteo. It is not a field-level forecast and it needs the internet.</p>
-          <button type="button" class="btn btn-secondary" id="btn-results-weather">Check weather</button>
+        <div id="summary-strip" class="summary-strip data-user" aria-live="polite"></div>
+        <div id="results-location" class="location-card" hidden></div>
+        <div id="results-zone" class="region-card data-regional" hidden></div>
+
+        <div class="weather-callout no-print data-weather">
+          <h2>Weather near a town, not your field</h2>
+          <p>Open-Meteo weather for a nearby town matched from the district name. It is not a field forecast, and it needs the internet.</p>
+          <button type="button" class="btn btn-secondary" id="btn-results-weather">Check weather for a nearby town</button>
         </div>
 
         <div id="options-list" class="options-list"></div>
@@ -251,7 +293,8 @@
     <section id="screen-compare" class="screen" aria-labelledby="compare-title" hidden>
       <div class="container">
         <h1 id="compare-title" class="screen-title">Compare options</h1>
-        <p class="screen-intro">Side-by-side view of the activities above. Every rating here is an ordered judgement, not a measurement.</p>
+        <p class="screen-intro">A short side-by-side view. Every rating here is an ordered judgement, not a measurement.</p>
+        <div id="compare-review" class="review-banner compact" hidden></div>
         <div id="compare-provenance" class="provenance-wrap compact"></div>
         <div class="table-wrap" id="compare-table-wrap" hidden>
           <table class="compare-table" id="compare-table">
@@ -315,13 +358,21 @@
         <p class="screen-intro">
           This summary is stored only on this device, in this browser. Nothing is uploaded. Print gives a clean page you can save as a PDF.
         </p>
+        <div id="summary-review" class="review-banner" hidden></div>
         <div class="summary-card" id="plan-summary"></div>
-        <div class="results-actions no-print">
-          <button type="button" class="btn btn-secondary" id="btn-print">Print or save as PDF</button>
-          <button type="button" class="btn btn-secondary" id="btn-download-text">Download as text</button>
-          <button type="button" class="btn btn-secondary" id="btn-download-html">Download for a browser</button>
-          <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
-          <button type="button" class="btn btn-primary" id="btn-done">Done</button>
+        <div class="plan-tools no-print">
+          <h2 class="tools-title">Keep this plan</h2>
+          <p class="hint">Nothing is uploaded. Print, download or copy stays on this device.</p>
+          <div class="results-actions">
+            <button type="button" class="btn btn-primary" id="btn-print">Print or save as PDF</button>
+            <button type="button" class="btn btn-secondary" id="btn-download-text">Download as text</button>
+            <button type="button" class="btn btn-secondary" id="btn-download-html">Download for a browser</button>
+            <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
+          </div>
+          <div class="results-actions">
+            <button type="button" class="btn btn-secondary" id="btn-summary-back">Back to next steps</button>
+            <button type="button" class="btn btn-quiet" id="btn-done">Finish and go home</button>
+          </div>
         </div>
         <p class="hint no-print" id="copy-status" role="status" hidden></p>
         <div class="provenance-wrap no-print">
@@ -335,8 +386,8 @@
       <div class="container narrow">
         <h1 id="weather-title" class="screen-title">Weather near your district</h1>
         <p class="screen-intro">
-          General weather for a nearby town, so you can judge the days ahead for any outdoor work.
-          This is the only part of the app that needs the internet, and it is not a field-level forecast.
+          General weather for a nearby town, so you can judge the days ahead for outdoor work.
+          This is the only part of the app that needs the internet. It is not a forecast for your field.
         </p>
 
         <form id="weather-form" class="weather-form" novalidate>
@@ -345,7 +396,21 @@
             <select id="weather-district" name="weather-district">
               <option value="">Select district</option>
             </select>
+            <p class="hint">The district name is used to find a nearby town in Jammu and Kashmir. The forecast is for that town, not for a village or a plot.</p>
             <p class="field-error" id="weather-district-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="weather-place-mode">Weather location</label>
+            <select id="weather-place-mode" name="weather-place-mode">
+              <option value="district">Use the district town name</option>
+              <option value="custom">Name a nearby town instead</option>
+            </select>
+          </div>
+          <div class="field" id="weather-custom-wrap" hidden>
+            <label for="weather-custom-place">Nearby town name</label>
+            <input type="text" id="weather-custom-place" name="weather-custom-place" maxlength="80" autocomplete="off" placeholder="e.g. Anantnag, or the nearest large town" />
+            <p class="hint">Type a town you know is close. The weather service will still return a model grid around that town, not your field.</p>
+            <p class="field-error" id="weather-custom-error" hidden></p>
           </div>
           <button type="submit" class="btn btn-primary">Get the forecast</button>
         </form>
@@ -358,7 +423,7 @@
           <p class="option-note">
             Weather is the only live data in this app. Your plan, the options, the calendars and the checklist all work without a connection once the page has loaded.
           </p>
-          <button type="button" class="btn btn-quiet" id="btn-weather-home">Back to home</button>
+          <button type="button" class="btn btn-quiet" id="btn-weather-home">Back</button>
         </div>
       </div>
     </section>
@@ -389,6 +454,14 @@
             <li>Does not give a field-level weather forecast, frost warning or irrigation schedule</li>
             <li>Does not collect personal, financial, or land-identification data beyond what you type for this plan</li>
           </ul>
+
+          <h2>Officer review</h2>
+          <p>
+            The activity list lives in a separate catalogue so an agriculture officer can check it.
+            Until that happens, the app says plainly that the suggestions have not yet been checked.
+            A reviewed catalogue still needs local confirmation before anyone acts on it.
+          </p>
+          <p id="about-review-status"></p>
 
           <h2>What is yours, what is illustrative, what is live</h2>
           <ul>
@@ -436,7 +509,7 @@
             <li>Saffron is only offered for the four districts where it is documented as grown, and the app cannot tell whether a particular piece of ground is suitable.</li>
             <li>No conversions between kanal, acre, hectare and marla are exact, and local usage varies.</li>
             <li>The text is in English only. Real use would need Kashmiri, Dogri, Urdu and Hindi, checked by fluent speakers.</li>
-            <li>Nothing here has been reviewed by an agriculture officer, a horticulturist or a legal expert.</li>
+            <li>Until an officer fills in the review fields on the catalogue, nothing here has been signed off. Even after a review, confirm locally before acting.</li>
           </ul>
 
           <h2>Data and privacy</h2>
@@ -466,6 +539,7 @@
   </footer>
 
   <script src="js/regions.js"></script>
+  <script src="js/catalogue.js"></script>
   <script src="js/activities.js"></script>
   <script src="js/schemes.js"></script>
   <script src="js/weather.js"></script>

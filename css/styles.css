@@ -232,10 +232,6 @@ main {
   display: block;
 }
 
-.screen[hidden] {
-  display: none !important;
-}
-
 /* Typography */
 .screen-title {
   font-family: var(--font-serif);
@@ -1036,6 +1032,8 @@ select:focus {
 
 /* Print */
 @media print {
+  /* Printing must win over the on-screen layout, whatever later rules do, so
+     these two blocks keep !important on purpose. */
   .site-header,
   .site-footer,
   .no-print,
@@ -1232,7 +1230,6 @@ select:focus {
   background: var(--color-accent-soft);
   color: var(--color-accent-hover);
   border-color: var(--color-accent-hover);
-  transform: translateY(-1px);
 }
 
 .btn-toggle[aria-pressed="true"] {
@@ -1696,4 +1693,252 @@ select:focus {
   font-size: 0.85rem;
   color: var(--color-text-muted);
   margin: var(--space-2) 0 0;
+}
+
+/* Offline, review, location, and the four information kinds. */
+
+.offline-banner {
+  background: #46360f;
+  color: #fff8ec;
+  text-align: center;
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.home-kinds {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+@media (min-width: 640px) {
+  .home-kinds {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kind-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.kind-card h2 {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-2);
+}
+
+.kind-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* The four kinds of information carry the same four washes as their .kind-tag
+   chips, so a block is named by its fill and its label rather than by a
+   coloured stripe down one edge. */
+.kind-card-user,
+.data-user,
+.summary-strip.data-user {
+  background: #e8efe6;
+}
+
+.kind-card-illustrative,
+.data-illustrative {
+  background: #f0e4d0;
+}
+
+.kind-card-regional,
+.data-regional,
+.region-card.data-regional {
+  background: #e1e8ec;
+}
+
+.kind-card-weather,
+.data-weather,
+.weather-callout.data-weather {
+  background: #dde8f2;
+}
+
+.review-banner {
+  margin-bottom: var(--space-4);
+}
+
+/* Amber while a suggestion is unchecked, green once an officer has signed it
+   off. The heading above the text always names the state in words too, so the
+   colour is a reinforcement rather than the only signal. */
+.review-card {
+  background: #f0e4d0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+}
+
+.review-card.review-reviewed {
+  background: var(--color-accent-soft);
+}
+
+.review-card.review-mixed {
+  background: #f7e0c0;
+}
+
+.review-label {
+  margin: 0 0 var(--space-1);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.review-card p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.review-banner.compact .review-card {
+  padding: var(--space-3) var(--space-4);
+}
+
+.disclaimer-block.compact {
+  padding: var(--space-4);
+}
+
+.location-context,
+.location-card {
+  background: #e1e8ec;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+.location-context h2,
+.location-card h2 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.location-context p,
+.location-card p {
+  margin: 0 0 var(--space-2);
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+}
+
+.location-context p:last-child,
+.location-card p:last-child {
+  margin-bottom: 0;
+}
+
+.option-confirm,
+.summary-card .option-confirm {
+  font-size: 0.88rem;
+  color: var(--color-text);
+  margin: 0 0 var(--space-3);
+}
+
+.option-card.is-interested,
+.stacked-option.is-interested,
+.summary-option.is-interested {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.draft-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.plan-tools {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.tools-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.weather-ok {
+  font-size: 0.88rem;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-3);
+}
+
+.schemes-list li.is-secondary {
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  .calendar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cal-cell {
+    min-height: 4.5rem;
+  }
+
+  .stacked-option {
+    padding: var(--space-3);
+  }
+
+  .option-card,
+  .summary-card,
+  .region-card,
+  .checklist-card,
+  .schemes-card {
+    padding: var(--space-4);
+  }
+
+  .compare-table {
+    min-width: 0;
+  }
+
+  .weather-now {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: var(--space-3);
+  }
+
+  .weather-day {
+    grid-template-columns: 1fr auto;
+  }
+
+  .wd-cond {
+    grid-column: 1 / -1;
+  }
+
+  .wd-rain {
+    grid-column: 1 / -1;
+  }
+
+  .summary-options {
+    padding-left: 0;
+    list-style: none;
+  }
+}
+
+@media print {
+  .offline-banner,
+  .plan-tools {
+    display: none !important;
+  }
+
+  .review-card,
+  .location-card,
+  .option-card {
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
 }
