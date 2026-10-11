@@ -1198,9 +1198,11 @@
       "<li" +
       (relevant ? "" : ' class="is-secondary"') +
       ">" +
+      // No per-row "relevant" pill: nearly every entry relates to some option,
+      // so a repeated pill would carry no signal. The ordering and the section
+      // note do that job instead.
       '<p class="scheme-cat">' +
       escapeHtml(s.category) +
-      (relevant ? ' <span class="pill">likely relevant to your plan</span>' : "") +
       "</p>" +
       "<strong>" +
       escapeHtml(s.title) +
@@ -1245,17 +1247,15 @@
 
     var contextNote = $("#schemes-context");
     if (contextNote) {
-      if (markedIds.length) {
-        contextNote.hidden = false;
-        contextNote.textContent =
-          "Grouped against the " +
-          markedIds.length +
-          (markedIds.length === 1 ? " option" : " options") +
-          " you marked interested in. Relevance to your plan is a pointer for the conversation at the office, not a statement about eligibility.";
-      } else {
-        contextNote.hidden = true;
-        contextNote.textContent = "";
-      }
+      contextNote.hidden = false;
+      contextNote.textContent =
+        (markedIds.length
+          ? "Grouped against the " +
+            markedIds.length +
+            (markedIds.length === 1 ? " option" : " options") +
+            " you marked interested in"
+          : "Grouped against the options you were shown") +
+        ". The grouping says which entries came up for those options, not whether you qualify for anything.";
     }
 
     list.innerHTML =
