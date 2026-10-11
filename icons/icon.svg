@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="My Land, My Plan">
+  <!-- The app mark: a green field with a single leaf. Flat shapes only, and
+       the same geometry as the PNGs written by tools/make-icons.py. -->
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="#3d5a3d" />
+  <path d="M256 88 C374 200 374 312 256 424 C138 312 138 200 256 88 Z" fill="#f7f5f0" />
+  <g stroke="#3d5a3d" stroke-linecap="round" fill="none">
+    <path d="M256 118 L256 402" stroke-width="7" />
+    <g stroke-width="5">
+      <path d="M256 172 L306.4 172" />
+      <path d="M256 172 L205.6 172" />
+      <path d="M256 222 L324.9 222" />
+      <path d="M256 222 L187.1 222" />
+      <path d="M256 272 L327.7 272" />
+      <path d="M256 272 L184.3 272" />
+      <path d="M256 322 L314.8 322" />
+      <path d="M256 322 L197.2 322" />
+    </g>
+  </g>
+</svg>

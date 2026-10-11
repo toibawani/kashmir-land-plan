@@ -129,21 +129,57 @@
     };
   }
 
-  function geocode(name) {
-    var url =
+  function geocodeUrl(name) {
+    return (
       GEO_URL +
       "?name=" +
       encodeURIComponent(name) +
-      "&count=10&language=en&format=json";
-    return fetchJson(url).then(function (data) {
-      var results = (data && data.results) || [];
-      var picked = pickPlace(results, name);
-      if (!picked) {
-        var err = new Error("No place called " + name + " was found.");
-        err.reason = "not_found";
-        throw err;
+      "&count=10&language=en&format=json&countryCode=IN"
+    );
+  }
+
+  function geocodeOnce(name) {
+    return fetchJson(geocodeUrl(name)).then(function (data) {
+      return (data && data.results) || [];
+    });
+  }
+
+  /**
+   * Resolve a place name to a town in J&K where possible. The first attempt
+   * uses the name as given, limited to India. If that misses J&K, a second
+   * attempt adds "Jammu and Kashmir" so common district names are not matched
+   * to a town of the same name elsewhere.
+   */
+  function geocode(name) {
+    var wanted = String(name || "").trim();
+    return geocodeOnce(wanted).then(function (results) {
+      var picked = pickPlace(results, wanted);
+      var alreadyQualified = /jammu|kashmir/i.test(wanted);
+      if (picked && picked.confidence === "district") {
+        picked.queryUsed = wanted;
+        return picked;
       }
-      return picked;
+      if (alreadyQualified) {
+        if (!picked) {
+          var err = new Error("No place called " + wanted + " was found.");
+          err.reason = "not_found";
+          throw err;
+        }
+        picked.queryUsed = wanted;
+        return picked;
+      }
+      var qualified = wanted + ", Jammu and Kashmir";
+      return geocodeOnce(qualified).then(function (extra) {
+        var second = pickPlace(extra, wanted);
+        var best = second && second.confidence === "district" ? second : picked || second;
+        if (!best) {
+          var missing = new Error("No place called " + wanted + " was found.");
+          missing.reason = "not_found";
+          throw missing;
+        }
+        best.queryUsed = second && second.confidence === "district" ? qualified : wanted;
+        return best;
+      });
     });
   }
 
@@ -215,6 +251,7 @@
         population: p.population || null,
       },
       confidence: picked.confidence,
+      queryUsed: picked.queryUsed || "",
       current: {
         time: current.time || "",
         temperature: current.temperature_2m,
@@ -238,6 +275,10 @@
    * Resolves with the normalised result, rejects with an Error carrying a
    * `reason` of "not_found" or "unreachable" where those can be told apart.
    */
+  function isOffline() {
+    return typeof navigator !== "undefined" && navigator.onLine === false;
+  }
+
   function get(districtName, force) {
     var key = String(districtName || "").trim().toLowerCase();
     if (!key) {
@@ -246,6 +287,13 @@
       return Promise.reject(empty);
     }
     if (!force && cache[key]) return Promise.resolve(cache[key]);
+    if (isOffline()) {
+      var offline = new Error(
+        "This device is offline. Weather is the only part of the app that needs the internet."
+      );
+      offline.reason = "offline";
+      return Promise.reject(offline);
+    }
 
     return geocode(districtName)
       .then(function (picked) {
@@ -278,6 +326,7 @@
     get: get,
     cached: cached,
     describeCode: describeCode,
+    isOffline: isOffline,
     attribution: "Weather data from Open-Meteo (CC BY 4.0), general for a town, not your plot.",
   };
 })();
