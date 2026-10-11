@@ -351,11 +351,78 @@
     return cache[String(districtName || "").trim().toLowerCase()] || null;
   }
 
+  /**
+   * One honest observation about the days ahead, or null when nothing stands
+   * out. This is the single place that decides what counts as notable, so the
+   * note on screen and the question the app suggests ask about the same thing
+   * instead of drifting apart.
+   *
+   * It reports a fact about a forecast for a town and stops there. It never
+   * says what to do, because a model grid cannot know a particular field.
+   * Order of notice: a cold night first, then heavy rain, then heat.
+   */
+  function timingHint(result) {
+    if (!result || !result.days || !result.days.length) return null;
+    var place = (result.place && result.place.name) || "the nearest town";
+    // Skip today, which is already half gone, and look a few days ahead.
+    var ahead = result.days.slice(1, 4);
+    if (!ahead.length) ahead = result.days.slice(0, 2);
+
+    function find(test) {
+      for (var i = 0; i < ahead.length; i++) {
+        if (test(ahead[i])) return ahead[i];
+      }
+      return null;
+    }
+
+    var cold = find(function (d) {
+      return d.min != null && d.min <= 2;
+    });
+    if (cold) {
+      return {
+        kind: "cold",
+        dayLabel: cold.label,
+        value: Math.round(cold.min),
+        unit: "\u00b0C",
+        placeName: place,
+      };
+    }
+
+    var wet = find(function (d) {
+      return d.rainChance != null && d.rainChance >= 60;
+    });
+    if (wet) {
+      return {
+        kind: "rain",
+        dayLabel: wet.label,
+        value: Math.round(wet.rainChance),
+        unit: "%",
+        placeName: place,
+      };
+    }
+
+    var hot = find(function (d) {
+      return d.max != null && d.max >= 35;
+    });
+    if (hot) {
+      return {
+        kind: "heat",
+        dayLabel: hot.label,
+        value: Math.round(hot.max),
+        unit: "\u00b0C",
+        placeName: place,
+      };
+    }
+
+    return null;
+  }
+
   window.MLMP_WEATHER = {
     get: get,
     cached: cached,
     describeCode: describeCode,
     isOffline: isOffline,
+    timingHint: timingHint,
     attribution: "Weather data from Open-Meteo (CC BY 4.0), general for a town, not your plot.",
   };
 })();
