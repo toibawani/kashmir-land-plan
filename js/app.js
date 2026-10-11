@@ -19,6 +19,9 @@
   var ACTIVITIES = window.MLMP_ACTIVITIES;
   var SCHEMES = window.MLMP_SCHEMES;
   var WEATHER = window.MLMP_WEATHER;
+  var QUESTIONS = window.MLMP_QUESTIONS;
+  var PLANS = window.MLMP_PLANS;
+  var SPEECH = window.MLMP_SPEECH;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -76,6 +79,11 @@
     weatherPlaceMode: "district",
     weatherCustomPlace: "",
     planReady: false,
+    /** The saved plan currently being edited, so saving again updates it. */
+    currentPlanId: null,
+    currentPlanName: "",
+    /** Held from beforeinstallprompt until the farmer asks to install. */
+    installPrompt: null,
   };
 
   // ------------------------------------------------------------- Helpers
@@ -127,6 +135,13 @@
 
   function showScreen(id, opts) {
     opts = opts || {};
+    // Moving to another screen stops anything being read out. Without this the
+    // voice carries on describing a page the farmer has already left.
+    var leaving = $(".screen-active");
+    if (leaving && leaving.id !== "screen-" + id && speechAvailable() && SPEECH.speaking()) {
+      SPEECH.stop();
+      setReadState(null, false);
+    }
     $$(".screen").forEach(function (s) {
       s.hidden = true;
       s.classList.remove("screen-active");
@@ -431,6 +446,10 @@
           planReady: !!state.planReady,
           weatherPlaceMode: state.weatherPlaceMode || "district",
           weatherCustomPlace: state.weatherCustomPlace || "",
+          // Which saved plan this draft belongs to, so saving again updates
+          // that plan instead of adding a duplicate.
+          currentPlanId: state.currentPlanId || null,
+          currentPlanName: state.currentPlanName || "",
         })
       );
       return true;
@@ -479,6 +498,8 @@
     state.planReady = !!parsed.planReady;
     state.weatherPlaceMode = parsed.weatherPlaceMode === "custom" ? "custom" : "district";
     state.weatherCustomPlace = parsed.weatherCustomPlace || "";
+    state.currentPlanId = parsed.currentPlanId || null;
+    state.currentPlanName = parsed.currentPlanName || "";
     return true;
   }
 
@@ -502,6 +523,10 @@
     state.weatherPlaceMode = "district";
     state.weatherCustomPlace = "";
     state.data = blankData();
+    // Starting over abandons the working copy but leaves saved plans alone, so
+    // nothing the farmer deliberately saved disappears with it.
+    state.currentPlanId = null;
+    state.currentPlanName = "";
     state.weather = { district: "", query: "", result: null, error: null, status: "idle" };
     var form = $("#land-form");
     if (form) form.reset();
@@ -983,6 +1008,23 @@
     var legend = $("#results-provenance");
     if (legend) legend.innerHTML = provenanceLegend({});
 
+    var nameTag = $("#results-plan-name");
+    if (nameTag) {
+      if (state.currentPlanId && state.currentPlanName) {
+        nameTag.hidden = false;
+        nameTag.textContent = 'Saved as "' + state.currentPlanName + '". Saving again updates that plan.';
+      } else {
+        nameTag.hidden = true;
+        nameTag.textContent = "";
+      }
+    }
+
+    // These three follow the shortlist, so they rebuild whenever the marks or
+    // a loaded forecast change.
+    renderTimingNote();
+    renderMonthView();
+    renderQuestions();
+
     updateInterestedStatus();
   }
 
@@ -1459,6 +1501,8 @@
         })
         .join("") +
       "</ul>" +
+      monthSummaryHtml() +
+      questionsSummaryHtml() +
       "<h3>Who to contact next</h3>" +
       "<ul>" +
       "<li>Your Kisan Khidmat Ghar or district agriculture office</li>" +
@@ -1843,6 +1887,33 @@
     );
     lines.push("");
 
+    var monthIndexNow = new Date().getMonth();
+    var monthOptions = chosenOptions();
+    if (monthOptions.length) {
+      lines.push(ACTIVITIES.MONTHS[monthIndexNow] + " IN THE OPTIONS YOU PICKED");
+      lines.push("----------------------------------------");
+      monthOptions.forEach(function (o) {
+        var cell = o.activity.calendar[monthIndexNow];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        lines.push(o.activity.title + ": " + phase.label + ", " + cell.t);
+      });
+      lines.push("General guidance only. Sowing, care and harvest move with elevation,");
+      lines.push("variety and the year.");
+      lines.push("");
+    }
+
+    var planQuestions = currentQuestions();
+    if (planQuestions.length) {
+      lines.push("QUESTIONS TO ASK AT THE OFFICE (illustrative, from your answers)");
+      lines.push("------------------------------------------------------------");
+      planQuestions.forEach(function (q, i) {
+        lines.push(i + 1 + ". " + q.text);
+      });
+      lines.push("");
+      lines.push("These are questions, not answers. No officer has seen or approved them.");
+      lines.push("");
+    }
+
     lines.push("YOUR NEXT STEPS");
     lines.push("---------------");
     var checklist = state.checklist && state.checklist.length
@@ -1955,6 +2026,11 @@
       text = buildPlanText();
     }
 
+    triggerDownload(text, filename, type);
+    setStatus("copy-status", "Downloaded " + filename + ".");
+  }
+
+  function triggerDownload(text, filename, type) {
     var blob = new Blob([text], { type: type });
     var url = URL.createObjectURL(blob);
     var link = document.createElement("a");
@@ -1966,7 +2042,848 @@
     setTimeout(function () {
       URL.revokeObjectURL(url);
     }, 1000);
-    setStatus("copy-status", "Downloaded " + filename + ".");
+  }
+
+  function downloadVisitCard() {
+    var date = new Date().toISOString().slice(0, 10);
+    var filename = "my-land-my-plan-office-card-" + date + ".txt";
+    triggerDownload(buildVisitCardText(), filename, "text/plain;charset=utf-8");
+    setStatus("visit-status", "Downloaded " + filename + ". Print the page instead if you want it on paper.");
+  }
+
+  // ------------------------------------- Questions, the month, and reading
+
+  /**
+   * The options to carry forward: the ones marked, or everything shown when
+   * nothing is marked yet. Everything downstream uses this, so the questions,
+   * the month view and the office card all talk about the same shortlist.
+   */
+  function chosenOptions() {
+    if (!state.options.length) return [];
+    var marked = state.options.filter(function (o) {
+      return !!state.interested[o.activity.id];
+    });
+    return marked.length ? marked : state.options.slice();
+  }
+
+  function markedCount() {
+    return Object.keys(state.interested).filter(function (k) {
+      return state.interested[k];
+    }).length;
+  }
+
+  function questionsAvailable() {
+    return !!(QUESTIONS && QUESTIONS.forPlan);
+  }
+
+  function currentQuestions() {
+    if (!questionsAvailable() || !state.options.length) return [];
+    var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
+    return QUESTIONS.forPlan(state.data, chosenOptions(), {
+      zone: REGIONS.zoneFor(state.data.district),
+      timingHint: hint,
+      max: 7,
+    });
+  }
+
+  /**
+   * A forecast fact, the reason it is only a fact about a town, and the advice
+   * to ask rather than act. Deliberately no instruction, because a model grid
+   * cannot know a field.
+   */
+  function timingNoteText(hint) {
+    if (!hint) return "";
+    var lead;
+    if (hint.kind === "rain") {
+      lead =
+        "The forecast for " + hint.placeName + " puts the chance of rain at about " +
+        hint.value + "% around " + hint.dayLabel + ".";
+    } else if (hint.kind === "cold") {
+      lead =
+        "Night temperatures near " + hint.placeName + " are forecast close to " +
+        hint.value + hint.unit + " around " + hint.dayLabel + ".";
+    } else {
+      lead =
+        "Daytime temperatures near " + hint.placeName + " are forecast close to " +
+        hint.value + hint.unit + " around " + hint.dayLabel + ".";
+    }
+    return (
+      lead +
+      " This is a forecast for a town, not for your field, and it changes. Worth asking the officer whether it affects the timing you had in mind."
+    );
+  }
+
+  function renderTimingNote() {
+    var el = $("#timing-note");
+    if (!el) return;
+    var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
+    var text = timingNoteText(hint);
+    if (!text) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML =
+      "<h2>Something in the forecast</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-weather">Live weather</span></p>' +
+      "<p>" +
+      escapeHtml(text) +
+      "</p>" +
+      '<p class="option-note">Shown because a forecast was loaded for this district. It is one more thing to raise at the office, not a plan.</p>';
+  }
+
+  /** Which month each option is usually at, using the calendar already shown. */
+  function renderMonthView() {
+    var el = $("#month-view");
+    if (!el) return;
+    var options = chosenOptions();
+    if (!options.length) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    var monthIndex = new Date().getMonth();
+    var monthName = ACTIVITIES.MONTHS[monthIndex];
+    var rows = options
+      .map(function (o) {
+        var cell = o.activity.calendar[monthIndex];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        return (
+          '<li class="month-row">' +
+          '<span class="month-option">' +
+          escapeHtml(o.activity.title) +
+          "</span>" +
+          '<span class="month-phase phase-' +
+          cell.p +
+          '">' +
+          escapeHtml(phase.label) +
+          ": " +
+          escapeHtml(cell.t) +
+          "</span></li>"
+        );
+      })
+      .join("");
+    el.hidden = false;
+    el.innerHTML =
+      "<h2>" +
+      escapeHtml(monthName) +
+      " in the options you picked</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      '<ul class="month-list">' +
+      rows +
+      "</ul>" +
+      '<p class="option-note">Taken from the typical year shown for each option. Sowing, care and harvest move with elevation, variety and the year, so read this as what the month usually means for that option rather than as something to do now.</p>';
+  }
+
+  /** The month view again, in summary form, because the summary is what prints. */
+  function monthSummaryHtml() {
+    var options = chosenOptions();
+    if (!options.length) return "";
+    var monthIndex = new Date().getMonth();
+    var rows = options
+      .map(function (o) {
+        var cell = o.activity.calendar[monthIndex];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        return (
+          "<li><strong>" +
+          escapeHtml(o.activity.title) +
+          ":</strong> " +
+          escapeHtml(phase.label + ", " + cell.t) +
+          "</li>"
+        );
+      })
+      .join("");
+    return (
+      "<h3>" +
+      escapeHtml(ACTIVITIES.MONTHS[monthIndex]) +
+      " in the options you picked</h3>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      "<ul>" +
+      rows +
+      "</ul>" +
+      '<p class="summary-note">From the typical year recorded for each option. General guidance only: sowing, care and harvest move with elevation, variety and the year.</p>'
+    );
+  }
+
+  function questionsSummaryHtml() {
+    var questions = currentQuestions();
+    if (!questions.length) return "";
+    return (
+      "<h3>Questions to ask at the office</h3>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      '<p class="summary-note">Written from your answers and the options you marked. They are questions, not answers, and no officer has seen them.</p>' +
+      questionsListHtml(questions, { hideAbout: true })
+    );
+  }
+
+  function questionsListHtml(questions, opts) {
+    opts = opts || {};
+    if (!questions.length) return "";
+    return (
+      '<ol class="question-list">' +
+      questions
+        .map(function (q) {
+          return (
+            '<li class="question-item">' +
+            '<span class="question-text">' +
+            escapeHtml(q.text) +
+            "</span>" +
+            (q.about && !opts.hideAbout
+              ? '<span class="question-about">About: ' + escapeHtml(q.about) + "</span>"
+              : "") +
+            "</li>"
+          );
+        })
+        .join("") +
+      "</ol>"
+    );
+  }
+
+  function renderQuestions() {
+    var el = $("#questions-block");
+    if (!el) return;
+    var questions = currentQuestions();
+    if (!questions.length) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML =
+      "<h2>Questions to ask at the office</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      "<p>Written from what you entered and from the options you marked. They are questions, not answers, and no officer has seen them.</p>" +
+      questionsListHtml(questions) +
+      '<p class="option-note">Take these to your Kisan Khidmat Ghar or district agriculture office, along with any soil test report you have. The office visit card collects them onto one page.</p>';
+  }
+
+  // ------------------------------------------------------------ Reading out
+
+  var READ_BUTTONS = { "btn-read-plan": "Read the plan aloud", "btn-visit-read": "Read it aloud" };
+
+  function speechAvailable() {
+    return !!(SPEECH && SPEECH.supported && SPEECH.supported());
+  }
+
+  function setReadState(activeId, on) {
+    Object.keys(READ_BUTTONS).forEach(function (id) {
+      var b = $("#" + id);
+      if (!b) return;
+      var active = on && id === activeId;
+      b.setAttribute("aria-pressed", active ? "true" : "false");
+      b.textContent = active ? "Stop reading" : READ_BUTTONS[id];
+    });
+  }
+
+  /**
+   * A version meant for the ear rather than the eye. The downloaded text holds
+   * portal addresses and section rules that sound like noise when read out, so
+   * this keeps the shape of the plan and drops anything that is only useful on
+   * paper.
+   */
+  function buildSpokenText() {
+    var d = state.data;
+    var lines = [];
+    lines.push("My Land, My Plan. Your plan summary for " + (d.district || "your district") + ".");
+    lines.push("");
+    lines.push(currentReview().text);
+    lines.push("");
+    lines.push(
+      "You entered " + (d.size || "a plot") + " " + (d.unit || "") + ", " + labelLandUse(d.landUse) +
+        ", with " + labelWater(d.water) + " water, " + labelTerrain(d.terrain) + " ground, and " +
+        labelConstraint(d.constraint) + " as the main thing holding you back."
+    );
+    lines.push("");
+
+    var options = chosenOptions();
+    if (options.length) {
+      lines.push(
+        markedCount()
+          ? "You marked " + markedCount() + " of the options to follow up."
+          : "No options were marked, so these are all the ones shown."
+      );
+      options.forEach(function (o, i) {
+        lines.push(
+          "Option " + (i + 1) + ": " + o.activity.title + ". " + o.activity.why
+        );
+      });
+      lines.push("");
+    }
+
+    var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
+    if (hint) {
+      lines.push(timingNoteText(hint));
+      lines.push("");
+    }
+
+    var monthIndex = new Date().getMonth();
+    if (options.length) {
+      lines.push("In " + ACTIVITIES.MONTHS[monthIndex] + ", the typical year says:");
+      options.forEach(function (o) {
+        var cell = o.activity.calendar[monthIndex];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        lines.push(o.activity.title + ": " + phase.label + ", " + cell.t + ".");
+      });
+      lines.push("That is general guidance only, and it moves with elevation and the year.");
+      lines.push("");
+    }
+
+    var questions = currentQuestions();
+    if (questions.length) {
+      lines.push("Questions to ask at the office.");
+      questions.forEach(function (q, i) {
+        lines.push("Question " + (i + 1) + ". " + q.text);
+      });
+      lines.push("");
+    }
+
+    lines.push("Next steps.");
+    var checklist = state.checklist && state.checklist.length ? state.checklist : [];
+    if (checklist.length) {
+      checklist.forEach(function (item) {
+        lines.push((item.checked ? "Done: " : "To do: ") + item.text);
+      });
+    } else {
+      getChecklistItems().forEach(function (text) {
+        lines.push(text);
+      });
+    }
+    lines.push("");
+    lines.push(ACTIVITIES.confirmationLine);
+    lines.push("This is an illustrative prototype, not an official service.");
+    return lines.join("\n\n");
+  }
+
+  function toggleRead(id, statusId, text) {
+    if (!speechAvailable()) {
+      setStatus(statusId || "copy-status", "This browser does not offer a reading voice. The text stays on screen.");
+      return;
+    }
+    if (SPEECH.speaking()) {
+      SPEECH.stop();
+      setReadState(id, false);
+      return;
+    }
+    if (!text) {
+      setStatus(statusId || "copy-status", "There is nothing to read yet.");
+      return;
+    }
+    setReadState(id, true);
+    SPEECH.speak(text, {
+      onState: function (s) {
+        if (s === "done" || s === "stopped") setReadState(id, false);
+        if (s === "unavailable") {
+          setReadState(id, false);
+          setStatus(statusId || "copy-status", "This device could not read it out. The text is still on screen and can be printed.");
+        }
+      },
+    });
+  }
+
+  // -------------------------------------------------------- Office visit card
+
+  function formatVisitDate() {
+    return new Date().toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  function visitOptions() {
+    return chosenOptions().slice(0, 3);
+  }
+
+  function buildVisitCard() {
+    var d = state.data;
+    var options = visitOptions();
+    var questions = currentQuestions();
+
+    var answerRows = [
+      ["District", d.district || "not given"],
+      ["Village or locality", d.village || "not given"],
+      ["Approximate size", (d.size || "not given") + " " + (d.unit || "")],
+      ["Currently", labelLandUse(d.landUse)],
+      ["Water access", labelWater(d.water)],
+      ["Terrain", labelTerrain(d.terrain)],
+      ["Soil test", labelSoil(d.soil)],
+      ["Main constraint", labelConstraint(d.constraint)],
+    ];
+
+    var optionsHtml = options.length
+      ? "<ol class=\"visit-options\">" +
+        options
+          .map(function (o) {
+            return (
+              "<li>" +
+              escapeHtml(o.activity.title) +
+              (state.interested[o.activity.id] ? ' <span class="visit-flag">marked to follow up</span>' : "") +
+              "</li>"
+            );
+          })
+          .join("") +
+        "</ol>"
+      : "<p>No options were marked or shown, so there is nothing listed here.</p>";
+
+    var supportHtml = (function () {
+      var ids = options.length
+        ? options.map(function (o) {
+            return o.activity.id;
+          })
+        : state.options.map(function (o) {
+            return o.activity.id;
+          });
+      if (!ids.length) return "";
+      var entries = SCHEMES.relevantTo(ids).filter(function (e) {
+        return e.relevant;
+      });
+      if (!entries.length) return "";
+      return (
+        "<ul class=\"visit-support\">" +
+        entries
+          .slice(0, 5)
+          .map(function (e) {
+            return "<li>" + escapeHtml(e.scheme.category) + ": " + escapeHtml(e.scheme.title) + "</li>";
+          })
+          .join("") +
+        "</ul>" +
+        '<p class="visit-note">Ask which of these applies to a plot like mine, and what to bring. The app lists no amounts, deadlines or eligibility rules because those change.</p>'
+      );
+    })();
+
+    var lines = "";
+    for (var i = 0; i < 5; i++) lines += '<div class="visit-line"></div>';
+
+    return (
+      '<div class="visit-head">' +
+      "<h2>My Land, My Plan: office visit card</h2>" +
+      '<p class="visit-date">Prepared ' + escapeHtml(formatVisitDate()) +
+      (state.isDemo ? " from the sample journey" : "") +
+      ".</p>" +
+      '<p class="visit-review"><strong>' +
+      (currentReview().status === "reviewed" ? "Reviewed" : "Not yet reviewed") +
+      ":</strong> " +
+      escapeHtml(currentReview().text) +
+      "</p>" +
+      "</div>" +
+      '<div class="visit-section">' +
+      "<h3>What I entered</h3>" +
+      '<dl class="visit-answers">' +
+      answerRows
+        .map(function (row) {
+          return "<dt>" + escapeHtml(row[0]) + "</dt><dd>" + escapeHtml(row[1]) + "</dd>";
+        })
+        .join("") +
+      "</dl>" +
+      "</div>" +
+      '<div class="visit-section break-avoid">' +
+      "<h3>Options I want to discuss</h3>" +
+      optionsHtml +
+      '<p class="visit-note">These are options to discuss, not recommendations. Nothing about them has been checked against my plot.</p>' +
+      "</div>" +
+      '<div class="visit-section break-avoid">' +
+      "<h3>Questions I would like to ask</h3>" +
+      (questions.length
+        ? questionsListHtml(questions, { hideAbout: true })
+        : "<p>No questions were generated.</p>") +
+      "</div>" +
+      (supportHtml
+        ? '<div class="visit-section break-avoid"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
+        : "") +
+      '<div class="visit-section break-avoid">' +
+      "<h3>Notes from the visit</h3>" +
+      '<div class="visit-lines">' +
+      lines +
+      "</div>" +
+      "</div>" +
+      '<p class="visit-foot">' +
+      escapeHtml(ACTIVITIES.confirmationLine) +
+      " This card was made by the farmer using a prototype, not by any department. It is not an official document and it does not establish eligibility for anything." +
+      "</p>"
+    );
+  }
+
+  /** The same card as plain text, for downloading and for reading aloud. */
+  function buildVisitCardText() {
+    var d = state.data;
+    var options = visitOptions();
+    var questions = currentQuestions();
+    var lines = [];
+
+    lines.push("MY LAND, MY PLAN: OFFICE VISIT CARD");
+    lines.push("=".repeat(36));
+    lines.push("");
+    lines.push("Prepared " + formatVisitDate() + (state.isDemo ? " from the sample journey" : ""));
+    lines.push(currentReview().text);
+    lines.push("");
+    lines.push("WHAT I ENTERED");
+    lines.push("--------------");
+    lines.push("District: " + (d.district || "not given"));
+    lines.push("Village or locality: " + (d.village || "not given"));
+    lines.push("Approximate size: " + (d.size || "not given") + " " + (d.unit || ""));
+    lines.push("Currently: " + labelLandUse(d.landUse));
+    lines.push("Water access: " + labelWater(d.water));
+    lines.push("Terrain: " + labelTerrain(d.terrain));
+    lines.push("Soil test: " + labelSoil(d.soil));
+    lines.push("Main constraint: " + labelConstraint(d.constraint));
+    lines.push("");
+
+    lines.push("OPTIONS I WANT TO DISCUSS");
+    lines.push("------------------------");
+    if (options.length) {
+      options.forEach(function (o, i) {
+        lines.push(
+          i + 1 + ". " + o.activity.title +
+            (state.interested[o.activity.id] ? "   [marked to follow up]" : "")
+        );
+        lines.push("   An option to discuss, not a recommendation.");
+      });
+    } else {
+      lines.push("No options were marked or shown.");
+    }
+    lines.push("");
+
+    lines.push("QUESTIONS I WOULD LIKE TO ASK");
+    lines.push("-----------------------------");
+    if (questions.length) {
+      questions.forEach(function (q, i) {
+        lines.push(i + 1 + ". " + q.text);
+      });
+    } else {
+      lines.push("No questions were generated.");
+    }
+    lines.push("");
+
+    lines.push("NOTES FROM THE VISIT");
+    lines.push("--------------------");
+    lines.push("");
+    lines.push("");
+    lines.push("");
+    lines.push("");
+    lines.push("");
+    lines.push(ACTIVITIES.confirmationLine);
+    lines.push("Made by the farmer using a prototype. Not an official document.");
+    return lines.join("\n");
+  }
+
+  function renderVisitCard() {
+    var host = $("#visit-card");
+    if (host) host.innerHTML = buildVisitCard();
+  }
+
+  // ------------------------------------------------------------- My plans
+
+  function plansAvailable() {
+    return !!(PLANS && PLANS.list);
+  }
+
+  function planSnapshot() {
+    var zone = REGIONS.zoneFor(state.data.district);
+    return {
+      id: state.currentPlanId || undefined,
+      name: state.currentPlanName || "",
+      data: JSON.parse(JSON.stringify(state.data)),
+      interested: JSON.parse(JSON.stringify(state.interested)),
+      // A snapshot of the option ids shown, so a later change to the scoring
+      // cannot rewrite a plan someone already printed.
+      options: state.options.map(function (o) {
+        return { id: o.activity.id };
+      }),
+      zoneId: zone ? zone.id : null,
+      isDemo: state.isDemo,
+    };
+  }
+
+  function saveCurrentPlan() {
+    if (!plansAvailable()) {
+      setStatus("copy-status", "This browser blocked local storage, so plans cannot be saved.");
+      return null;
+    }
+    if (!state.planReady || !state.options.length) {
+      setStatus("copy-status", "Finish the plot details first, then this can be saved.");
+      return null;
+    }
+    var snapshot = planSnapshot();
+    if (!state.currentPlanId) {
+      var taken = PLANS.list().map(function (p) {
+        return p.name;
+      });
+      snapshot.name = PLANS.suggestName(chosenOptions(), taken);
+    }
+    var saved = PLANS.upsert(snapshot);
+    if (saved) {
+      state.currentPlanId = saved.id;
+      state.currentPlanName = saved.name;
+    }
+    return saved;
+  }
+
+  function planById(id) {
+    return PLANS.get(id);
+  }
+
+  function activityTitleFor(id) {
+    var a = ACTIVITIES.ALL[id];
+    return a ? a.title : id;
+  }
+
+  /** Titles of the options in a saved plan, marked ones first. */
+  function planOptionLines(plan) {
+    var ids = (plan.options || []).map(function (o) {
+      return o.id;
+    });
+    var marked = ids.filter(function (id) {
+      return plan.interested && plan.interested[id];
+    });
+    var others = ids.filter(function (id) {
+      return marked.indexOf(id) === -1;
+    });
+    return { marked: marked, others: others, ids: ids };
+  }
+
+  function planMonthLine(plan) {
+    var ids = planOptionLines(plan);
+    var leadId = (ids.marked.length ? ids.marked : ids.ids)[0];
+    var activity = leadId ? ACTIVITIES.ALL[leadId] : null;
+    if (!activity) return "not available";
+    var cell = activity.calendar[new Date().getMonth()];
+    var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+    return phase.label + ": " + cell.t;
+  }
+
+  function savedDate(iso) {
+    if (!iso) return "not recorded";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "not recorded";
+    try {
+      return d.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" });
+    } catch (_) {
+      return "not recorded";
+    }
+  }
+
+  function compareRows(plans) {
+    var rows = [
+      { label: "District and village", value: function (p) { return (p.data.district || "not given") + (p.data.village ? ", " + p.data.village : ""); } },
+      { label: "Plot size", value: function (p) { return (p.data.size || "not given") + " " + (p.data.unit || ""); } },
+      { label: "Currently", value: function (p) { return labelLandUse(p.data.landUse); } },
+      { label: "Water access", value: function (p) { return labelWater(p.data.water); } },
+      { label: "Terrain", value: function (p) { return labelTerrain(p.data.terrain); } },
+      { label: "Main constraint", value: function (p) { return labelConstraint(p.data.constraint); } },
+      { label: "Soil test", value: function (p) { return labelSoil(p.data.soil); } },
+      {
+        label: "Options to explore",
+        value: function (p) {
+          var ids = planOptionLines(p);
+          if (!ids.ids.length) return "none recorded";
+          return ids.ids
+            .map(function (id) {
+              return activityTitleFor(id) + (p.interested && p.interested[id] ? " (marked)" : "");
+            })
+            .join("; ");
+        },
+      },
+      { label: "Usually at this time of year", value: planMonthLine },
+      { label: "Saved on", value: function (p) { return savedDate(p.updatedAt || p.createdAt); } },
+    ];
+    return rows;
+  }
+
+  function renderPlansList() {
+    var host = $("#plans-list");
+    var empty = $("#plans-empty");
+    if (!host) return;
+
+    if (!plansAvailable()) {
+      host.innerHTML = "";
+      if (empty) {
+        empty.hidden = false;
+        empty.innerHTML =
+          "<h2>Plans cannot be saved here</h2><p>This browser is blocking local storage, so nothing can be kept between visits. The plan still works on this screen and can be printed or downloaded.</p>";
+      }
+      return;
+    }
+
+    var plans = PLANS.list();
+    if (!plans.length) {
+      host.innerHTML = "";
+      if (empty) {
+        empty.hidden = false;
+        empty.innerHTML =
+          "<h2>No saved plans yet</h2>" +
+          "<p>Finish a plan, then use Save this plan on the summary. Saving a second one lets you put them side by side here and decide which to take to the office.</p>";
+      }
+      return;
+    }
+
+    if (empty) {
+      empty.hidden = true;
+      empty.innerHTML = "";
+    }
+
+    host.innerHTML =
+      '<h2 class="plans-heading">' +
+      plans.length +
+      (plans.length === 1 ? " saved plan" : " saved plans") +
+      "</h2>" +
+      '<ul class="plans-cards">' +
+      plans
+        .map(function (p) {
+          var ids = planOptionLines(p);
+          var lead = (ids.marked.length ? ids.marked : ids.ids)[0];
+          return (
+            '<li class="plan-card' +
+            (p.chosen ? " is-chosen" : "") +
+            '">' +
+            '<h3>' +
+            escapeHtml(p.name) +
+            (p.chosen ? ' <span class="pill">taking this one to the office</span>' : "") +
+            "</h3>" +
+            '<p class="plan-meta">' +
+            escapeHtml(p.data.district || "district not given") +
+            " | " +
+            escapeHtml((p.data.size || "size not given") + " " + (p.data.unit || "")) +
+            " | saved " +
+            escapeHtml(savedDate(p.updatedAt || p.createdAt)) +
+            (p.isDemo ? " | sample " : "") +
+            "</p>" +
+            (lead
+              ? '<p class="plan-lead">Leads with ' + escapeHtml(activityTitleFor(lead)) + "</p>"
+              : "") +
+            '<div class="plan-actions">' +
+            '<button type="button" class="btn btn-secondary" data-plan-open="' +
+            escapeHtml(p.id) +
+            '">Open this plan</button>' +
+            '<button type="button" class="btn btn-primary" data-plan-choose="' +
+            escapeHtml(p.id) +
+            '" aria-pressed="' +
+            (p.chosen ? "true" : "false") +
+            '">' +
+            (p.chosen ? "Taking this one" : "Take this one to the office") +
+            "</button>" +
+            '<button type="button" class="btn btn-secondary" data-plan-rename="' +
+            escapeHtml(p.id) +
+            '">Rename</button>' +
+            '<button type="button" class="btn btn-quiet" data-plan-remove="' +
+            escapeHtml(p.id) +
+            '">Delete</button>' +
+            "</div></li>"
+          );
+        })
+        .join("") +
+      "</ul>";
+  }
+
+  function renderPlansCompare() {
+    var host = $("#plans-compare");
+    if (!host) return;
+    if (!plansAvailable()) {
+      host.hidden = true;
+      return;
+    }
+    var plans = PLANS.list().slice(0, 3);
+    if (plans.length < 2) {
+      host.hidden = true;
+      host.innerHTML = "";
+      return;
+    }
+
+    var rows = compareRows(plans);
+    var narrow = window.matchMedia("(max-width: 700px)").matches;
+
+    var head =
+      "<h2 class=\"plans-heading\">Side by side</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-user">Your answers</span></p>' +
+      '<p>Only your own answers and the options recorded with each plan. Nothing here is compared against any standard.</p>';
+
+    if (narrow) {
+      host.innerHTML =
+        head +
+        '<div class="compare-stacked">' +
+        plans
+          .map(function (p) {
+            return (
+              '<div class="stacked-option">' +
+              "<h3>" +
+              escapeHtml(p.name) +
+              (p.chosen ? ' <span class="pill">chosen</span>' : "") +
+              "</h3>" +
+              '<dl class="rating-list">' +
+              rows
+                .map(function (row) {
+                  return ratingRow(row.label, String(row.value(p)));
+                })
+                .join("") +
+              "</dl></div>"
+            );
+          })
+          .join("") +
+        "</div>";
+    } else {
+      host.innerHTML =
+        head +
+        '<div class="table-wrap">' +
+        '<table class="compare-table"><thead><tr><th scope="col">Field</th>' +
+        plans
+          .map(function (p) {
+            return "<th scope=\"col\">" + escapeHtml(p.name) + (p.chosen ? " (chosen)" : "") + "</th>";
+          })
+          .join("") +
+        "</tr></thead><tbody>" +
+        rows
+          .map(function (row) {
+            return (
+              '<tr><th scope="row">' +
+              escapeHtml(row.label) +
+              "</th>" +
+              plans
+                .map(function (p) {
+                  return "<td>" + escapeHtml(String(row.value(p))) + "</td>";
+                })
+                .join("") +
+              "</tr>"
+            );
+          })
+          .join("") +
+        "</tbody></table></div>";
+    }
+    host.hidden = false;
+  }
+
+  function renderPlans() {
+    renderPlansList();
+    renderPlansCompare();
+  }
+
+  /** Load a saved plan back into the working state so it can be edited. */
+  function openSavedPlan(id) {
+    var plan = planById(id);
+    if (!plan) return false;
+    state.data = Object.assign(blankData(), plan.data);
+    state.interested = Object.assign({}, plan.interested || {});
+    state.currentPlanId = plan.id;
+    state.currentPlanName = plan.name;
+    state.isDemo = !!plan.isDemo;
+    state.checklist = [];
+    state.weather = { district: "", query: "", result: null, error: null, status: "idle" };
+    fillFormFromState();
+    updateFormLocationContext();
+    computeOptions();
+    state.planReady = true;
+    // If the option ids recorded with the plan are no longer in the catalogue,
+    // the plan still opens; it just cannot mark anything that has gone.
+    var known = {};
+    ACTIVITIES.ids.forEach(function (x) {
+      known[x] = true;
+    });
+    Object.keys(state.interested).forEach(function (x) {
+      if (!known[x]) delete state.interested[x];
+    });
+    renderResults();
+    showScreen("results");
+    saveDraft();
+    return true;
   }
 
   // --------------------------------------------------------------- Events
@@ -2043,6 +2960,11 @@
       else card.classList.remove("is-interested");
     }
     updateInterestedStatus();
+    // The questions, the month view and the forecast note all follow the
+    // shortlist, so they have to be rebuilt when a mark changes.
+    renderTimingNote();
+    renderMonthView();
+    renderQuestions();
   }
 
   function confirmStartOver() {
@@ -2077,6 +2999,60 @@
     if (!banner) return;
     var offline = WEATHER.isOffline ? WEATHER.isOffline() : navigator.onLine === false;
     banner.hidden = !offline;
+  }
+
+  /**
+   * The add to home screen path. Chrome and Android offer a real install
+   * prompt and it is held here until it is asked for, because prompting on
+   * arrival is exactly the kind of nagging this app avoids. Where there is no
+   * prompt event, most often Safari, the written instruction stays visible
+   * instead of a dead button.
+   */
+  function initInstall() {
+    var button = $("#btn-install");
+    var hint = $("#install-hint");
+
+    function showHintOnly() {
+      if (button) button.hidden = true;
+      if (hint) hint.hidden = false;
+    }
+
+    // Already installed: say nothing about installing.
+    var standalone = false;
+    try {
+      standalone = window.matchMedia("(display-mode: standalone)").matches;
+    } catch (_) {}
+    if (standalone) {
+      if (button) button.hidden = true;
+      if (hint) hint.hidden = true;
+      return;
+    }
+
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      state.installPrompt = e;
+      if (button) button.hidden = false;
+      if (hint) hint.hidden = true;
+    });
+
+    if (button) {
+      button.addEventListener("click", function () {
+        var promptEvent = state.installPrompt;
+        state.installPrompt = null;
+        if (!promptEvent || typeof promptEvent.prompt !== "function") {
+          showHintOnly();
+          return;
+        }
+        promptEvent.prompt();
+        button.hidden = true;
+        if (hint) hint.hidden = false;
+      });
+    }
+
+    window.addEventListener("appinstalled", function () {
+      state.installPrompt = null;
+      if (button) button.hidden = true;
+    });
   }
 
   function registerServiceWorker() {
@@ -2233,6 +3209,106 @@
         showScreen("next");
       });
 
+    // ---- Office visit card and my plans
+
+    function openVisitCard() {
+      if (!state.planReady || !state.options.length) {
+        setStatus("copy-status", "Finish the plot details first, then the card can be made.");
+        return;
+      }
+      renderVisitCard();
+      showScreen("visit");
+    }
+
+    function openPlans() {
+      renderPlans();
+      showScreen("plans");
+    }
+
+    $("#btn-visit-card") && $("#btn-visit-card").addEventListener("click", openVisitCard);
+    $("#btn-visit-plans") && $("#btn-visit-plans").addEventListener("click", openPlans);
+    $("#btn-results-plans") && $("#btn-results-plans").addEventListener("click", openPlans);
+    $("#btn-plans-visit") && $("#btn-plans-visit").addEventListener("click", openVisitCard);
+    $("#btn-visit-back") &&
+      $("#btn-visit-back").addEventListener("click", function () {
+        renderSummary();
+        showScreen("summary");
+      });
+    $("#btn-plans-back") &&
+      $("#btn-plans-back").addEventListener("click", function () {
+        if (state.planReady && state.options.length) showScreen("results");
+        else showScreen("home");
+      });
+    $("#btn-visit-print") && $("#btn-visit-print").addEventListener("click", function () { window.print(); });
+    $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
+    $("#btn-visit-read") &&
+      $("#btn-visit-read").addEventListener("click", function () {
+        renderVisitCard();
+        toggleRead("btn-visit-read", "visit-status", buildVisitCardText());
+      });
+
+    $("#btn-read-plan") &&
+      $("#btn-read-plan").addEventListener("click", function () {
+        toggleRead("btn-read-plan", "copy-status", buildSpokenText());
+      });
+
+    $("#btn-save-named") &&
+      $("#btn-save-named").addEventListener("click", function () {
+        var saved = saveCurrentPlan();
+        if (saved) {
+          setStatus("copy-status", 'Saved as "' + saved.name + '" on this device. My plans shows it beside any others.');
+          var nameTag = $("#results-plan-name");
+          if (nameTag) {
+            nameTag.hidden = false;
+            nameTag.textContent = 'Saved as "' + saved.name + '". Saving again updates that plan.';
+          }
+        }
+      });
+
+    // One delegated listener covers every card in the saved list, including
+    // ones rendered after this runs.
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest) return;
+      var open = e.target.closest("[data-plan-open]");
+      if (open) {
+        openSavedPlan(open.getAttribute("data-plan-open"));
+        return;
+      }
+      var choose = e.target.closest("[data-plan-choose]");
+      if (choose) {
+        PLANS.choose(choose.getAttribute("data-plan-choose"));
+        renderPlans();
+        setStatus("plans-status", "Noted. The office visit card will carry the plan you marked.");
+        return;
+      }
+      var rename = e.target.closest("[data-plan-rename]");
+      if (rename) {
+        var plan = PLANS.get(rename.getAttribute("data-plan-rename"));
+        if (!plan) return;
+        var next = window.prompt("Name for this plan", plan.name);
+        if (next === null) return;
+        PLANS.rename(plan.id, next);
+        if (state.currentPlanId === plan.id) state.currentPlanName = PLANS.get(plan.id).name;
+        renderPlans();
+        setStatus("plans-status", "Renamed.");
+        return;
+      }
+      var remove = e.target.closest("[data-plan-remove]");
+      if (remove) {
+        var target = PLANS.get(remove.getAttribute("data-plan-remove"));
+        if (!target) return;
+        var ok = window.confirm('Delete "' + target.name + '"? This removes it from this device only.');
+        if (!ok) return;
+        PLANS.remove(target.id);
+        if (state.currentPlanId === target.id) {
+          state.currentPlanId = null;
+          state.currentPlanName = "";
+        }
+        renderPlans();
+        setStatus("plans-status", "Deleted.");
+      }
+    });
+
     var districtSelectLive = $("#district");
     if (districtSelectLive) {
       districtSelectLive.addEventListener("change", function () {
@@ -2339,6 +3415,10 @@
         if (target === "home") goHome();
         else if (target === "plan") startPlan();
         else if (target === "about") showScreen("about");
+        else if (target === "plans") {
+          renderPlans();
+          showScreen("plans");
+        }
         else if (target === "weather") {
           var select = $("#weather-district");
           if (select && state.data.district) select.value = state.data.district;
@@ -2373,7 +3453,11 @@
     var restore = function () { return loadDraft(); };
 
     if (h === "about") showScreen("about", { focus: focus });
-    else if (h === "weather") {
+    else if (h === "plans") {
+      // Saved plans stand on their own, so this deep link never needs a draft.
+      renderPlans();
+      showScreen("plans", { focus: focus });
+    } else if (h === "weather") {
       showScreen("weather", { focus: focus });
       renderWeather();
       if (state.weather.status === "idle" && state.data.district) {
@@ -2397,7 +3481,17 @@
       if (!state.options.length) computeOptions();
       renderSummary();
       showScreen("summary", { focus: focus });
-    } else if (h === "summary" || h === "results" || h === "compare" || h === "next") {
+    } else if (h === "visit" && (state.options.length || restore())) {
+      if (!state.options.length) computeOptions();
+      renderVisitCard();
+      showScreen("visit", { focus: focus });
+    } else if (
+      h === "summary" ||
+      h === "results" ||
+      h === "compare" ||
+      h === "next" ||
+      h === "visit"
+    ) {
       // A deep link with nothing saved behind it falls back home rather than
       // showing an empty screen.
       showScreen("home", { focus: focus });
@@ -2426,6 +3520,7 @@
     bind();
     setAboutReviewStatus();
     updateOfflineBanner();
+    initInstall();
     registerServiceWorker();
     window.addEventListener("online", updateOfflineBanner);
     window.addEventListener("offline", function () {
