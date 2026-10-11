@@ -1157,19 +1157,94 @@
       return state.interested[k];
     });
 
+    // The printed and downloaded plans should carry the same detail, otherwise
+    // someone who prints the page gets a much thinner plan than someone who
+    // downloads it. This block mirrors buildPlanText().
+    var zone = REGIONS.zoneFor(d.district);
+    var regionHtml = "";
+    if (zone) {
+      var districtInfo = REGIONS.district(d.district) || {};
+      regionHtml =
+        "<h3>Regional background</h3>" +
+        '<p class="section-kind"><span class="kind-tag kind-regional">Regional background</span></p>' +
+        "<p><strong>" +
+        escapeHtml(zone.label) +
+        ":</strong> " +
+        escapeHtml(zone.summary) +
+        "</p>" +
+        "<ul>" +
+        "<li>Approximate elevation band: " +
+        escapeHtml(zone.elevationBand) +
+        "</li>" +
+        "</ul>" +
+        (districtInfo.note
+          ? "<p><strong>This district:</strong> " + escapeHtml(districtInfo.note) + "</p>"
+          : "") +
+        (districtInfo.spans
+          ? '<p class="summary-note">' + escapeHtml(districtInfo.spans) + "</p>"
+          : "") +
+        '<p class="summary-note">General information about the area, never about your plot. Districts span more than one zone, and soil and elevation change within a single village.</p>';
+    }
+
     var optsHtml = state.options
-      .map(function (option) {
+      .map(function (option, i) {
         var a = option.activity;
         var isInterested = !!state.interested[a.id];
+        var zoneNote = a.zoneNotes && option.zone ? a.zoneNotes[option.zone.id] : "";
+        var districtNote = a.districtNotes ? a.districtNotes[d.district] : "";
+        var list = function (items) {
+          return (
+            "<ul>" +
+            items
+              .map(function (r) {
+                return "<li>" + escapeHtml(r) + "</li>";
+              })
+              .join("") +
+            "</ul>"
+          );
+        };
         return (
-          '<li class="' +
-          (isInterested ? "is-interested" : "") +
-          '"><strong>' +
+          '<li class="summary-option' +
+          (isInterested ? " is-interested" : "") +
+          '"><h4>' +
+          (i + 1) +
+          ". " +
           escapeHtml(a.title) +
-          "</strong>" +
-          (isInterested ? ' <span class="pill">interested</span>' : "") +
-          ": " +
-          escapeHtml(a.why)
+          "</h4>" +
+          (isInterested
+            ? '<p class="summary-marked">You marked this as interested.</p>'
+            : "") +
+          '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+          "<p><strong>Why it may be worth exploring.</strong> " +
+          escapeHtml(a.why) +
+          "</p>" +
+          (zoneNote
+            ? "<p><strong>Why this might fit your area.</strong> " + escapeHtml(zoneNote) + "</p>"
+            : "") +
+          (districtNote ? "<p>" + escapeHtml(districtNote) + "</p>" : "") +
+          '<ul class="summary-ratings">' +
+          '<li>Water need: ' + escapeHtml(a.waterNeed) + "</li>" +
+          "<li>Effort: " + escapeHtml(a.effort) + "</li>" +
+          "<li>Relative cost: " + escapeHtml(a.cost) + "</li>" +
+          "<li>First returns: " + escapeHtml(a.firstReturns) + "</li>" +
+          "<li>Return potential: " + escapeHtml(a.returnPotential) + "</li>" +
+          "</ul>" +
+          '<p class="summary-note">These five ratings are ordered judgements, not measurements, and they are not a forecast of money or yield.</p>' +
+          (option.reasons.length
+            ? "<p><strong>Why this came up.</strong></p>" + list(option.reasons.slice(0, 4))
+            : "") +
+          "<p><strong>Basic requirements.</strong></p>" +
+          list(a.requirements) +
+          "<p><strong>Main risks or questions to verify.</strong></p>" +
+          list(a.risks) +
+          "<p><strong>What information is missing.</strong> " +
+          escapeHtml(a.missing) +
+          "</p>" +
+          "<p><strong>Water, roughly.</strong> " +
+          escapeHtml(a.waterNote) +
+          "</p>" +
+          '<p class="summary-note">Not a water requirement estimate. No litres, no schedules.</p>' +
+          "</li>"
         );
       })
       .join("");
@@ -1214,9 +1289,12 @@
       "<li>Soil test: " + escapeHtml(labelSoil(d.soil)) + "</li>" +
       "<li>Main constraint: " + escapeHtml(labelConstraint(d.constraint)) + "</li>" +
       "</ul>" +
+      regionHtml +
       "<h3>Activities to explore</h3>" +
       '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
-      "<ol>" + optsHtml + "</ol>" +
+      "<ol class=\"summary-options\">" +
+      optsHtml +
+      "</ol>" +
       (interestedIds.length
         ? "<p><strong>You marked " +
           interestedIds.length +
@@ -1508,6 +1586,11 @@
       lines.push(zone.summary);
       lines.push("Approximate elevation band: " + zone.elevationBand);
       lines.push("");
+      lines.push(
+        "General information about the area, never about your plot. Districts span"
+      );
+      lines.push("more than one zone, and soil and elevation change within a village.");
+      lines.push("");
 
       var info = REGIONS.district(d.district) || {};
       if (info.note) {
@@ -1540,6 +1623,10 @@
           ", return potential " +
           a.returnPotential
       );
+      lines.push(
+        "   These five ratings are ordered judgements, not measurements, and they"
+      );
+      lines.push("   are not a forecast of money or yield.");
       if (option.reasons.length) {
         lines.push("   Why this came up (sample logic):");
         option.reasons.slice(0, 4).forEach(function (r) {

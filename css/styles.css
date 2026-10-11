@@ -1647,3 +1647,53 @@ select:focus {
     border: 1px solid #bbb;
   }
 }
+
+/* The printed summary now carries the same detail as the downloaded plan. */
+.summary-card h4 {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: var(--space-5) 0 var(--space-2);
+}
+
+.summary-options {
+  list-style: decimal;
+  padding-left: 1.2em;
+}
+
+.summary-option {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary-options > li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.summary-card p.summary-marked {
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.summary-card ul.summary-ratings {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.summary-card ul.summary-ratings li {
+  padding: var(--space-1) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.summary-card ul.summary-ratings li:last-child {
+  border-bottom: none;
+}
+
+.summary-card p.summary-note {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 0;
+}
