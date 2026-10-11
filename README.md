@@ -16,8 +16,12 @@ My Land, My Plan helps a farmer turn basic details about an underused plot into 
 - Gives a practical next-step checklist, and lists the official portals to check
 - Shows general weather for a nearby town, from Open-Meteo
 - Saves a draft on the device and lets you print, save as PDF, download or copy the plan
+- Keeps working with no connection once it has been opened, and can be added to a home screen
+- States plainly whether the suggestions have been checked by an agriculture officer
 
 No account is required. No personal, financial, or land-identification data is sent to any server. Two honest caveats: the typefaces load from Google Fonts, and the weather screen sends the district you select to Open-Meteo. Everything else stays on the device.
+
+The whole plan works offline after the first visit. Weather is the one part that needs a connection, and the app says so instead of showing an old reading as if it were current.
 
 ## The four kinds of information in this app
 
@@ -28,7 +32,17 @@ They are labelled in the interface, and the same labels are used in the plan you
 | **Your answers** | District, size, water, terrain, main constraint | What you type |
 | **Illustrative** | The options, the five ratings, the reasons for each suggestion, the calendars, the checklist | Hand-written rules in this repo |
 | **Regional background** | District grouping, elevation bands, crop patterns | The published sources listed below |
-| **Live weather** | Current conditions and a short forecast | Open-Meteo, fetched when you ask |
+| **Live weather** | Current conditions and a short forecast | Open-Meteo, fetched when you ask. Never stored |
+
+## Officer review: what is checked and what is not
+
+**Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary and the About page, in these words: "These suggestions have not yet been checked by an agriculture officer."
+
+The catalogue lives in `js/catalogue.js`, kept apart from the scoring and rendering code so an officer can read the data without reading any JavaScript logic. To record a review, either fill in `CATALOGUE_REVIEW` at the top of that file for the whole list, or fill in `reviewStatus`, `reviewedBy`, `designation` and `reviewedOn` on a single entry if only that one has been checked. Leave the fields empty rather than guessing a name or a date.
+
+Once a review is recorded, every screen changes to say "Reviewed by [name], [designation] on [date]. Still confirm locally before acting." A partly reviewed list says so too. The confirmation line that every option and every scheme entry already carries does not go away when a review is added: a reviewed catalogue still has to be checked locally, because the officer reviewed the catalogue, not your plot.
+
+If only some of the suggestions on screen have been checked, the app says that instead of rounding up.
 
 ## Important disclaimer
 
@@ -58,6 +72,8 @@ python3 -m http.server 8080
 
 Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
 
+Opened from disk (`file://`) the app also skips installing its service worker, because browsers only allow one over `http`. Served from a local server or a real host, it precaches the plan on the first visit and works offline from then on. To see that, load it once, stop the server, and reload.
+
 ## Screens
 
 1. Home
@@ -72,13 +88,18 @@ Opening the file directly from disk works. The weather screen will show its "not
 ## Code structure
 
 ```
-index.html        markup for every screen
-css/styles.css    design tokens plus component styles
-js/regions.js     districts, coarse zone grouping, elevation bands
-js/activities.js  the activity catalogue, including calendars
-js/schemes.js     official portal entries and their relevance
-js/weather.js     Open-Meteo geocoding and forecast
-js/app.js         state, validation, sample scoring, rendering
+index.html            markup for every screen
+manifest.webmanifest  name, icons and colours for a home screen install
+sw.js                 service worker: precaches the plan, never caches weather
+css/styles.css        design tokens plus component styles
+js/regions.js         districts, coarse zone grouping, elevation bands
+js/catalogue.js       the activity data an officer reviews
+js/activities.js      helpers that read the catalogue and report its review state
+js/schemes.js         official portal entries and their relevance
+js/weather.js         Open-Meteo geocoding and forecast
+js/app.js             state, validation, sample scoring, rendering
+icons/                the app mark, as SVG and as PNG
+tools/make-icons.py   draws the PNG icons, with no image library involved
 ```
 
 `css/styles.css` starts with the design tokens: a soil, leaf and daylight palette, one accent colour (deep olive), a 4/8px spacing scale, a small radius scale, and a type pairing of Source Sans 3 for text with Source Serif 4 for headings.
@@ -86,7 +107,8 @@ js/app.js         state, validation, sample scoring, rendering
 The JavaScript is plain browser scripts in one namespace, no framework and no bundler, so the page still works when opened straight from disk. The parts worth knowing:
 
 - `js/regions.js` groups the 20 districts into three coarse zones and records the source for each statement.
-- `js/activities.js` holds the catalogue. Each entry carries a zone note, a twelve month calendar, five approximate ratings, and a short water note.
+- `js/catalogue.js` holds the activity data. Each entry carries a zone note, a twelve month calendar, five approximate ratings, a short water note, and the review fields an officer fills in. `js/activities.js` only reads it and works out the review wording, which keeps the data readable on its own.
+- `sw.js` precaches the plan for offline use. It serves the app's own files network first, so an edited file appears on the next load rather than one load later, and it deliberately never caches a weather response.
 - `computeOptions()` in `js/app.js` scores the catalogue against the answers, and records a plain language reason for every point it awards. Activities that do not belong in a zone are excluded outright rather than ranked low.
 - `COMPARE_ROWS` defines the comparison. Under 700px it renders as stacked blocks instead of a table, because a seven column table on a phone is unreadable.
 - `js/weather.js` treats an Open-Meteo `200` response with an `error` body as a failure. The service returns that shape when it is overloaded, so checking `res.ok` alone is not enough.
@@ -106,12 +128,15 @@ I checked contrast, horizontal overflow and target size on every screen at 320px
 - Draft saving in local storage, restored with a visible notice. Stopping on step 3 and coming back later resumes on step 3. Finishing the plan resets the position so it does not reopen on the last step.
 - The sample journey button fills a sample plot (Pulwama, 3 kanal, seasonal water) and jumps to the results. Every screen it reaches is labelled as sample.
 - Marking options as interested, and those marks being carried into the summary and into which support entries are flagged as likely relevant.
-- The weather screen, including the three failure paths: a network error, an error body returned with status 200, and a place name that cannot be found. Each one explains itself and offers a retry. The plan keeps working meanwhile.
+- The weather screen, including the failure paths: a network error, an error body returned with status 200, a place name that cannot be found, and an offline device. Each one explains itself and offers a retry. The plan keeps working meanwhile.
 - Deep links (`#results`, `#summary`, `#weather`) rebuild the plan from the saved draft, and fall back home when there is nothing to rebuild.
+- Offline use. With the connection off, and with the server stopped entirely, the form, options, comparison, calendars, checklist, schemes and summary all still work, and the plan still downloads.
+- Installability. The app has a manifest and a service worker, so it can be added to a home screen and opened without a browser bar.
+- The review state, which is currently "not yet reviewed" everywhere, and which will follow any review recorded in `js/catalogue.js`.
 
 ## What is sample data
 
-- The activity catalogue: descriptions, requirements, risks and missing information are written by hand as illustrations.
+- The activity catalogue: descriptions, requirements, risks and missing information are written by hand as illustrations, and none of it has been reviewed by an officer yet.
 - `computeOptions()` and the reasons it prints, including the water, effort, cost, first returns, potential and terrain ratings in the comparison.
 - The month by month calendars. They describe usual windows, and they shift with elevation, variety and the year.
 - The relevance grouping in the scheme section. It is a pointer for the conversation at the office, not a statement about eligibility.
@@ -130,7 +155,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 
 ## What would need official data or expert review
 
-- The activity list, the five ratings and the calendars come from published background plus my own judgement. An agriculture or horticulture officer should review them before a farmer acts on them.
+- The activity list, the five ratings and the calendars come from published background plus my own judgement, and the catalogue is currently marked not-reviewed. The review fields in `js/catalogue.js` exist so an agriculture or horticulture officer can change that, and the interface will report whatever they record.
 - The district grouping into three zones is coarse, and every district spans more than one zone. A real version would use elevation and soil, not a district name. Nothing here is elevation aware in the recommendation logic, though the weather screen does report an approximate model elevation.
 - The elevation bands are approximate ranges, not survey figures.
 - The weather is for a named town, matched from a district name, on a coarse model grid. A real version needs a proper location picker and would need to be clear about what the grid can and cannot say.
@@ -139,6 +164,11 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 - The unit conversions used for the size bands (kanal, acre, hectare, marla) are approximate, and local usage varies.
 - The text is English only. Real use would need Kashmiri, Dogri, Urdu and Hindi, checked by fluent speakers.
 - Any use with real farmer data would need a privacy review first.
+- An installed copy holds its own cached files. The service worker deletes caches from earlier versions when it updates, but a release habit of bumping `CACHE_VERSION` in `sw.js` is what keeps that honest.
+
+## New sources used for this round
+
+None. No new crop, scheme or suitability claim was added, so no new source was needed. Everything in `js/catalogue.js` was already in the list above; the work was to separate it, label it, and let someone check it.
 
 ## Licence
 
