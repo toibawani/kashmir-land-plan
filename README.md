@@ -70,10 +70,14 @@ No build step needed.
 2. Serve the folder locally:
 
 ```bash
+npm start
+# or
 npx serve .
 # or
 python3 -m http.server 8080
 ```
+
+There are no dependencies to install and nothing to build. The `package.json` exists only so `npm start` can serve the folder; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
 
 Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
 
