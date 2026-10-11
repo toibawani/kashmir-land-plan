@@ -862,10 +862,11 @@ select:focus {
   color: var(--color-text-muted);
 }
 
-.link-placeholder {
-  font-size: 0.875rem !important;
+/* Scoped past .schemes-list p rather than reaching for !important. */
+.schemes-list p.link-placeholder {
+  font-size: 0.875rem;
   font-style: italic;
-  color: var(--color-text-muted) !important;
+  color: var(--color-text-muted);
 }
 
 /* Summary card */
@@ -903,8 +904,8 @@ select:focus {
   text-decoration: line-through;
 }
 
-.summary-footnote {
-  margin-top: var(--space-5) !important;
+.summary-card .summary-footnote {
+  margin-top: var(--space-5);
   font-size: 0.9rem;
   color: var(--color-text-muted);
 }
