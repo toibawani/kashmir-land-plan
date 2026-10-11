@@ -28,6 +28,7 @@
         <ul class="nav-menu" id="nav-menu">
           <li><a href="#home" data-nav="home">Home</a></li>
           <li><a href="#plan" data-nav="plan">Start plan</a></li>
+          <li><a href="#weather" data-nav="weather">Weather</a></li>
           <li><a href="#about" data-nav="about">About</a></li>
         </ul>
       </nav>
@@ -58,7 +59,7 @@
           </div>
           <div class="point">
             <h2>What you get</h2>
-            <p>Two or three activity options to explore, a simple comparison, a next-step checklist, and pointers to official support channels.</p>
+            <p>Two or three activity options to explore, a typical year for each, a comparison, a next-step checklist, and the official portals to check.</p>
           </div>
         </div>
 
@@ -97,32 +98,13 @@
               <label for="district">District <span class="req">required</span></label>
               <select id="district" name="district" required>
                 <option value="">Select district</option>
-                <option value="Anantnag">Anantnag</option>
-                <option value="Bandipora">Bandipora</option>
-                <option value="Baramulla">Baramulla</option>
-                <option value="Budgam">Budgam</option>
-                <option value="Doda">Doda</option>
-                <option value="Ganderbal">Ganderbal</option>
-                <option value="Jammu">Jammu</option>
-                <option value="Kathua">Kathua</option>
-                <option value="Kishtwar">Kishtwar</option>
-                <option value="Kulgam">Kulgam</option>
-                <option value="Kupwara">Kupwara</option>
-                <option value="Poonch">Poonch</option>
-                <option value="Pulwama">Pulwama</option>
-                <option value="Rajouri">Rajouri</option>
-                <option value="Ramban">Ramban</option>
-                <option value="Reasi">Reasi</option>
-                <option value="Samba">Samba</option>
-                <option value="Shopian">Shopian</option>
-                <option value="Srinagar">Srinagar</option>
-                <option value="Udhampur">Udhampur</option>
               </select>
               <p class="field-error" id="err-district" hidden></p>
             </div>
             <div class="field">
               <label for="village">Village or locality <span class="req">required</span></label>
               <input type="text" id="village" name="village" required maxlength="80" autocomplete="off" placeholder="e.g. Tral, or your village name" />
+              <p class="hint">This stays on your device. Only the district is used for the regional notes and the weather.</p>
               <p class="field-error" id="err-village" hidden></p>
             </div>
           </fieldset>
@@ -145,7 +127,7 @@
                 </select>
               </div>
             </div>
-            <p class="hint">You do not need an exact survey figure. A rough estimate is enough for this plan.</p>
+            <p class="hint">You do not need an exact survey figure. A rough estimate is enough, and the size is only used in coarse bands. Conversions between kanal, acre, hectare and marla vary locally, so treat them as approximate.</p>
           </fieldset>
 
           <fieldset class="form-step" data-step="3" id="step-3" hidden>
@@ -229,18 +211,39 @@
         <div class="results-header">
           <h1 id="results-title" class="screen-title">Possible activities to explore</h1>
           <p class="screen-intro">
-            These are illustrative options based on the details you entered. They are not scientific recommendations or approvals.
+            These are illustrative options from simple sample logic, based on what you entered and on general information about your district.
+            They are not a scientific recommendation, an assessment of your plot, or an approval of anything.
             Confirm suitability, costs, and rules with your local agriculture office or Kisan Khidmat Ghar.
           </p>
-          <p class="sample-badge" id="results-sample-badge" hidden>Sample / demo data</p>
+          <p class="sample-badge" id="results-sample-badge" hidden>Illustrative options from sample logic</p>
         </div>
+
         <div id="summary-strip" class="summary-strip" aria-live="polite"></div>
+        <div id="results-zone" class="region-card" hidden></div>
+
+        <div class="weather-callout no-print">
+          <h2>Weather around your district</h2>
+          <p>General weather for the nearest town, from Open-Meteo. It is not a field-level forecast and it needs the internet.</p>
+          <button type="button" class="btn btn-secondary" id="btn-results-weather">Check weather</button>
+        </div>
+
         <div id="options-list" class="options-list"></div>
-        <div class="results-actions">
+
+        <p class="inline-status" id="interested-status" role="status"></p>
+
+        <div class="results-actions no-print">
           <button type="button" class="btn btn-secondary" id="btn-edit">Edit details</button>
           <button type="button" class="btn btn-primary" id="btn-compare">Compare options</button>
         </div>
-        <button type="button" class="btn btn-quiet" id="btn-reset-results">Start over with new details</button>
+        <button type="button" class="btn btn-quiet no-print" id="btn-reset-results">Start over with new details</button>
+
+        <div class="provenance-wrap">
+          <h2>What is in this page</h2>
+          <div id="results-provenance"></div>
+          <p class="option-note">
+            Only the weather box above uses live data, and only when you ask for it. Everything else is either your own answer or general background information.
+          </p>
+        </div>
       </div>
     </section>
 
@@ -248,7 +251,8 @@
     <section id="screen-compare" class="screen" aria-labelledby="compare-title" hidden>
       <div class="container">
         <h1 id="compare-title" class="screen-title">Compare options</h1>
-        <p class="screen-intro">Side-by-side view of the activities above. Still illustrative only.</p>
+        <p class="screen-intro">Side-by-side view of the activities above. Every rating here is an ordered judgement, not a measurement.</p>
+        <div id="compare-provenance" class="provenance-wrap compact"></div>
         <div class="table-wrap" id="compare-table-wrap" hidden>
           <table class="compare-table" id="compare-table">
             <thead><tr><th scope="col">Option</th></tr></thead>
@@ -269,42 +273,35 @@
       <div class="container">
         <h1 id="next-title" class="screen-title">Next steps and local support</h1>
         <p class="screen-intro">
-          Use this checklist to move from ideas to verification. Scheme details change. Confirm current rules on official portals or at your nearest office.
+          Use this checklist to move from ideas to verification. Scheme details change, so confirm current rules on the official portal or at your nearest office.
         </p>
+
+        <div class="disclaimer-block">
+          <h2>Before you spend anything</h2>
+          <p>
+            This prototype cannot check whether you qualify for anything, and it lists no amounts, deadlines, eligibility rules or documents.
+            Those are set by the government and change between years and districts. Every entry below is a starting point for a conversation, not an answer.
+          </p>
+        </div>
+
         <div class="checklist-card">
           <h2>Practical checklist</h2>
           <ul class="checklist" id="checklist"></ul>
         </div>
+
         <div class="schemes-card">
           <h2>Scheme and support pathway</h2>
           <p class="schemes-note">
-            The following are general pointers only. This prototype does not verify eligibility, subsidy amounts, deadlines, or documents.
-            Confirm current details with the official portal or local agriculture office.
+            Official portals only, each checked before it was listed here. Every entry carries the same instruction: confirm current details with the official portal or your local office.
           </p>
-          <ul class="schemes-list" id="schemes-list">
-            <li>
-              <strong>Kisan Khidmat Ghar / Agriculture office</strong>
-              <p>Ask about soil testing, crop advisories, and any active schemes for your district. Take your land details and any soil report with you.</p>
-              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
-            </li>
-            <li>
-              <strong>Soil Health / testing services</strong>
-              <p>If you do not have a recent test, request information on how to get one through the local system.</p>
-              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
-            </li>
-            <li>
-              <strong>Central and UT agriculture schemes</strong>
-              <p>Schemes related to irrigation, horticulture, livestock, or farm mechanisation may exist. Rules and availability change by year and location.</p>
-              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
-            </li>
-            <li>
-              <strong>Market and cooperative support</strong>
-              <p>Ask about local mandis, FPOs, or cooperative channels if market access is a concern.</p>
-              <p class="link-placeholder">Confirm current details with the official portal or local agriculture office.</p>
-            </li>
-          </ul>
+          <p class="inline-status" id="schemes-context" role="status" hidden></p>
+          <ul class="schemes-list" id="schemes-list"></ul>
+          <p class="option-note">
+            Links open the official site in a new tab. This app does not track what you open and does not send your details anywhere.
+          </p>
         </div>
-        <div class="results-actions">
+
+        <div class="results-actions no-print">
           <button type="button" class="btn btn-secondary" id="btn-back-compare">Back</button>
           <button type="button" class="btn btn-primary" id="btn-save-plan">Save / print plan summary</button>
         </div>
@@ -316,46 +313,145 @@
       <div class="container narrow">
         <h1 id="summary-title" class="screen-title">Your plan summary</h1>
         <p class="screen-intro">
-          This summary is stored only on this device (browser storage). You can print it or copy the text.
-          No data is sent to a server in this prototype.
+          This summary is stored only on this device, in this browser. Nothing is uploaded. Print gives a clean page you can save as a PDF.
         </p>
         <div class="summary-card" id="plan-summary"></div>
         <div class="results-actions no-print">
-          <button type="button" class="btn btn-secondary" id="btn-print">Print</button>
-          <button type="button" class="btn btn-secondary" id="btn-download">Download</button>
+          <button type="button" class="btn btn-secondary" id="btn-print">Print or save as PDF</button>
+          <button type="button" class="btn btn-secondary" id="btn-download-text">Download as text</button>
+          <button type="button" class="btn btn-secondary" id="btn-download-html">Download for a browser</button>
           <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
           <button type="button" class="btn btn-primary" id="btn-done">Done</button>
         </div>
         <p class="hint no-print" id="copy-status" role="status" hidden></p>
+        <div class="provenance-wrap no-print">
+          <div id="summary-provenance"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WEATHER -->
+    <section id="screen-weather" class="screen" aria-labelledby="weather-title" hidden>
+      <div class="container narrow">
+        <h1 id="weather-title" class="screen-title">Weather near your district</h1>
+        <p class="screen-intro">
+          General weather for a nearby town, so you can judge the days ahead for any outdoor work.
+          This is the only part of the app that needs the internet, and it is not a field-level forecast.
+        </p>
+
+        <form id="weather-form" class="weather-form" novalidate>
+          <div class="field">
+            <label for="weather-district">District</label>
+            <select id="weather-district" name="weather-district">
+              <option value="">Select district</option>
+            </select>
+            <p class="field-error" id="weather-district-error" hidden></p>
+          </div>
+          <button type="submit" class="btn btn-primary">Get the forecast</button>
+        </form>
+
+        <div id="weather-output" aria-live="polite">
+          <p class="weather-status">Choose a district and get the forecast. Weather is the only part of this app that needs the internet.</p>
+        </div>
+
+        <div class="weather-foot">
+          <p class="option-note">
+            Weather is the only live data in this app. Your plan, the options, the calendars and the checklist all work without a connection once the page has loaded.
+          </p>
+          <button type="button" class="btn btn-quiet" id="btn-weather-home">Back to home</button>
+        </div>
       </div>
     </section>
 
     <!-- ABOUT -->
     <section id="screen-about" class="screen" aria-labelledby="about-title" hidden>
       <div class="container narrow">
-        <h1 id="about-title" class="screen-title">About and disclaimer</h1>
+        <h1 id="about-title" class="screen-title">About, sources and limitations</h1>
         <div class="about-content">
           <p><strong>My Land, My Plan</strong> is a prototype, not an official government service of the Union Territory of Jammu and Kashmir or any department.</p>
           <p>My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.</p>
+
           <h2>What this app does</h2>
           <ul>
             <li>Collects basic, non-identifying plot details you choose to enter</li>
-            <li>Shows illustrative activity options using simple sample logic</li>
-            <li>Saves a draft on this device, and can print or download the plan summary</li>
-            <li>Provides a comparison view and a practical next-step checklist</li>
-            <li>Points you toward official channels without inventing scheme rules or amounts</li>
+            <li>Shows illustrative activity options using simple sample logic, with the reasons it picked them</li>
+            <li>Describes a typical year for each option, as general guidance</li>
+            <li>Shows general weather for a nearby town from Open-Meteo, when you are online</li>
+            <li>Links to official portals, without inventing amounts, deadlines or eligibility rules</li>
+            <li>Saves a draft on this device and can print, copy or download the plan</li>
           </ul>
+
           <h2>What this app does not do</h2>
           <ul>
-            <li>Does not verify land ownership or records</li>
-            <li>Does not guarantee crop suitability or yield</li>
-            <li>Does not approve subsidies or determine scheme eligibility</li>
+            <li>Does not verify land ownership or land records</li>
+            <li>Does not assess your particular plot, predict yield, or guarantee that a crop will suit it</li>
+            <li>Does not approve subsidies, decide eligibility, or list documents you would need</li>
+            <li>Does not give a field-level weather forecast, frost warning or irrigation schedule</li>
             <li>Does not collect personal, financial, or land-identification data beyond what you type for this plan</li>
           </ul>
+
+          <h2>What is yours, what is illustrative, what is live</h2>
+          <ul>
+            <li><strong>Your answers.</strong> The district, size, water, terrain and constraint you typed. These drive the plan.</li>
+            <li><strong>Illustrative.</strong> The option list, the five ratings, the reasons shown for each suggestion, the calendars and the checklist. These come from simple rules and published general information. They are not an assessment.</li>
+            <li><strong>Regional background.</strong> The district grouping, elevation bands and crop patterns, taken from the published sources below. These describe an area, never your field.</li>
+            <li><strong>Live weather.</strong> Fetched from Open-Meteo when you ask for it, for a named town. It changes, and it is the only live data in the app.</li>
+          </ul>
+
+          <h2>Sources</h2>
+          <p>Regional background comes from these published sources. Nothing about crops, zones or programmes was invented for this app.</p>
+          <ul class="sources-list">
+            <li>
+              <a href="https://farmech.dac.gov.in/Content/FarmerGuide/JK/1J.html" target="_blank" rel="noopener noreferrer">Government of India, Department of Agriculture and Cooperation, Farmer's Guide for Jammu and Kashmir</a>
+              <p>Used for the three agro-climatic zones, the elevation and rainfall gradient across the region, the leading crops of the Kashmir and Jammu zones, and the share of India's temperate fruit grown here.</p>
+            </li>
+            <li>
+              <a href="https://icar.org.in/en/node/17267" target="_blank" rel="noopener noreferrer">ICAR, Jammu and Kashmir</a>
+              <p>Used for the share of cultivated area, the rainfed proportion, the horticulture based farming systems of the valley, and the usual cropping systems in both regions.</p>
+            </li>
+            <li>
+              <a href="https://iiim.res.in/saffron-production/" target="_blank" rel="noopener noreferrer">CSIR Indian Institute of Integrative Medicine, saffron production</a>
+              <p>Used for the fact that saffron is grown mainly in Pulwama, Budgam, Srinagar and Kishtwar.</p>
+            </li>
+            <li>
+              <a href="https://rkvy.da.gov.in/static/download/pdf/Saffron_Mission.pdf" target="_blank" rel="noopener noreferrer">Rashtriya Krishi Vikas Yojana, National Mission on Saffron</a>
+              <p>Used for the place of the Pampore belt in Pulwama within saffron production, and the place of the karewa uplands.</p>
+            </li>
+            <li>
+              <a href="https://www.niti.gov.in/" target="_blank" rel="noopener noreferrer">NITI Aayog, Roadmap for Horticulture Development in the UT of Jammu and Kashmir</a>
+              <p>Used for the broad agro-climatic zone structure of the Union Territory and the districts that fall in the subtropical and intermediate zones.</p>
+            </li>
+            <li>
+              <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+              <p>Weather and place lookup for the weather screen. Data is licensed CC BY 4.0.</p>
+            </li>
+          </ul>
+
+          <h2>Limitations</h2>
+          <ul>
+            <li>The district grouping into three broad zones is coarse. Every district in J&amp;K spans more than one zone, and a single village can hold a range of soil and elevation.</li>
+            <li>The elevation bands are approximate ranges, not survey figures.</li>
+            <li>The option ratings and the reasons shown for each suggestion come from a small set of hand-written rules, not from any agronomic model, soil data or yield data.</li>
+            <li>The calendars describe usual windows. Sowing and harvest move with elevation, variety and the year.</li>
+            <li>Saffron is only offered for the four districts where it is documented as grown, and the app cannot tell whether a particular piece of ground is suitable.</li>
+            <li>No conversions between kanal, acre, hectare and marla are exact, and local usage varies.</li>
+            <li>The text is in English only. Real use would need Kashmiri, Dogri, Urdu and Hindi, checked by fluent speakers.</li>
+            <li>Nothing here has been reviewed by an agriculture officer, a horticulturist or a legal expert.</li>
+          </ul>
+
           <h2>Data and privacy</h2>
-          <p>Draft plans are saved in your browser’s local storage, on this device only. Nothing is uploaded in this prototype. Use Start over inside the form, or clear your browser data, to remove a saved draft.</p>
-          <h2>Sample data</h2>
-          <p>Recommendations and activity descriptions are marked as sample or illustrative. They are not based on real-time agronomic models or official databases. Always confirm crop choices, costs, water requirements, and current scheme rules with the relevant agriculture office or Kisan Khidmat Ghar.</p>
+          <p>
+            Draft plans are saved in your browser's local storage, on this device only. Nothing is uploaded, and there are no accounts, analytics or tracking.
+            The weather screen sends only the district name you select to Open-Meteo. Use Start over inside the form, or clear your browser data, to remove a saved draft.
+          </p>
+
+          <h2>Before real-world use</h2>
+          <p>
+            Every option, rating and calendar here would need review by the district agriculture or horticulture office before a farmer acted on it.
+            The scheme list would need to be replaced with the current official position for each district, checked at the time it is shown.
+            The weather screen would need a proper location picker rather than a district name match.
+          </p>
+
           <button type="button" class="btn btn-primary" id="btn-about-home">Back to home</button>
         </div>
       </div>
@@ -365,10 +461,14 @@
   <footer class="site-footer" role="contentinfo">
     <div class="container">
       <p>My Land, My Plan is a prototype for farmers in Jammu and Kashmir. It is not an official service.</p>
-      <p><a href="#about" data-nav="about">About and disclaimer</a></p>
+      <p><a href="#about" data-nav="about">About, sources and limitations</a></p>
     </div>
   </footer>
 
+  <script src="js/regions.js"></script>
+  <script src="js/activities.js"></script>
+  <script src="js/schemes.js"></script>
+  <script src="js/weather.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

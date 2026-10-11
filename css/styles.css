@@ -14,7 +14,20 @@
   --color-accent: #3d5a3d;
   --color-accent-hover: #2f4630;
   --color-accent-soft: #e8efe6;
+  --color-surface-alt: #f2f4ef;
   --color-error: #8b3a2a;
+  /* Calendar phase tints. Each is a light ground with dark text on it, so a
+     colour-coded month never drops below AA contrast. */
+  --phase-prepare-bg: #f0e4d0;
+  --phase-prepare-fg: #46360f;
+  --phase-sow-bg: #dfe9d8;
+  --phase-sow-fg: #263c1d;
+  --phase-care-bg: #d9e8e4;
+  --phase-care-fg: #1c4038;
+  --phase-harvest-bg: #f7e0c0;
+  --phase-harvest-fg: #55340b;
+  --phase-quiet-bg: #ebebe6;
+  --phase-quiet-fg: #404840;
   --color-focus: #1a4d2e;
   --radius: 8px;
   --radius-sm: 4px;
@@ -823,8 +836,10 @@ select:focus {
 }
 
 .checklist input[type="checkbox"] {
-  width: 22px;
-  height: 22px;
+  /* 24px is the WCAG 2.2 target size minimum, and the label beside it is
+     clickable as well. */
+  width: 24px;
+  height: 24px;
   margin-top: 2px;
   accent-color: var(--color-accent);
   flex-shrink: 0;
@@ -944,7 +959,11 @@ select:focus {
   margin: 0 0 var(--space-1);
 }
 
+/* Footer links sit on their own line, so they get a comfortable tap height
+   rather than the height of the text alone. */
 .site-footer a {
+  display: inline-block;
+  padding: var(--space-2) 0;
   color: var(--color-accent);
   text-decoration: underline;
 }
@@ -1036,5 +1055,595 @@ select:focus {
 
   .summary-checklist li {
     break-inside: avoid;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Additions: provenance legend, region background, ratings, calendars,
+   scheme entries, weather screen, sources and print details.
+   Same tokens and spacing scale as the rest of the file.
+   ------------------------------------------------------------------ */
+
+/* A legend, deliberately not a row of boxes: label then meaning. */
+.provenance-wrap {
+  margin-top: var(--space-5);
+}
+
+.provenance-wrap h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.provenance {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.provenance-item {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: var(--space-1) var(--space-4);
+  align-items: baseline;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.88rem;
+}
+
+.provenance-item:last-child {
+  border-bottom: none;
+}
+
+.provenance-label {
+  font-weight: 600;
+}
+
+.provenance-body {
+  color: var(--color-text-muted);
+}
+
+.provenance-compact .provenance-item {
+  grid-template-columns: 9rem 1fr;
+  font-size: 0.82rem;
+}
+
+/* Small labels saying where a piece of information comes from. */
+.kind-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.kind-user {
+  background: #e8efe6;
+  color: #263c1d;
+}
+
+.kind-illustrative {
+  background: #f0e4d0;
+  color: #46360f;
+}
+
+.kind-regional {
+  background: #e1e8ec;
+  color: #23384a;
+}
+
+.kind-weather {
+  background: #dde8f2;
+  color: #1a3c58;
+}
+
+.section-kind {
+  margin: 0 0 var(--space-2);
+}
+
+.option-note,
+.option-section .option-note {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin: var(--space-2) 0 0;
+}
+
+.pill {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--color-accent-soft);
+  color: #263c1d;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+}
+
+/* Regional background panel, tinted to separate it from your own answers. */
+.region-card {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.region-card h2 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.region-card > p {
+  margin: 0 0 var(--space-3);
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+/* Ratings read as a data list, not as tiles. */
+.rating-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.rating-item dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.rating-item dd {
+  margin: var(--space-1) 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.option-why ul {
+  padding-left: 1.2em;
+}
+
+.option-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Considered hover states rather than an opacity fade. */
+.btn-toggle {
+  background: var(--color-surface);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  font-weight: 600;
+}
+
+.btn-toggle:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-toggle[aria-pressed="true"] {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.btn-toggle[aria-pressed="true"]:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* Typical year. Twelve cells that tint by phase, so the shape of the year
+   is readable at a glance on a phone and on a desktop. */
+.calendar {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.calendar summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-accent);
+  padding: var(--space-2) 0;
+}
+
+.calendar summary:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+
+.calendar[open] summary {
+  margin-bottom: var(--space-3);
+}
+
+.calendar-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: var(--space-2);
+}
+
+.cal-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--phase-bg, var(--color-bg));
+  color: var(--phase-fg, var(--color-text));
+  font-size: 0.82rem;
+}
+
+.cal-month {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cal-phase {
+  font-weight: 600;
+}
+
+.cal-detail {
+  font-size: 0.78rem;
+}
+
+.calendar-key {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.cal-key {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cal-key-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--phase-bg, var(--color-border));
+}
+
+.phase-prepare {
+  --phase-bg: var(--phase-prepare-bg);
+  --phase-fg: var(--phase-prepare-fg);
+}
+
+.phase-sow {
+  --phase-bg: var(--phase-sow-bg);
+  --phase-fg: var(--phase-sow-fg);
+}
+
+.phase-care {
+  --phase-bg: var(--phase-care-bg);
+  --phase-fg: var(--phase-care-fg);
+}
+
+.phase-harvest {
+  --phase-bg: var(--phase-harvest-bg);
+  --phase-fg: var(--phase-harvest-fg);
+}
+
+.phase-quiet {
+  --phase-bg: var(--phase-quiet-bg);
+  --phase-fg: var(--phase-quiet-fg);
+}
+
+/* Scheme entries */
+.schemes-list .scheme-cat {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.schemes-list .scheme-actions {
+  margin: var(--space-2) 0;
+  padding-left: 1.2em;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.scheme-link {
+  display: inline-block;
+  padding: var(--space-2) 0;
+  color: var(--color-accent);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.scheme-link:hover {
+  color: var(--color-accent-hover);
+}
+
+.schemes-divider strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  margin: 0 0 var(--space-2);
+}
+
+.disclaimer-block {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.disclaimer-block h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.disclaimer-block p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+/* Weather */
+.weather-callout {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.weather-callout h2 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.weather-callout p {
+  margin: 0 0 var(--space-4);
+  font-size: 0.92rem;
+  color: var(--color-text-muted);
+}
+
+.weather-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.weather-form .field {
+  flex: 1 1 12rem;
+  margin-bottom: 0;
+}
+
+.weather-status {
+  color: var(--color-text-muted);
+}
+
+.weather-error {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.weather-error h2 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: var(--color-error);
+  margin: 0 0 var(--space-3);
+}
+
+.weather-error p {
+  margin: 0 0 var(--space-3);
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.weather-head h2 {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.weather-place {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.weather-warn {
+  background: var(--phase-harvest-bg);
+  color: var(--phase-harvest-fg);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  margin: 0 0 var(--space-3);
+}
+
+.weather-now {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.wn-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+}
+
+.wn-value {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.weather-days {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 0 var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.weather-day {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.92rem;
+}
+
+.weather-day:last-child {
+  border-bottom: none;
+}
+
+.wd-day {
+  font-weight: 600;
+}
+
+.wd-cond {
+  color: var(--color-text-muted);
+}
+
+.wd-temp {
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.wd-rain {
+  grid-column: 2 / -1;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.weather-foot {
+  margin-top: var(--space-5);
+}
+
+/* Summary details */
+.summary-card p.summary-disclaimer {
+  background: var(--phase-prepare-bg);
+  color: var(--phase-prepare-fg);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+/* Sources in About */
+.about-content ul.sources-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 var(--space-4);
+}
+
+.sources-list li {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sources-list li:last-child {
+  border-bottom: none;
+}
+
+.sources-list a {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.sources-list p {
+  margin: var(--space-1) 0 0;
+  font-size: 0.9rem;
+}
+
+.about-content p.section-note {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .provenance-item {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .weather-day {
+    grid-template-columns: 4.5rem 1fr auto;
+  }
+}
+
+@media print {
+  .kind-tag,
+  .pill {
+    border: 1px solid #999;
+  }
+
+  .provenance-item,
+  .rating-item,
+  .weather-day,
+  .sources-list li {
+    break-inside: avoid;
+  }
+
+  .region-card,
+  .weather-callout,
+  .disclaimer-block,
+  .weather-now,
+  .weather-days,
+  .calendar {
+    border: 1px solid #ccc;
+  }
+
+  .cal-cell {
+    background: none;
+    border: 1px solid #bbb;
   }
 }
