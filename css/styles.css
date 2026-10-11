@@ -1,4 +1,4 @@
-/* My Land, My Plan — design tokens
+/* My Land, My Plan, Kashmir. Design tokens
    Palette: soil / leaf / daylight
    Primary accent: deep olive green
    Type: Source Sans 3 (UI) + Source Serif 4 (titles)
@@ -234,6 +234,14 @@ main {
   letter-spacing: -0.02em;
 }
 
+/* Headings receive focus only to move the reading position for screen
+   readers. They are not reachable by Tab, so no ring is needed. */
+.screen-title:focus,
+.hero h1:focus,
+.step-legend:focus {
+  outline: none;
+}
+
 .screen-intro {
   margin: 0 0 var(--space-5);
   color: var(--color-text-muted);
@@ -292,7 +300,7 @@ main {
 
 @media (min-width: 640px) {
   .home-points {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -314,6 +322,29 @@ main {
   margin: 0;
   font-size: 0.95rem;
   color: var(--color-text-muted);
+}
+
+.home-note {
+  margin-top: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius);
+}
+
+.home-note h2 {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-2);
+}
+
+.home-note p {
+  margin: 0;
+  font-size: 0.95rem;
+  max-width: 62ch;
 }
 
 /* Buttons */
@@ -358,6 +389,24 @@ main {
 .btn-secondary:hover {
   background: var(--color-accent-soft);
   border-color: var(--color-accent);
+}
+
+/* Low-emphasis action for save, reset, and other secondary utilities. */
+.btn-quiet {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  background: none;
+  border-color: transparent;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.btn-quiet:hover {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  text-decoration: none;
 }
 
 /* Progress */
@@ -506,6 +555,40 @@ select:focus {
   gap: var(--space-3);
   padding-top: var(--space-4);
   border-top: 1px solid var(--color-border);
+}
+
+.form-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.inline-status {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.draft-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.draft-notice p {
+  margin: 0;
+  font-size: 0.95rem;
+  max-width: 46ch;
 }
 
 /* Results */
@@ -815,6 +898,17 @@ select:focus {
   margin: 0 0 var(--space-2);
 }
 
+.summary-checklist .is-done {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.summary-footnote {
+  margin-top: var(--space-5) !important;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 /* About */
 .about-content h2 {
   font-family: var(--font-serif);
@@ -909,6 +1003,17 @@ select:focus {
   }
 }
 
+/* Respect a reduced-motion preference: keep the layout, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Print */
 @media print {
   .site-header,
@@ -926,5 +1031,9 @@ select:focus {
 
   .summary-card {
     border: 1px solid #ccc;
+  }
+
+  .summary-checklist li {
+    break-inside: avoid;
   }
 }

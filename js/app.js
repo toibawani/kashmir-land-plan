@@ -1,6 +1,6 @@
 /**
- * My Land, My Plan — Kashmir
- * Hackathon prototype. Sample logic only. No claims of scientific precision.
+ * My Land, My Plan, Kashmir.
+ * Prototype. Sample scoring logic only, no claims of scientific precision.
  */
 
 (function () {
@@ -134,10 +134,8 @@
   };
 
   // --- State ---
-  let state = {
-    step: 1,
-    isDemo: false,
-    data: {
+  function blankData() {
+    return {
       district: "",
       village: "",
       size: "",
@@ -147,28 +145,63 @@
       terrain: "",
       soil: "none",
       constraint: "",
-    },
+    };
+  }
+
+  let state = {
+    step: 1,
+    isDemo: false,
+    data: blankData(),
     options: [],
+    checklist: [],
   };
 
   // --- DOM helpers ---
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const scrollBehavior = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 
-  function showScreen(id) {
+  function showScreen(id, opts = {}) {
     $$(".screen").forEach((s) => {
       s.hidden = true;
       s.classList.remove("screen-active");
     });
     const el = $(`#screen-${id}`);
-    if (el) {
-      el.hidden = false;
-      el.classList.add("screen-active");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      // Update hash without scroll jump
-      if (history.replaceState) {
-        history.replaceState(null, "", `#${id === "home" ? "home" : id}`);
-      }
+    if (!el) return;
+    el.hidden = false;
+    el.classList.add("screen-active");
+
+    // Keep the screen addressable without pushing history entries.
+    if (history.replaceState) {
+      history.replaceState(null, "", `#${id}`);
+    }
+
+    // Send focus to the new screen heading so keyboard and screen reader
+    // users are not left behind on the previous screen.
+    const heading = $(".screen-title", el) || el.querySelector("h1");
+    if (opts.focus !== false && heading) {
+      if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+      heading.focus({ preventScroll: true });
+    }
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
+  }
+
+  function setStatus(id, msg, timeout = 4000) {
+    const el = $(`#${id}`);
+    if (!el) return;
+    if (setStatus.timer) clearTimeout(setStatus.timer);
+    if (!msg) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.textContent = msg;
+    el.hidden = false;
+    if (timeout) {
+      setStatus.timer = setTimeout(() => {
+        el.hidden = true;
+      }, timeout);
     }
   }
 
@@ -182,7 +215,7 @@
     if (label) label.textContent = `Step ${state.step} of ${TOTAL_STEPS}`;
   }
 
-  function showStep(n) {
+  function showStep(n, opts = {}) {
     state.step = n;
     $$(".form-step").forEach((fs) => {
       fs.hidden = Number(fs.dataset.step) !== n;
@@ -194,12 +227,31 @@
     if (next) next.hidden = n === TOTAL_STEPS;
     if (submit) submit.hidden = n !== TOTAL_STEPS;
     updateProgress();
+
+    // Announce the step change instead of silently swapping content.
+    const legend = $(`.form-step[data-step="${n}"] .step-legend`);
+    if (opts.focus !== false && legend) {
+      if (!legend.hasAttribute("tabindex")) legend.setAttribute("tabindex", "-1");
+      legend.focus({ preventScroll: true });
+    }
+  }
+
+  // A field can be a single control or a radio group sharing a name.
+  function errorTargets(id) {
+    const single = $(`#${id}`);
+    if (single) return [single];
+    return $$(`input[name="${id}"]`);
   }
 
   function clearErrors() {
     $$(".field-error").forEach((e) => {
       e.hidden = true;
       e.textContent = "";
+    });
+    $$("[aria-invalid='true']").forEach((el) => el.removeAttribute("aria-invalid"));
+    $$("[data-error-link]").forEach((el) => {
+      el.removeAttribute("aria-describedby");
+      el.removeAttribute("data-error-link");
     });
   }
 
@@ -209,56 +261,59 @@
       el.textContent = msg;
       el.hidden = false;
     }
+    errorTargets(id).forEach((field) => {
+      field.setAttribute("aria-invalid", "true");
+      field.setAttribute("aria-describedby", `err-${id}`);
+      field.setAttribute("data-error-link", "true");
+    });
+  }
+
+  // Move focus to the first problem so keyboard and screen reader users
+  // hear the message attached to the field, not just a floating error.
+  function focusFirstInvalid(id) {
+    const target = errorTargets(id)[0];
+    if (target && typeof target.focus === "function") {
+      target.focus();
+      return;
+    }
+    const msg = $(`#err-${id}`);
+    if (msg) msg.scrollIntoView({ block: "center", behavior: scrollBehavior() });
   }
 
   function validateStep(step) {
     clearErrors();
-    let ok = true;
+    let firstInvalid = null;
     const d = state.data;
+    const fail = (id, msg) => {
+      setError(id, msg);
+      if (!firstInvalid) firstInvalid = id;
+    };
 
     if (step === 1) {
-      if (!d.district) {
-        setError("district", "Please select a district.");
-        ok = false;
-      }
+      if (!d.district) fail("district", "Please select a district.");
       if (!d.village || d.village.trim().length < 2) {
-        setError("village", "Please enter a village or locality name.");
-        ok = false;
+        fail("village", "Please enter a village or locality name.");
       }
     }
     if (step === 2) {
       const size = parseFloat(d.size);
       if (!d.size || isNaN(size) || size <= 0) {
-        setError("size", "Enter a positive number for plot size.");
-        ok = false;
+        fail("size", "Enter a positive number for plot size.");
       } else if (size > 500) {
-        setError("size", "Please check the size. For this prototype use up to 500.");
-        ok = false;
+        fail("size", "Please check the size. For this prototype use up to 500.");
       }
     }
     if (step === 3) {
-      if (!d.landUse) {
-        setError("landUse", "Please select current land use.");
-        ok = false;
-      }
-      if (!d.water) {
-        setError("water", "Please select water access.");
-        ok = false;
-      }
+      if (!d.landUse) fail("landUse", "Please select current land use.");
+      if (!d.water) fail("water", "Please select water access.");
     }
     if (step === 4) {
-      if (!d.terrain) {
-        setError("terrain", "Please select terrain.");
-        ok = false;
-      }
+      if (!d.terrain) fail("terrain", "Please select terrain.");
     }
     if (step === 5) {
-      if (!d.constraint) {
-        setError("constraint", "Please select the main constraint.");
-        ok = false;
-      }
+      if (!d.constraint) fail("constraint", "Please select the main constraint.");
     }
-    return ok;
+    return firstInvalid;
   }
 
   function readFormIntoState() {
@@ -280,9 +335,17 @@
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ data: state.data, step: state.step, isDemo: state.isDemo })
+        JSON.stringify({
+          data: state.data,
+          step: state.step,
+          isDemo: state.isDemo,
+          checklist: state.checklist || [],
+        })
       );
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function loadDraft() {
@@ -291,13 +354,38 @@
       if (!raw) return false;
       const parsed = JSON.parse(raw);
       if (parsed && parsed.data) {
-        state.data = { ...state.data, ...parsed.data };
+        state.data = { ...blankData(), ...parsed.data };
         state.step = parsed.step || 1;
         state.isDemo = !!parsed.isDemo;
+        state.checklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
         return true;
       }
     } catch (_) {}
     return false;
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (_) {}
+  }
+
+  // Wipe everything and put the farmer back on a blank first step.
+  function resetPlan() {
+    clearDraft();
+    state.isDemo = false;
+    state.step = 1;
+    state.options = [];
+    state.checklist = [];
+    state.data = blankData();
+    const form = $("#land-form");
+    if (form) form.reset();
+    fillFormFromState();
+    const notice = $("#draft-notice");
+    if (notice) notice.hidden = true;
+    setStatus("save-status", "");
+    showStep(1, { focus: false });
+    showScreen("form");
   }
 
   function fillFormFromState() {
@@ -430,8 +518,8 @@
     if (strip) {
       strip.innerHTML = `
         <strong>Your inputs (sample plan):</strong>
-        ${escapeHtml(d.district)}, ${escapeHtml(d.village)} —
-        ${escapeHtml(d.size)} ${escapeHtml(d.unit)},
+        ${escapeHtml(d.district)}, ${escapeHtml(d.village)}.
+        Plot ${escapeHtml(d.size)} ${escapeHtml(d.unit)},
         land ${escapeHtml(labelLandUse(d.landUse))},
         water ${escapeHtml(labelWater(d.water))},
         terrain ${escapeHtml(labelTerrain(d.terrain))},
@@ -452,7 +540,7 @@
         (o, i) => `
       <article class="option-card" id="opt-${o.id}">
         <h2>${i + 1}. ${escapeHtml(o.title)}</h2>
-        <p class="option-meta">Illustrative option — not a verified recommendation</p>
+        <p class="option-meta">Illustrative option, not a verified recommendation</p>
         <div class="option-section">
           <h3>Why it may be worth exploring</h3>
           <p>${escapeHtml(o.why)}</p>
@@ -573,21 +661,38 @@
       "Ask which of the activity ideas (if any) are realistic for your village and season, and what training is available.",
       "Request current information on any schemes related to horticulture, irrigation, livestock, or farm support. Do not rely on amounts or rules from this app.",
       "Note market or cooperative options if selling produce is part of your plan.",
-      "Write down questions before the visit so you cover costs, labour, and risks clearly.",
+      "Write down your questions before the visit so you cover costs, labour, and risks clearly.",
     ];
+  }
 
+  function renderChecklist() {
+    const items = getChecklistItems();
     const ul = $("#checklist");
     if (!ul) return;
-    ul.innerHTML = items
+
+    // Keep ticks across re-renders and across visits.
+    state.checklist = items.map((text, i) => ({
+      text,
+      checked: !!(state.checklist[i] && state.checklist[i].checked),
+    }));
+
+    ul.innerHTML = state.checklist
       .map(
-        (t, i) => `
+        (item, i) => `
       <li>
-        <input type="checkbox" id="chk-${i}" name="chk-${i}" />
-        <label for="chk-${i}">${escapeHtml(t)}</label>
+        <input type="checkbox" id="chk-${i}" name="chk-${i}" ${item.checked ? "checked" : ""} />
+        <label for="chk-${i}">${escapeHtml(item.text)}</label>
       </li>
     `
       )
       .join("");
+
+    $$("#checklist input[type='checkbox']").forEach((box, i) => {
+      box.addEventListener("change", () => {
+        state.checklist[i].checked = box.checked;
+        saveDraft();
+      });
+    });
   }
 
   function renderSummary() {
@@ -602,10 +707,17 @@
       day: "numeric",
     });
 
+    // If someone lands straight on the summary, rebuild the checklist so the
+    // printed plan is never missing its next steps.
+    const checklist =
+      state.checklist && state.checklist.length
+        ? state.checklist
+        : getChecklistItems().map((text) => ({ text, checked: false }));
+
     card.innerHTML = `
-      <h2>Plan summary — My Land, My Plan</h2>
+      <h2>My Land, My Plan: plan summary</h2>
       <p><strong>Date:</strong> ${escapeHtml(date)}</p>
-      <p><strong>Note:</strong> Illustrative prototype only. Confirm everything with local agriculture office or Kisan Khidmat Ghar.</p>
+      <p><strong>Note:</strong> Illustrative prototype only. Confirm everything with the local agriculture office or Kisan Khidmat Ghar.</p>
       <h3>Plot details</h3>
       <ul>
         <li>District: ${escapeHtml(d.district)}</li>
@@ -619,19 +731,51 @@
       </ul>
       <h3>Activities to explore (sample)</h3>
       <ol>
-        ${opts.map((o) => `<li><strong>${escapeHtml(o.title)}</strong> — ${escapeHtml(o.why)}</li>`).join("")}
+        ${opts.map((o) => `<li><strong>${escapeHtml(o.title)}</strong>: ${escapeHtml(o.why)}</li>`).join("")}
       </ol>
-      <h3>Suggested next steps</h3>
-      <ul>
-        <li>Contact agriculture office / Kisan Khidmat Ghar</li>
-        <li>Clarify soil test and water situation</li>
-        <li>Ask about current schemes (confirm rules officially)</li>
-        <li>Discuss market or cooperative channels if relevant</li>
+      <h3>Your next steps</h3>
+      <ul class="summary-checklist">
+        ${checklist
+          .map(
+            (c) =>
+              `<li class="${c.checked ? "is-done" : ""}">${c.checked ? "Done" : "To do"}: ${escapeHtml(
+                c.text
+              )}</li>`
+          )
+          .join("")}
       </ul>
-      <p style="margin-top:1rem;font-size:0.9rem;color:#4a524a;">
+      <h3>Who to contact next</h3>
+      <ul>
+        <li>Agriculture office or Kisan Khidmat Ghar for your district</li>
+        <li>Soil testing service, if you do not have a recent report</li>
+        <li>Ask for the current list of schemes and their rules</li>
+      </ul>
+      <p class="summary-footnote">
         This summary was generated by the My Land, My Plan prototype. It does not verify ownership, suitability, or eligibility.
       </p>
     `;
+  }
+
+  function buildPlanText() {
+    const card = $("#plan-summary");
+    return card ? `${card.innerText.trim()}\n` : "";
+  }
+
+  // Save a plain text copy of the plan so it can be kept or shared.
+  function downloadPlan() {
+    const text = buildPlanText();
+    if (!text) return;
+    const date = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `my-land-my-plan-${date}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setStatus("copy-status", "Plan summary downloaded as a text file.");
   }
 
   // Labels
@@ -667,9 +811,10 @@
       .replace(/"/g, "&quot;");
   }
 
-  // Demo data
+  // Sample journey for judges. Every screen it reaches is labelled as sample.
   function loadDemo() {
     state.isDemo = true;
+    state.checklist = [];
     state.data = {
       district: "Pulwama",
       village: "Tral (sample)",
@@ -681,8 +826,10 @@
       soil: "none",
       constraint: "water",
     };
+    // Keep the wizard at step 1 so "Edit details" opens the beginning of the
+    // form rather than dropping the user on the last step.
+    state.step = 1;
     fillFormFromState();
-    state.step = TOTAL_STEPS;
     computeOptions();
     renderResults();
     showScreen("results");
@@ -695,11 +842,24 @@
   }
 
   function startPlan() {
-    state.isDemo = false;
-    loadDraft();
+    const hadDraft = loadDraft();
     fillFormFromState();
-    showStep(state.step || 1);
-    showScreen("form");
+
+    // Only resume mid-form. A finished plan starts again from step 1.
+    const resumeStep = state.step > 0 && state.step < TOTAL_STEPS ? state.step : 1;
+    showStep(resumeStep, { focus: false });
+    showScreen("form", { focus: false });
+
+    const notice = $("#draft-notice");
+    const noticeText = $("#draft-notice-text");
+    if (notice) {
+      notice.hidden = !hadDraft;
+      if (hadDraft && noticeText) {
+        noticeText.textContent = state.isDemo
+          ? "These answers are sample data from the demo. Choose Start over to clear them."
+          : "Your saved draft was restored. Continue where you left off, or start over.";
+      }
+    }
   }
 
   // Events
@@ -714,11 +874,16 @@
 
     $("#btn-next")?.addEventListener("click", () => {
       readFormIntoState();
-      if (!validateStep(state.step)) return;
-      saveDraft();
+      const firstInvalid = validateStep(state.step);
+      if (firstInvalid) {
+        focusFirstInvalid(firstInvalid);
+        return;
+      }
+      // Advance first, then save, so the stored step matches what is on screen.
       if (state.step < TOTAL_STEPS) {
         showStep(state.step + 1);
       }
+      saveDraft();
     });
 
     $("#btn-back")?.addEventListener("click", () => {
@@ -729,12 +894,31 @@
     $("#land-form")?.addEventListener("submit", (e) => {
       e.preventDefault();
       readFormIntoState();
-      if (!validateStep(TOTAL_STEPS)) return;
-      saveDraft();
+      const firstInvalid = validateStep(TOTAL_STEPS);
+      if (firstInvalid) {
+        focusFirstInvalid(firstInvalid);
+        return;
+      }
       computeOptions();
+      saveDraft();
       renderResults();
       showScreen("results");
     });
+
+    $("#btn-save-draft")?.addEventListener("click", () => {
+      readFormIntoState();
+      const ok = saveDraft();
+      setStatus(
+        "save-status",
+        ok
+          ? "Draft saved on this device. Nothing was sent anywhere."
+          : "This browser blocked local storage, so the draft could not be saved."
+      );
+    });
+
+    $("#btn-reset-form")?.addEventListener("click", resetPlan);
+    $("#btn-reset-results")?.addEventListener("click", resetPlan);
+    $("#btn-download")?.addEventListener("click", downloadPlan);
 
     $("#btn-edit")?.addEventListener("click", () => {
       fillFormFromState();
@@ -812,15 +996,36 @@
 
     // Hash routing for simple deep links
     window.addEventListener("hashchange", handleHash);
-    handleHash();
+    handleHash(true);
   }
 
-  function handleHash() {
+  function handleHash(initial) {
     const h = (location.hash || "#home").replace("#", "");
-    if (h === "about") showScreen("about");
+    const focus = !initial;
+    const restore = () => loadDraft();
+
+    if (h === "about") showScreen("about", { focus });
     else if (h === "plan" || h === "form") startPlan();
-    else if (h === "results" && state.options.length) showScreen("results");
-    else if (h === "home" || h === "") goHome();
+    else if (h === "results" && (state.options.length || restore())) {
+      if (!state.options.length) computeOptions();
+      renderResults();
+      showScreen("results", { focus });
+    } else if (h === "compare" && (state.options.length || restore())) {
+      if (!state.options.length) computeOptions();
+      renderCompare();
+      showScreen("compare", { focus });
+    } else if (h === "next" && (state.options.length || restore())) {
+      if (!state.options.length) computeOptions();
+      renderChecklist();
+      showScreen("next", { focus });
+    } else if (h === "summary" && (state.options.length || restore())) {
+      if (!state.options.length) computeOptions();
+      renderSummary();
+      showScreen("summary", { focus });
+    } else {
+      // Anything unknown, including a stale deep link, falls back home.
+      showScreen("home", { focus });
+    }
   }
 
   // Init

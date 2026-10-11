@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="description" content="My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support." />
   <meta name="theme-color" content="#3d5a3d" />
-  <title>My Land, My Plan — Kashmir</title>
+  <title>My Land, My Plan, Kashmir</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" />
@@ -60,10 +60,14 @@
             <h2>What you get</h2>
             <p>Two or three activity options to explore, a simple comparison, a next-step checklist, and pointers to official support channels.</p>
           </div>
-          <div class="point">
-            <h2>Important</h2>
-            <p>This is a hackathon prototype. Recommendations are illustrative. Always confirm with your local agriculture office or Kisan Khidmat Ghar.</p>
-          </div>
+        </div>
+
+        <div class="home-note">
+          <h2>What this is not</h2>
+          <p>
+            This is a working prototype, not a government service. The options it suggests are illustrative.
+            Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar.
+          </p>
         </div>
       </div>
     </section>
@@ -80,6 +84,11 @@
 
         <h1 id="form-title" class="screen-title">Your plot details</h1>
         <p class="screen-intro">Only what is needed. You can go back and change answers anytime.</p>
+
+        <div class="draft-notice" id="draft-notice" hidden>
+          <p id="draft-notice-text">Saved draft restored.</p>
+          <button type="button" class="btn btn-quiet" id="btn-reset-form">Start over</button>
+        </div>
 
         <form id="land-form" novalidate>
           <fieldset class="form-step" data-step="1" id="step-1">
@@ -205,6 +214,11 @@
             <button type="button" class="btn btn-primary" id="btn-next">Continue</button>
             <button type="submit" class="btn btn-primary" id="btn-submit" hidden>See options</button>
           </div>
+
+          <div class="form-footer-actions">
+            <button type="button" class="btn btn-quiet" id="btn-save-draft">Save draft on this device</button>
+            <p class="inline-status" id="save-status" role="status" hidden></p>
+          </div>
         </form>
       </div>
     </section>
@@ -226,6 +240,7 @@
           <button type="button" class="btn btn-secondary" id="btn-edit">Edit details</button>
           <button type="button" class="btn btn-primary" id="btn-compare">Compare options</button>
         </div>
+        <button type="button" class="btn btn-quiet" id="btn-reset-results">Start over with new details</button>
       </div>
     </section>
 
@@ -307,10 +322,11 @@
         <div class="summary-card" id="plan-summary"></div>
         <div class="results-actions no-print">
           <button type="button" class="btn btn-secondary" id="btn-print">Print</button>
+          <button type="button" class="btn btn-secondary" id="btn-download">Download</button>
           <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
           <button type="button" class="btn btn-primary" id="btn-done">Done</button>
         </div>
-        <p class="hint no-print" id="copy-status" hidden></p>
+        <p class="hint no-print" id="copy-status" role="status" hidden></p>
       </div>
     </section>
 
@@ -319,12 +335,13 @@
       <div class="container narrow">
         <h1 id="about-title" class="screen-title">About and disclaimer</h1>
         <div class="about-content">
-          <p><strong>My Land, My Plan</strong> is a hackathon prototype. It is not an official government service of the Union Territory of Jammu and Kashmir or any department.</p>
-          <p>Product idea: My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.</p>
+          <p><strong>My Land, My Plan</strong> is a prototype, not an official government service of the Union Territory of Jammu and Kashmir or any department.</p>
+          <p>My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.</p>
           <h2>What this app does</h2>
           <ul>
             <li>Collects basic, non-identifying plot details you choose to enter</li>
             <li>Shows illustrative activity options using simple sample logic</li>
+            <li>Saves a draft on this device, and can print or download the plan summary</li>
             <li>Provides a comparison view and a practical next-step checklist</li>
             <li>Points you toward official channels without inventing scheme rules or amounts</li>
           </ul>
@@ -336,7 +353,7 @@
             <li>Does not collect personal, financial, or land-identification data beyond what you type for this plan</li>
           </ul>
           <h2>Data and privacy</h2>
-          <p>Draft plans can be saved in your browser’s local storage. Nothing is uploaded in this prototype. Clear your browser data to remove saved drafts.</p>
+          <p>Draft plans are saved in your browser’s local storage, on this device only. Nothing is uploaded in this prototype. Use Start over inside the form, or clear your browser data, to remove a saved draft.</p>
           <h2>Sample data</h2>
           <p>Recommendations and activity descriptions are marked as sample or illustrative. They are not based on real-time agronomic models or official databases. Always confirm crop choices, costs, water requirements, and current scheme rules with the relevant agriculture office or Kisan Khidmat Ghar.</p>
           <button type="button" class="btn btn-primary" id="btn-about-home">Back to home</button>
@@ -347,7 +364,7 @@
 
   <footer class="site-footer" role="contentinfo">
     <div class="container">
-      <p>My Land, My Plan — prototype for farmers in Jammu and Kashmir. Not an official service.</p>
+      <p>My Land, My Plan is a prototype for farmers in Jammu and Kashmir. It is not an official service.</p>
       <p><a href="#about" data-nav="about">About and disclaimer</a></p>
     </div>
   </footer>
