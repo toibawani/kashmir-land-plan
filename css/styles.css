@@ -378,6 +378,15 @@ main {
   outline-offset: 2px;
 }
 
+/* Links in the middle of a paragraph, such as the source list and the scheme
+   entries, get the same ring as the buttons. Keyboard focus should look the
+   same wherever it lands rather than depending on the browser default. */
+a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .btn-primary {
   background: var(--color-accent);
   color: #fff;
@@ -1750,6 +1759,13 @@ select:focus {
 .kind-card-illustrative,
 .data-illustrative {
   background: #f0e4d0;
+}
+
+/* Deliberately excluded: washing every option card amber would make the whole
+   results list one colour and blunt the point of having four washes. The card
+   keeps the plain surface and names its kind in the meta line instead. */
+.option-card.data-illustrative {
+  background: var(--color-surface);
 }
 
 .kind-card-regional,

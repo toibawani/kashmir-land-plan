@@ -911,7 +911,7 @@
           ". " +
           escapeHtml(a.title) +
           "</h2>" +
-          '<p class="option-meta">Illustrative option, not a verified recommendation</p>' +
+          '<p class="option-meta"><span class="kind-tag kind-illustrative">Illustrative</span> An option to discuss, not a verified recommendation</p>' +
           '<p class="option-confirm">' +
           escapeHtml(ACTIVITIES.confirmationLine) +
           "</p>" +
