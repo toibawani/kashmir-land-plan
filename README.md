@@ -127,7 +127,7 @@ I checked contrast, horizontal overflow and target size on every screen at 320px
 - Validation with a message per problem, and focus moved to the first one.
 - Draft saving in local storage, restored with a visible notice. Stopping on step 3 and coming back later resumes on step 3. Finishing the plan resets the position so it does not reopen on the last step.
 - The sample journey button fills a sample plot (Pulwama, 3 kanal, seasonal water) and jumps to the results. Every screen it reaches is labelled as sample.
-- Marking options as interested, and those marks being carried into the summary and into which support entries are flagged as likely relevant.
+- Marking options as interested, and those marks being carried into the summary and into how the support entries are grouped and ordered.
 - The weather screen, including the failure paths: a network error, an error body returned with status 200, a place name that cannot be found, and an offline device. Each one explains itself and offers a retry. The plan keeps working meanwhile.
 - Deep links (`#results`, `#summary`, `#weather`) rebuild the plan from the saved draft, and fall back home when there is nothing to rebuild.
 - Offline use. With the connection off, and with the server stopped entirely, the form, options, comparison, calendars, checklist, schemes and summary all still work, and the plan still downloads.
