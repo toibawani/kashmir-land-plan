@@ -159,6 +159,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 - The district grouping into three zones is coarse, and every district spans more than one zone. A real version would use elevation and soil, not a district name. Nothing here is elevation aware in the recommendation logic, though the weather screen does report an approximate model elevation.
 - The elevation bands are approximate ranges, not survey figures.
 - The weather is for a named town, matched from a district name, on a coarse model grid. A real version needs a proper location picker and would need to be clear about what the grid can and cannot say.
+- The place list does not answer to every district name. Baramulla, Bandipora, Budgam and Rajouri need an alternate spelling, which is recorded as `weatherQuery` in `js/regions.js`, and the weather screen shows both the name asked for and the place matched so the substitution is visible rather than hidden. All 20 districts were checked against the live service and resolve to a town inside J&K, but a change at the service's end could break one without notice.
 - Any crop or variety suitability claim needs local advice. The app cannot tell whether a particular piece of ground suits saffron or anything else.
 - The scheme list needs the current official position for each district, checked at the time it is shown.
 - The unit conversions used for the size bands (kanal, acre, hectare, marla) are approximate, and local usage varies.

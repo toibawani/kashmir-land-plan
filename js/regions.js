@@ -70,11 +70,20 @@
    * optional note where a reliable source supports a district-level statement.
    * Notes elsewhere are deliberately left empty rather than guessed.
    */
+  /**
+   * `weatherQuery` is only set where the weather service's place list does not
+   * answer to the district name the app shows. Open-Meteo geocodes against
+   * GeoNames, which spells three of these districts differently, and those
+   * spellings return no result at all rather than a wrong one. Verified against
+   * the live geocoder: without these, Baramulla, Bandipora and Budgam fail with
+   * "no place found", and every other district resolves inside J&K unaided.
+   */
   var DISTRICTS = {
     Anantnag: { zone: "valley_temperate" },
-    Bandipora: { zone: "valley_temperate" },
-    Baramulla: { zone: "valley_temperate" },
+    Bandipora: { zone: "valley_temperate", weatherQuery: "Bandipura" },
+    Baramulla: { zone: "valley_temperate", weatherQuery: "Baramula" },
     Budgam: {
+      weatherQuery: "Badgam",
       zone: "valley_temperate",
       note:
         "One of the four districts where saffron is grown in J&K, after Pulwama.",
@@ -107,6 +116,9 @@
       saffron: true,
     },
     Rajouri: {
+      // "Rajouri" alone matches only an airport in the place list; the town
+      // itself is indexed as Rajaori.
+      weatherQuery: "Rajaori",
       zone: "jammu_hills",
       spans: "The district covers sub-tropical as well as intermediate and temperate ground.",
     },

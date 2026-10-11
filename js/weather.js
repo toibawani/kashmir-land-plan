@@ -97,20 +97,49 @@
    * place names elsewhere in India, so J&K matches are preferred, then the
    * largest place, and the caller is told how confident to be.
    */
+  /**
+   * Lower case with accents removed, so a name match is not lost to a diacritic.
+   * The place list writes Kupwara as "Kupwāra" and Budgam as "Badgām", and
+   * without this the exact-name bonus never fires for those.
+   */
+  function foldName(value) {
+    var text = String(value == null ? "" : value).toLowerCase();
+    if (typeof text.normalize === "function") {
+      text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    return text;
+  }
+
   function pickPlace(results, districtName) {
-    var wanted = districtName.toLowerCase();
+    var wanted = foldName(districtName);
     var inState = results.filter(function (r) {
       return isJammuAndKashmir(r);
     });
     var pool = inState.length ? inState : results;
 
+    /**
+     * The place list holds more than one record per name, and a near-miss
+     * spelling can point at somewhere else entirely. "Kupwara" returns both
+     * Kopawor, the district town at 1662 m, and Kupwara, a similarly spelled
+     * place in Baramulla district at 3681 m. A farmer acting on the second one
+     * would be reading the wrong valley. So where a record is filed counts for
+     * more here than how its name happens to be spelled.
+     */
+    function districtSignal(place) {
+      var admin2 = foldName(place.admin2);
+      if (!admin2) return 0;
+      if (admin2 === wanted) return 120;
+      // "Kupwara District" should count for Kupwara.
+      if (admin2.indexOf(wanted) === 0) return 100;
+      return 0;
+    }
+
     function score(place) {
-      var name = String(place.name || "").toLowerCase();
-      var s = 0;
-      if (name === wanted) s += 100;
-      else if (name.indexOf(wanted) === 0) s += 40;
-      else if (name.indexOf(wanted) !== -1) s += 20;
-      if (String(place.admin2 || "").toLowerCase() === wanted) s += 60;
+      var name = foldName(place.name);
+      var s = districtSignal(place);
+      if (name === wanted) s += 60;
+      else if (name.indexOf(wanted) === 0) s += 25;
+      else if (name.indexOf(wanted) !== -1) s += 12;
       if (place.feature_code && String(place.feature_code).indexOf("PPLA") === 0) s += 15;
       s += Math.min(Number(place.population) || 0, 200000) / 20000;
       return s;
