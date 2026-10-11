@@ -475,38 +475,96 @@
       .join("");
   }
 
+  // Short, genuinely comparable attributes. Long prose is kept out of the
+  // table so it still reads as a table on a phone.
+  const COMPARE_ROWS = [
+    { key: "waterNeed", label: "Water need (sample)", format: (o) => o.waterNeed || "Not noted" },
+    { key: "labour", label: "Labour (sample)", format: (o) => o.labour || "Not noted" },
+    { key: "cost", label: "Relative cost (sample)", format: (o) => o.cost || "Not noted" },
+    {
+      key: "terrainFit",
+      label: "Terrain (sample)",
+      format: (o) => {
+        const fit = o.terrainFit || [];
+        const flat = fit.includes("flat");
+        const sloped = fit.includes("sloped");
+        if (flat && sloped) return "Flat or sloped";
+        if (flat) return "Flat ground";
+        if (sloped) return "Sloped ground";
+        return "Not noted";
+      },
+    },
+  ];
+
   function renderCompare() {
     const opts = state.options;
+    const wrap = $("#compare-table-wrap");
     const table = $("#compare-table");
-    if (!table || !opts.length) return;
+    const stacked = $("#compare-stacked");
+    const notes = $("#compare-notes");
+    if (!table || !stacked || !wrap || !opts.length) return;
 
-    const thead = table.querySelector("thead tr");
-    const tbody = table.querySelector("tbody");
-    thead.innerHTML = `<th scope="col">Aspect</th>` + opts.map((o) => `<th scope="col">${escapeHtml(o.title)}</th>`).join("");
+    const narrow = window.matchMedia("(max-width: 700px)").matches;
 
-    const rows = [
-      ["Why explore", ...opts.map((o) => o.why)],
-      ["Water need (sample)", ...opts.map((o) => o.waterNeed)],
-      ["Labour (sample)", ...opts.map((o) => o.labour)],
-      ["Relative cost (sample)", ...opts.map((o) => o.cost)],
-      ["Key risk to check", ...opts.map((o) => o.risks[0] || "—")],
-      ["Missing info", ...opts.map((o) => o.missing)],
-    ];
+    if (narrow) {
+      // A horizontally scrolling table is unusable on a small phone, so
+      // each option becomes its own block instead.
+      wrap.hidden = true;
+      stacked.hidden = false;
+      stacked.innerHTML = opts
+        .map(
+          (o) => `
+        <article class="stacked-option">
+          <h2>${escapeHtml(o.title)}</h2>
+          <dl>
+            ${COMPARE_ROWS.map(
+              (r) => `<dt>${escapeHtml(r.label)}</dt><dd>${escapeHtml(r.format(o))}</dd>`
+            ).join("")}
+          </dl>
+        </article>`
+        )
+        .join("");
+    } else {
+      stacked.hidden = true;
+      wrap.hidden = false;
+      const thead = table.querySelector("thead tr");
+      const tbody = table.querySelector("tbody");
+      thead.innerHTML =
+        `<th scope="col">Option</th>` +
+        COMPARE_ROWS.map((r) => `<th scope="col">${escapeHtml(r.label)}</th>`).join("");
+      tbody.innerHTML = opts
+        .map(
+          (o) => `
+          <tr>
+            <th scope="row">${escapeHtml(o.title)}</th>
+            ${COMPARE_ROWS.map((r) => `<td>${escapeHtml(r.format(o))}</td>`).join("")}
+          </tr>`
+        )
+        .join("");
+    }
 
-    tbody.innerHTML = rows
-      .map(
-        (row) =>
-          `<tr><td>${escapeHtml(row[0])}</td>${row
-            .slice(1)
-            .map((c) => `<td>${escapeHtml(c)}</td>`)
-            .join("")}</tr>`
-      )
-      .join("");
+    if (notes) {
+      notes.innerHTML = `
+        <h2>What to verify for each option</h2>
+        <p class="hint">These are questions to ask at the agriculture office, not conclusions.</p>
+        <ul class="verify-list">
+          ${opts
+            .map(
+              (o) => `
+            <li>
+              <strong>${escapeHtml(o.title)}</strong>
+              <p>Main risk to check: ${escapeHtml((o.risks && o.risks[0]) || "Not noted")}</p>
+              <p>Still needed: ${escapeHtml(o.missing)}</p>
+            </li>`
+            )
+            .join("")}
+        </ul>`;
+    }
   }
 
-  function renderChecklist() {
+  function getChecklistItems() {
     const d = state.data;
-    const items = [
+    return [
       "Visit or call the nearest agriculture office or Kisan Khidmat Ghar with your plot details.",
       d.soil === "none"
         ? "Ask how to get a soil test for your plot and what the process costs and takes."
@@ -687,6 +745,11 @@
     $("#btn-compare")?.addEventListener("click", () => {
       renderCompare();
       showScreen("compare");
+    });
+
+    // The comparison swaps between a table and stacked blocks at this width.
+    window.matchMedia("(max-width: 700px)").addEventListener("change", () => {
+      if ($("#screen-compare")?.classList.contains("screen-active")) renderCompare();
     });
 
     $("#btn-back-results")?.addEventListener("click", () => showScreen("results"));

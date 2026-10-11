@@ -234,12 +234,14 @@
       <div class="container">
         <h1 id="compare-title" class="screen-title">Compare options</h1>
         <p class="screen-intro">Side-by-side view of the activities above. Still illustrative only.</p>
-        <div class="table-wrap">
+        <div class="table-wrap" id="compare-table-wrap" hidden>
           <table class="compare-table" id="compare-table">
-            <thead><tr><th scope="col">Aspect</th></tr></thead>
+            <thead><tr><th scope="col">Option</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
+        <div class="compare-stacked" id="compare-stacked" hidden></div>
+        <div class="compare-notes" id="compare-notes"></div>
         <div class="results-actions">
           <button type="button" class="btn btn-secondary" id="btn-back-results">Back to options</button>
           <button type="button" class="btn btn-primary" id="btn-next-steps">Next steps &amp; support</button>

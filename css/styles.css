@@ -39,6 +39,11 @@
   box-sizing: border-box;
 }
 
+/* Author styles would otherwise beat the browser default for [hidden]. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
@@ -613,11 +618,84 @@ select:focus {
   font-size: 0.9rem;
 }
 
-.compare-table th:first-child,
-.compare-table td:first-child {
+.compare-table tbody th {
+  width: 200px;
   font-weight: 600;
-  white-space: nowrap;
-  width: 140px;
+}
+
+.compare-stacked {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.stacked-option {
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.stacked-option h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.stacked-option dl {
+  margin: 0;
+}
+
+.stacked-option dt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.stacked-option dt:first-child {
+  margin-top: 0;
+}
+
+.stacked-option dd {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.compare-notes h2 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.verify-list {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+}
+
+.verify-list li {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.verify-list li:last-child {
+  border-bottom: none;
+}
+
+.verify-list strong {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
+.verify-list p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
 }
 
 .compare-table tbody tr:last-child td {
