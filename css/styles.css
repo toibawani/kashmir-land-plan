@@ -427,6 +427,53 @@ a:focus-visible {
   text-decoration: none;
 }
 
+/* The read-aloud controls are the biggest buttons in the app on purpose: the
+   farmer reaching for them is often listening, not looking, and may be doing
+   both poorly in bright sun. Big tap target, short calm label, and a spoken
+   status line that names the section being read. No icons, no emoji, the words
+   say what happens. */
+.btn-read {
+  min-height: 56px;
+  font-size: 1.1rem;
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.btn-read:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.btn-read[aria-pressed="true"] {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.read-controls {
+  margin: var(--space-4) 0;
+}
+
+.read-controls .results-actions {
+  margin-bottom: var(--space-2);
+}
+
+.read-status {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.read-fallback {
+  margin: var(--space-2) 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 /* Progress */
 .progress-wrap {
   margin-bottom: var(--space-5);

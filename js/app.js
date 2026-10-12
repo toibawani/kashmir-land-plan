@@ -139,8 +139,7 @@
     // voice carries on describing a page the farmer has already left.
     var leaving = $(".screen-active");
     if (leaving && leaving.id !== "screen-" + id && speechAvailable() && SPEECH.speaking()) {
-      SPEECH.stop();
-      setReadState(null, false);
+      stopReading();
     }
     $$(".screen").forEach(function (s) {
       s.hidden = true;
@@ -2262,125 +2261,317 @@
 
   // ------------------------------------------------------------ Reading out
 
-  var READ_BUTTONS = { "btn-read-plan": "Read the plan aloud", "btn-visit-read": "Read it aloud" };
+  // ------------------------------------------------------------ Reading out
+
+  // Reading is tap to play, tap to hold, tap to carry on. A smaller Stop sits
+  // beside the big button while anything plays, and leaving the screen stops
+  // the voice outright. The two big buttons live on different screens and
+  // never play at once, so starting one always stops the other and resets it.
+  //
+  // Which read is active is tracked in activeReadId, not guessed from the
+  // voice alone; guessing is how buttons end up saying Stop while nothing is
+  // playing. The paused label ("Carry on reading") is what makes the hold
+  // state visible to someone who cannot hear the silence.
+  var READ_CONTROLS = {
+    "btn-read-plan": {
+      play: "Read the plan aloud",
+      pause: "Pause the reading",
+      stop: "btn-read-plan-stop",
+      status: "read-plan-status",
+      fallback: "read-plan-fallback",
+    },
+    "btn-visit-read": {
+      play: "Read the card aloud",
+      pause: "Pause the reading",
+      stop: "btn-visit-read-stop",
+      status: "read-visit-status",
+      fallback: "read-visit-fallback",
+    },
+  };
+  var activeReadId = null;
 
   function speechAvailable() {
     return !!(SPEECH && SPEECH.supported && SPEECH.supported());
   }
 
-  function setReadState(activeId, on) {
-    Object.keys(READ_BUTTONS).forEach(function (id) {
-      var b = $("#" + id);
-      if (!b) return;
-      var active = on && id === activeId;
-      b.setAttribute("aria-pressed", active ? "true" : "false");
-      b.textContent = active ? "Stop reading" : READ_BUTTONS[id];
+  function readPaused() {
+    return !!(SPEECH && SPEECH.paused && SPEECH.paused());
+  }
+
+  // One renderer for every read button, driven by the voice engine state
+  // rather than by optimistic flags set at click time.
+  function setReadState(activeId) {
+    Object.keys(READ_CONTROLS).forEach(function (id) {
+      var c = READ_CONTROLS[id];
+      var play = $("#" + id);
+      var stop = $("#" + c.stop);
+      if (!play) return;
+      var isActive = activeId != null && id === activeId && SPEECH.speaking();
+      var paused = isActive && readPaused();
+      play.setAttribute("aria-pressed", isActive && !paused ? "true" : "false");
+      if (isActive && !paused) play.textContent = c.pause;
+      else if (isActive && paused) play.textContent = "Carry on reading";
+      else play.textContent = c.play;
+      // The stop control only exists while its own reading plays, so it can
+      // never stop silence or someone else's voice.
+      if (stop) stop.hidden = !isActive;
     });
   }
 
-  /**
-   * A version meant for the ear rather than the eye. The downloaded text holds
-   * portal addresses and section rules that sound like noise when read out, so
-   * this keeps the shape of the plan and drops anything that is only useful on
-   * paper.
-   */
-  function buildSpokenText() {
+  function readStatusElement(id) {
+    var c = READ_CONTROLS[id];
+    return c ? $("#" + c.status) : null;
+  }
+
+  // The spoken status names the section being read and the count, because
+  // "something is playing" on its own is not enough to follow a long plan.
+  function setReadProgress(id, index, total, label) {
+    var el = readStatusElement(id);
+    if (!el) return;
+    el.textContent = "Reading: " + label + " (" + (index + 1) + " of " + total + "). Press Pause to hold it.";
+    el.hidden = false;
+  }
+
+  function clearReadProgress(id) {
+    var el = readStatusElement(id);
+    if (!el) return;
+    el.textContent = "";
+    el.hidden = true;
+  }
+
+  function stopReading() {
+    // Stopping is safe to call any time, including from a screen change while
+    // nothing plays. The guards inside make the no-op genuinely free.
+    if (SPEECH.speaking()) SPEECH.stop();
+    activeReadId = null;
+    setReadState(null);
+    Object.keys(READ_CONTROLS).forEach(clearReadProgress);
+  }
+
+  function toggleRead(id, sections) {
+    if (!READ_CONTROLS[id]) return;
+    // Tapping the active button holds or carries on. The voice carries on
+    // from the held word rather than starting over.
+    if (activeReadId === id && SPEECH.speaking()) {
+      if (readPaused()) SPEECH.resume();
+      else if (SPEECH.pause) SPEECH.pause();
+      else stopReading();
+      setReadState(id);
+      return;
+    }
+    // Anything playing from the other screen is stopped first, and then the
+    // new text starts. A previous version just stopped and went quiet here,
+    // which read as a broken button: tap the card's reader while the plan is
+    // playing and nothing seemed to happen at all.
+    if (SPEECH.speaking()) stopReading();
+    if (!speechAvailable()) {
+      var silent = readStatusElement(id);
+      if (silent) {
+        silent.textContent = "This browser does not offer a reading voice. The text stays on screen, and it can still be printed.";
+        silent.hidden = false;
+      }
+      return;
+    }
+    if (!sections || !sections.length) {
+      var empty = readStatusElement(id);
+      if (empty) {
+        empty.textContent = "There is nothing to read yet.";
+        empty.hidden = false;
+      }
+      return;
+    }
+    activeReadId = id;
+    setReadState(id);
+    SPEECH.speak(sections, {
+      onState: function (s) {
+        if (activeReadId !== id) return;
+        if (s === "paused" || s === "resumed" || s === "speaking") {
+          setReadState(id);
+          return;
+        }
+        if (s === "done" || s === "stopped") {
+          stopReading();
+          return;
+        }
+        if (s === "unavailable") {
+          stopReading();
+          var failed = readStatusElement(id);
+          if (failed) {
+            failed.textContent = "This device could not read it out. The text is still on screen and can be printed.";
+            failed.hidden = false;
+          }
+        }
+      },
+      onSection: function (index, total, label) {
+        if (activeReadId === id) setReadProgress(id, index, total, label);
+      },
+    });
+  }
+
+  // Browsers with no voice never get a dead button. The play controls are
+  // swapped for a plain sentence that says so. The sentence lives in the
+  // static HTML too, so it shows even before any reading was attempted.
+  function initReadButtons() {
+    var ok = speechAvailable();
+    Object.keys(READ_CONTROLS).forEach(function (id) {
+      var c = READ_CONTROLS[id];
+      var play = $("#" + id);
+      var note = $("#" + c.fallback);
+      if (!play) return;
+      if (ok) {
+        if (note) note.hidden = true;
+      } else {
+        play.hidden = true;
+        var stop = $("#" + c.stop);
+        if (stop) stop.hidden = true;
+        if (note) note.hidden = false;
+      }
+    });
+  }
+
+  // ---------------------------------------------------------- Reading aloud
+
+  // The plan, cut into named sections so the ear can follow what the eye sees
+  // as headings. Each section is read in order, and the interface names the
+  // one being read: "Reading: Questions to ask at the office (5 of 7)".
+  // Portal addresses are left out on purpose. A spelled-out web address is
+  // useful on paper but only noise in a spoken sentence.
+  function buildSpokenSections() {
     var d = state.data;
-    var lines = [];
-    lines.push("My Land, My Plan. Your plan summary for " + (d.district || "your district") + ".");
-    lines.push("");
-    lines.push(currentReview().text);
-    lines.push("");
-    lines.push(
-      "You entered " + (d.size || "a plot") + " " + (d.unit || "") + ", " + labelLandUse(d.landUse) +
+    var sections = [];
+    sections.push({
+      label: "Your plan summary",
+      text:
+        "My Land, My Plan. Your plan summary for " + (d.district || "your district") + ". " +
+        currentReview().text,
+    });
+    sections.push({
+      label: "What you entered",
+      text:
+        "You entered " + (d.size || "a plot") + " " + (d.unit || "") + ", " + labelLandUse(d.landUse) +
         ", with " + labelWater(d.water) + " water, " + labelTerrain(d.terrain) + " ground, and " +
-        labelConstraint(d.constraint) + " as the main thing holding you back."
-    );
-    lines.push("");
+        labelConstraint(d.constraint) + " as the main thing holding you back.",
+    });
 
     var options = chosenOptions();
     if (options.length) {
-      lines.push(
-        markedCount()
+      var optionsText =
+        (markedCount()
           ? "You marked " + markedCount() + " of the options to follow up."
-          : "No options were marked, so these are all the ones shown."
-      );
-      options.forEach(function (o, i) {
-        lines.push(
-          "Option " + (i + 1) + ": " + o.activity.title + ". " + o.activity.why
-        );
-      });
-      lines.push("");
+          : "No options were marked, so these are all the ones shown.") +
+        " ";
+      optionsText += options
+        .map(function (o, i) {
+          return "Option " + (i + 1) + ": " + o.activity.title + ". " + o.activity.why;
+        })
+        .join(" ");
+      sections.push({ label: "Options to explore", text: optionsText });
     }
 
     var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
     if (hint) {
-      lines.push(timingNoteText(hint));
-      lines.push("");
+      sections.push({ label: "Something in the forecast", text: timingNoteText(hint) });
     }
 
     var monthIndex = new Date().getMonth();
     if (options.length) {
-      lines.push("In " + ACTIVITIES.MONTHS[monthIndex] + ", the typical year says:");
-      options.forEach(function (o) {
-        var cell = o.activity.calendar[monthIndex];
-        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
-        lines.push(o.activity.title + ": " + phase.label + ", " + cell.t + ".");
-      });
-      lines.push("That is general guidance only, and it moves with elevation and the year.");
-      lines.push("");
+      var monthText = "In " + ACTIVITIES.MONTHS[monthIndex] + ", the typical year says: ";
+      monthText += options
+        .map(function (o) {
+          var cell = o.activity.calendar[monthIndex];
+          var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+          return o.activity.title + ": " + phase.label + ", " + cell.t + ".";
+        })
+        .join(" ");
+      monthText += " That is general guidance only, and it moves with elevation and the year.";
+      sections.push({ label: ACTIVITIES.MONTHS[monthIndex] + " in the options you picked", text: monthText });
     }
 
     var questions = currentQuestions();
     if (questions.length) {
-      lines.push("Questions to ask at the office.");
-      questions.forEach(function (q, i) {
-        lines.push("Question " + (i + 1) + ". " + q.text);
+      sections.push({
+        label: "Questions to ask at the office",
+        text: questions
+          .map(function (q, i) {
+            return "Question " + (i + 1) + ". " + q.text;
+          })
+          .join(" "),
       });
-      lines.push("");
     }
 
-    lines.push("Next steps.");
     var checklist = state.checklist && state.checklist.length ? state.checklist : [];
-    if (checklist.length) {
-      checklist.forEach(function (item) {
-        lines.push((item.checked ? "Done: " : "To do: ") + item.text);
-      });
-    } else {
-      getChecklistItems().forEach(function (text) {
-        lines.push(text);
-      });
-    }
-    lines.push("");
-    lines.push(ACTIVITIES.confirmationLine);
-    lines.push("This is an illustrative prototype, not an official service.");
-    return lines.join("\n\n");
+    var stepsText = checklist.length
+      ? checklist
+          .map(function (item) {
+            return (item.checked ? "Done: " : "To do: ") + item.text;
+          })
+          .join(" ")
+      : getChecklistItems().join(" ");
+    sections.push({ label: "Your next steps", text: stepsText });
+
+    sections.push({
+      label: "A last word",
+      text: ACTIVITIES.confirmationLine + " This is an illustrative prototype, not an official service.",
+    });
+    return sections;
   }
 
-  function toggleRead(id, statusId, text) {
-    if (!speechAvailable()) {
-      setStatus(statusId || "copy-status", "This browser does not offer a reading voice. The text stays on screen.");
-      return;
-    }
-    if (SPEECH.speaking()) {
-      SPEECH.stop();
-      setReadState(id, false);
-      return;
-    }
-    if (!text) {
-      setStatus(statusId || "copy-status", "There is nothing to read yet.");
-      return;
-    }
-    setReadState(id, true);
-    SPEECH.speak(text, {
-      onState: function (s) {
-        if (s === "done" || s === "stopped") setReadState(id, false);
-        if (s === "unavailable") {
-          setReadState(id, false);
-          setStatus(statusId || "copy-status", "This device could not read it out. The text is still on screen and can be printed.");
-        }
+  // The office visit card, cut the same way: short sections with the card's
+  // own headings, so what the card names in print is what the voice names.
+  function buildVisitSections() {
+    var d = state.data;
+    var options = visitOptions();
+    var questions = currentQuestions();
+    return [
+      {
+        label: "Office visit card",
+        text: "My Land, My Plan. Your office visit card. " + currentReview().text,
       },
-    });
+      {
+        label: "What you entered",
+        text:
+          "District " + (d.district || "not given") + ". Village or locality " + (d.village || "not given") +
+          ". About " + (d.size || "not given") + " " + (d.unit || "") + ". Currently " + labelLandUse(d.landUse) +
+          ", water " + labelWater(d.water) + ", terrain " + labelTerrain(d.terrain) +
+          ", soil test " + labelSoil(d.soil) + ", main constraint " + labelConstraint(d.constraint) + ".",
+      },
+      {
+        label: "Options to discuss",
+        text: options.length
+          ? "Options to discuss, not recommendations. " +
+            options
+              .map(function (o, i) {
+                return "Option " + (i + 1) + ": " + o.activity.title + ".";
+              })
+              .join(" ")
+          : "No options were marked or shown, so there is nothing listed here.",
+      },
+      {
+        label: "Questions to ask",
+        text: questions.length
+          ? "Questions to ask at the office. " +
+            questions
+              .map(function (q, i) {
+                return "Question " + (i + 1) + ". " + q.text;
+              })
+              .join(" ")
+          : "No questions were generated.",
+      },
+      {
+        label: "A last word",
+        text: ACTIVITIES.confirmationLine + " This card was made by the farmer using a prototype, not by any department.",
+      },
+    ];
+  }
+
+  // The plain-text ear version survives for copying, and any older caller
+  // that only knows strings. It is the same content as the sections, joined.
+  function buildSpokenText() {
+    return buildSpokenSections()
+      .map(function (s) {
+        return s.label + ".\n\n" + s.text;
+      })
+      .join("\n\n");
   }
 
   // -------------------------------------------------------- Office visit card
@@ -3246,13 +3437,17 @@
     $("#btn-visit-read") &&
       $("#btn-visit-read").addEventListener("click", function () {
         renderVisitCard();
-        toggleRead("btn-visit-read", "visit-status", buildVisitCardText());
+        toggleRead("btn-visit-read", buildVisitSections());
       });
+    $("#btn-visit-read-stop") &&
+      $("#btn-visit-read-stop").addEventListener("click", stopReading);
 
     $("#btn-read-plan") &&
       $("#btn-read-plan").addEventListener("click", function () {
-        toggleRead("btn-read-plan", "copy-status", buildSpokenText());
+        toggleRead("btn-read-plan", buildSpokenSections());
       });
+    $("#btn-read-plan-stop") &&
+      $("#btn-read-plan-stop").addEventListener("click", stopReading);
 
     $("#btn-save-named") &&
       $("#btn-save-named").addEventListener("click", function () {
@@ -3523,6 +3718,7 @@
     setAboutReviewStatus();
     updateOfflineBanner();
     initInstall();
+    initReadButtons();
     registerServiceWorker();
     window.addEventListener("online", updateOfflineBanner);
     window.addEventListener("offline", function () {

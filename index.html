@@ -386,7 +386,14 @@
           <div class="results-actions">
             <button type="button" class="btn btn-primary" id="btn-visit-card">Make the office visit card</button>
             <button type="button" class="btn btn-secondary" id="btn-save-named">Save this plan</button>
-            <button type="button" class="btn btn-secondary" id="btn-read-plan" aria-pressed="false">Read the plan aloud</button>
+          </div>
+          <div class="read-controls">
+            <div class="results-actions">
+              <button type="button" class="btn btn-read" id="btn-read-plan" aria-pressed="false">Read the plan aloud</button>
+              <button type="button" class="btn btn-secondary" id="btn-read-plan-stop" hidden>Stop reading</button>
+            </div>
+            <p class="read-status" id="read-plan-status" role="status" hidden></p>
+            <p class="read-fallback" id="read-plan-fallback" hidden>This browser has no reading voice. The plan above stays on screen, and it can still be printed.</p>
           </div>
           <div class="results-actions">
             <button type="button" class="btn btn-secondary" id="btn-print">Print or save as PDF</button>
@@ -465,7 +472,14 @@
         <div class="results-actions no-print">
           <button type="button" class="btn btn-primary" id="btn-visit-print">Print or save as PDF</button>
           <button type="button" class="btn btn-secondary" id="btn-visit-download">Download as text</button>
-          <button type="button" class="btn btn-secondary" id="btn-visit-read" aria-pressed="false">Read it aloud</button>
+        </div>
+        <div class="read-controls no-print">
+          <div class="results-actions">
+            <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
+            <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+          </div>
+          <p class="read-status" id="read-visit-status" role="status" hidden></p>
+          <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
         </div>
         <div class="results-actions no-print">
           <button type="button" class="btn btn-secondary" id="btn-visit-back">Back to summary</button>
