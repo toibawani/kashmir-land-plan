@@ -13,7 +13,7 @@ My Land, My Plan helps a farmer turn basic details about an underused plot into 
 - Puts each option in context for the district, using published background on J&K farming
 - Shows a typical year for each option, month by month, and the month ahead for the options you shortlist
 - Turns your answers and chosen options into 5 to 7 specific questions to ask an officer, not a generic checklist
-- Lets you compare options side by side, and mark the ones you want to follow up
+- Lets you compare options side by side, tick the questions you ask, and mark the ones you want to follow up
 - Gives a practical next-step checklist, and lists the official portals to check
 - Makes a one page office visit card: your answers, the options you marked, the questions to ask and the confirmation note, ready to print and carry
 - Saves several named plans on the device, compares them side by side, and lets you pick which one goes to the office
@@ -41,7 +41,7 @@ They are labelled in the interface, and the same labels are used in the plan you
 
 ## Officer review: what is checked and what is not
 
-**Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary, the office visit card and the About page, in these words: "These suggestions have not yet been checked by an agriculture officer." The visit card carries it too, because that is the page that leaves the phone and reaches the office.
+**Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary, the office visit card and the About page, in these words: "Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting." The visit card carries it too, because that is the page that leaves the phone and reaches the office.
 
 The catalogue lives in `js/catalogue.js`, kept apart from the scoring and rendering code so an officer can read the data without reading any JavaScript logic. To record a review, either fill in `CATALOGUE_REVIEW` at the top of that file for the whole list, or fill in `reviewStatus`, `reviewedBy`, `designation` and `reviewedOn` on a single entry if only that one has been checked. Leave the fields empty rather than guessing a name or a date.
 
