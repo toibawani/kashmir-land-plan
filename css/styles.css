@@ -2097,6 +2097,12 @@ select:focus {
   margin-bottom: var(--space-4);
 }
 
+/* The shared review banner also sits in the visit card head, so it shares the
+   same card spacing without a second copy of the rules. */
+.visit-head .review-card {
+  margin-top: var(--space-3);
+}
+
 .visit-head h2 {
   font-family: var(--font-serif);
   font-size: 1.35rem;
@@ -2108,15 +2114,6 @@ select:focus {
   margin: 0 0 var(--space-2);
   font-size: 0.9rem;
   color: var(--color-text-muted);
-}
-
-.visit-review {
-  margin: 0;
-  font-size: 0.9rem;
-  background: #f0e4d0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
 }
 
 .visit-section {
@@ -2224,7 +2221,7 @@ select:focus {
     font-size: 10.5pt;
   }
 
-  .visit-review {
+  .visit-head .review-card {
     background: #f2f2f2;
     border: 1px solid #999;
   }

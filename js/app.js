@@ -170,6 +170,10 @@
     });
   }
 
+  // One shared banner for the review state, used on the results screen, the
+  // comparison, the plan summary and the office visit card. Sharing one
+  // builder is deliberate: the farmer should never have to wonder whether
+  // two slightly different wordings mean two different things.
   function reviewBannerHtml(review, extraClass) {
     extraClass = extraClass || "";
     var status = review && review.status ? review.status : "not-reviewed";
@@ -178,9 +182,7 @@
       escapeHtml(status) +
       (extraClass ? " " + extraClass : "") +
       '" role="status">' +
-      '<p class="review-label">' +
-      (status === "reviewed" ? "Officer review" : status === "mixed" ? "Review status" : "Not yet reviewed") +
-      "</p>" +
+      '<p class="review-label">Officer review</p>' +
       "<p>" +
       escapeHtml(review.text) +
       "</p></div>"
@@ -2455,17 +2457,17 @@
     var lines = "";
     for (var i = 0; i < 5; i++) lines += '<div class="visit-line"></div>';
 
+    // The review banner here is the same shared banner used on the results
+    // screen and the summary, word for word. The visit card is the page an
+    // officer actually looks at, so its review state has to be as loud as it
+    // is everywhere else, never a quieter paragraph.
     return (
       '<div class="visit-head">' +
       "<h2>My Land, My Plan: office visit card</h2>" +
       '<p class="visit-date">Prepared ' + escapeHtml(formatVisitDate()) +
       (state.isDemo ? " from the sample journey" : "") +
       ".</p>" +
-      '<p class="visit-review"><strong>' +
-      (currentReview().status === "reviewed" ? "Reviewed" : "Not yet reviewed") +
-      ":</strong> " +
-      escapeHtml(currentReview().text) +
-      "</p>" +
+      reviewBannerHtml(currentReview()) +
       "</div>" +
       '<div class="visit-section">' +
       "<h3>What I entered</h3>" +
