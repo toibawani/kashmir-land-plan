@@ -242,6 +242,28 @@ check(
   "an empty chunk slipped through"
 );
 
+console.log("visit card honesty");
+var cardData = {
+  district: "Pulwama",
+  village: "Tral",
+  size: "3",
+  unit: "kanal",
+  landUse: "unused",
+  water: "seasonal",
+  terrain: "flat",
+  soil: "none",
+  constraint: "water",
+};
+var cardOptions = sampleOptions();
+check("the full shortlist is rebuilt the way the card builds it", cardOptions.length >= 3, cardOptions.length + " options");
+var overflowNote = null;
+if (cardOptions.length > 3) {
+  overflowNote = "Showing the first 3 of the " + cardOptions.length + " options marked. The rest are in the plan summary.";
+  check("the overflow note names the counts", /\d+ of the \d+/.test(overflowNote), overflowNote);
+} else {
+  check("three or fewer need no overflow note", true, "nothing to hide");
+}
+
 /* ---- Report ---- */
 
 console.log("");

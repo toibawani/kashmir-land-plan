@@ -2052,7 +2052,7 @@
     setStatus("visit-status", "Downloaded " + filename + ". Print the page instead if you want it on paper.");
   }
 
-  // ------------------------------------- Questions, the month, and reading
+  // ------------------------------------------------------------ Reading out
 
   /**
    * The options to carry forward: the ones marked, or everything shown when
@@ -2574,7 +2574,62 @@
       .join("\n\n");
   }
 
-  // -------------------------------------------------------- Office visit card
+  // ------------------------------------------------------------ Visit card
+
+  // A short reference the farmer can quote and the officer can write down.
+  // It is a fingerprint of the answers plus the options the farmer marked,
+  // made on this device from a tiny hash, so no network or account is needed
+  // and the same answers always give the same code on any phone.
+  //
+  // What it is for: matching a printed card to the saved plan on the device
+  // it was made on, and naming the plan in a phone call ("we talked about
+  // MLMP-PUL-3K-8F2C"). What it is not: it links nowhere and looks up
+  // nothing. An officer with a different phone cannot open the plan from it,
+  // and this app must never pretend otherwise.
+  function planReferenceFor(data, interested) {
+    var marked = Object.keys(interested || {})
+      .filter(function (k) {
+        return !!interested[k];
+      })
+      .sort();
+    var seed = [
+      data.district,
+      data.village,
+      data.size,
+      data.unit,
+      data.landUse,
+      data.water,
+      data.terrain,
+      data.soil,
+      data.constraint,
+      marked.join(","),
+    ].join("|");
+    // FNV-1a, 32 bits. Small, deterministic, and good enough for a short
+    // human code; it is not security, it is a nametag.
+    var hash = 0x811c9dc5;
+    for (var i = 0; i < seed.length; i++) {
+      hash ^= seed.charCodeAt(i);
+      hash = (hash * 0x01000193) >>> 0;
+    }
+    var alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    var code = "";
+    var value = hash;
+    for (var n = 0; n < 5; n++) {
+      code += alphabet[value % alphabet.length];
+      value = Math.floor(value / alphabet.length);
+    }
+    // Skip the easily misread characters (0, O, 1, I, L) at the source, so
+    // the card prints nothing an officer has to guess at over the phone.
+    var district = String(data.district || "")
+      .replace(/[^A-Za-z]/g, "")
+      .slice(0, 3)
+      .toUpperCase();
+    return "MLMP-" + (district || "JK") + "-" + code.slice(0, 2) + "-" + code.slice(2);
+  }
+
+  function currentPlanReference() {
+    return planReferenceFor(state.data, state.interested);
+  }
 
   function formatVisitDate() {
     return new Date().toLocaleDateString("en-IN", {
@@ -2666,6 +2721,10 @@
       '<p class="visit-date">Prepared ' + escapeHtml(formatVisitDate()) +
       (state.isDemo ? " from the sample journey" : "") +
       ".</p>" +
+      // The reference sits directly under the date, before anything else, so
+      // it is the first line of every phone call, letter and file name.
+      '<p class="visit-reference">Plan reference: <strong>' + escapeHtml(currentPlanReference()) + "</strong></p>" +
+      '<p class="visit-reference-note">Made on this device from your answers. Quote it when you call about this plan.</p>' +
       reviewBannerHtml(currentReview()) +
       "</div>" +
       '<div class="visit-section">' +
@@ -2720,6 +2779,7 @@
     lines.push("=".repeat(36));
     lines.push("");
     lines.push("Prepared " + formatVisitDate() + (state.isDemo ? " from the sample journey" : ""));
+    lines.push("Plan reference: " + currentPlanReference());
     lines.push(currentReview().text);
     lines.push("");
     lines.push("WHAT I ENTERED");
@@ -2957,6 +3017,12 @@
             " | saved " +
             escapeHtml(savedDate(p.updatedAt || p.createdAt)) +
             (p.isDemo ? " | sample " : "") +
+            "</p>" +
+            // The reference printed on a visit card always matches the plan
+            // it came from, on the device it came from, so a stack of cards
+            // and a stack of saved plans can be paired up later.
+            '<p class="plan-reference">Reference: ' +
+            escapeHtml(planReferenceFor(p.data || {}, p.interested || {})) +
             "</p>" +
             (lead
               ? '<p class="plan-lead">Leads with ' + escapeHtml(activityTitleFor(lead)) + "</p>"

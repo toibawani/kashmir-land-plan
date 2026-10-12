@@ -2241,6 +2241,24 @@ select:focus {
   border-bottom: 1px solid var(--color-border);
 }
 
+.visit-reference {
+  margin: var(--space-2) 0 0;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.visit-reference-note {
+  margin: var(--space-1) 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.plan-reference {
+  margin: var(--space-1) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
 /* Give the printing of the card one page, and keep sections whole. */
 @page {
   margin: 12mm;
@@ -2264,6 +2282,7 @@ select:focus {
   .visit-answers,
   .visit-options,
   .visit-support,
+  .visit-reference,
   .question-text {
     font-size: 10.5pt;
   }
