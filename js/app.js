@@ -75,6 +75,11 @@
     options: [],
     checklist: [],
     interested: {},
+    // Which generated questions the farmer has already covered with the
+    // officer, keyed by the question id. The ids are stable for a plan, so a
+    // tick survives a re-render and a restart; ids that no longer exist are
+    // simply ignored when the lists are painted.
+    coveredQuestions: {},
     weather: { district: "", query: "", result: null, error: null, status: "idle" },
     weatherPlaceMode: "district",
     weatherCustomPlace: "",
@@ -444,6 +449,9 @@
           isDemo: state.isDemo,
           checklist: state.checklist || [],
           interested: state.interested || {},
+          // The covered questions ride with the answers, so a reopened draft
+          // still shows what the office already talked through.
+          coveredQuestions: state.coveredQuestions || {},
           planReady: !!state.planReady,
           weatherPlaceMode: state.weatherPlaceMode || "district",
           weatherCustomPlace: state.weatherCustomPlace || "",
@@ -496,6 +504,10 @@
     state.isDemo = !!parsed.isDemo;
     state.checklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
     state.interested = parsed.interested && typeof parsed.interested === "object" ? parsed.interested : {};
+    // Only plain yes-marks are kept. Anything shaped otherwise is dropped on
+    // the floor instead of trusted, because this map is read on every render.
+    state.coveredQuestions =
+      parsed.coveredQuestions && typeof parsed.coveredQuestions === "object" ? parsed.coveredQuestions : {};
     state.planReady = !!parsed.planReady;
     state.weatherPlaceMode = parsed.weatherPlaceMode === "custom" ? "custom" : "district";
     state.weatherCustomPlace = parsed.weatherCustomPlace || "";
@@ -520,6 +532,9 @@
     state.options = [];
     state.checklist = [];
     state.interested = {};
+    // Starting over clears the ticks too. They describe a visit about
+    // answers that are being thrown away, so keeping them would be a lie.
+    state.coveredQuestions = {};
     state.planReady = false;
     state.weatherPlaceMode = "district";
     state.weatherCustomPlace = "";
@@ -1908,8 +1923,10 @@
       lines.push("QUESTIONS TO ASK AT THE OFFICE (illustrative, from your answers)");
       lines.push("------------------------------------------------------------");
       planQuestions.forEach(function (q, i) {
-        lines.push(i + 1 + ". " + q.text);
+        var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
+        lines.push(i + 1 + ". [" + (ticked ? "x" : " ") + "] " + q.text);
       });
+      lines.push(questionCoverCount(planQuestions) + " of " + planQuestions.length + " covered.");
       lines.push("");
       lines.push("These are questions, not answers. No officer has seen or approved them.");
       lines.push("");
@@ -2214,20 +2231,48 @@
       "<h3>Questions to ask at the office</h3>" +
       '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
       '<p class="summary-note">Written from your answers and the options you marked. They are questions, not answers, and no officer has seen them.</p>' +
-      questionsListHtml(questions, { hideAbout: true })
+      questionsListHtml(questions, { hideAbout: true, ticked: true }) +
+      questionCounterHtml(questions)
     );
   }
 
   function questionsListHtml(questions, opts) {
     opts = opts || {};
     if (!questions.length) return "";
+    // opts.checkable paints each question as a real checklist row with a box
+    // the farmer can tick during the visit, on the phone and then again with
+    // a pen when the card is printed. opts.ticked renders the saved ticks as
+    // plain [x] and [ ] marks for the summary, the card and the downloads,
+    // where an interactive box would print as nothing.
+    var checkable = !!opts.checkable;
+    var showTicks = checkable || !!opts.ticked;
     return (
-      '<ol class="question-list">' +
+      '<ol class="question-list' + (checkable ? " question-checklist" : "") + '">' +
       questions
         .map(function (q) {
+          var ticked = !!(state.coveredQuestions && state.coveredQuestions[q.id]);
+          if (checkable) {
+            return (
+              '<li class="question-item">' +
+              '<label class="question-tick">' +
+              '<input type="checkbox" data-question-tick="' +
+              escapeHtml(q.id) +
+              '"' +
+              (ticked ? " checked" : "") +
+              ' /><span class="question-box" aria-hidden="true"></span>' +
+              '<span class="question-text">' +
+              escapeHtml(q.text) +
+              "</span></label>" +
+              (q.about && !opts.hideAbout
+                ? '<span class="question-about">About: ' + escapeHtml(q.about) + "</span>"
+                : "") +
+              "</li>"
+            );
+          }
           return (
             '<li class="question-item">' +
             '<span class="question-text">' +
+            (showTicks ? (ticked ? "[x] " : "[ ] ") : "") +
             escapeHtml(q.text) +
             "</span>" +
             (q.about && !opts.hideAbout
@@ -2241,6 +2286,23 @@
     );
   }
 
+  // The counter under the checklist. "3 of 7 covered" needs no lesson to
+  // parse, and it updates as boxes are ticked, so progress is visible while
+  // the visit is still happening rather than only after it.
+  function questionCoverCount(questions) {
+    return questions.filter(function (q) {
+      return state.coveredQuestions && state.coveredQuestions[q.id];
+    }).length;
+  }
+
+  function questionCounterHtml(questions) {
+    return (
+      '<p class="question-counter" role="status">' +
+      escapeHtml(questionCoverCount(questions) + " of " + questions.length + " covered") +
+      "</p>"
+    );
+  }
+
   function renderQuestions() {
     var el = $("#questions-block");
     if (!el) return;
@@ -2251,11 +2313,16 @@
       return;
     }
     el.hidden = false;
+    // The results screen carries the tickable checklist itself. Tick boxes
+    // during the visit, and the ticks follow the same questions into the
+    // summary, the visit card and the downloads.
     el.innerHTML =
       "<h2>Questions to ask at the office</h2>" +
       '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
       "<p>Written from what you entered and from the options you marked. They are questions, not answers, and no officer has seen them.</p>" +
-      questionsListHtml(questions) +
+      '<p class="option-note">Tick each one as the officer covers it. The tick is saved on this device and shows on the visit card too.</p>' +
+      questionsListHtml(questions, { checkable: true }) +
+      questionCounterHtml(questions) +
       '<p class="option-note">Take these to your Kisan Khidmat Ghar or district agriculture office, along with any soil test report you have. The office visit card collects them onto one page.</p>';
   }
 
@@ -2748,7 +2815,9 @@
       '<div class="visit-section break-avoid">' +
       "<h3>Questions I would like to ask</h3>" +
       (questions.length
-        ? questionsListHtml(questions, { hideAbout: true })
+        ? questionsListHtml(questions, { hideAbout: true, ticked: true, checkable: true }) +
+          questionCounterHtml(questions) +
+          '<p class="visit-note no-print">Ticked boxes are saved on this device. Tick the rest with a pen once this is printed.</p>'
         : "<p>No questions were generated.</p>") +
       "</div>" +
       (supportHtml
@@ -2818,8 +2887,12 @@
     lines.push("-----------------------------");
     if (questions.length) {
       questions.forEach(function (q, i) {
-        lines.push(i + 1 + ". " + q.text);
+        // The tick rides along into the download, so a downloaded card read
+        // later still shows what the office already covered.
+        var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
+        lines.push(i + 1 + ". [" + (ticked ? "x" : " ") + "] " + q.text);
       });
+      lines.push(questionCoverCount(questions) + " of " + questions.length + " covered.");
     } else {
       lines.push("No questions were generated.");
     }
@@ -3686,6 +3759,31 @@
     document.addEventListener("click", function (e) {
       var btn = e.target.closest ? e.target.closest("[data-interest]") : null;
       if (btn) toggleInterested(btn.getAttribute("data-interest"));
+    });
+
+    // One listener covers every question tick in the app, including the boxes
+    // the visit card renders after this runs. The tick is saved at once, the
+    // counter beside it is repainted, and the summary and card read the same
+    // map the next time they render, so nothing can drift.
+    document.addEventListener("change", function (e) {
+      var box = e.target && e.target.closest ? e.target.closest("[data-question-tick]") : null;
+      if (!box || box.type !== "checkbox") return;
+      var key = box.getAttribute("data-question-tick");
+      if (!key) return;
+      if (!state.coveredQuestions || typeof state.coveredQuestions !== "object") state.coveredQuestions = {};
+      if (box.checked) state.coveredQuestions[key] = true;
+      else delete state.coveredQuestions[key];
+      saveDraft();
+      // Repaint the counter in place without a full re-render, which would
+      // steal the farmer's place on the page mid-visit.
+      var list = box.closest(".question-checklist");
+      var questions = currentQuestions();
+      if (list && list.parentElement) {
+        var counter = list.parentElement.querySelector(".question-counter");
+        if (counter) {
+          counter.textContent = questionCoverCount(questions) + " of " + questions.length + " covered";
+        }
+      }
     });
 
     $$("[data-nav]").forEach(function (a) {

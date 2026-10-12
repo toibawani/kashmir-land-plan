@@ -264,6 +264,23 @@ if (cardOptions.length > 3) {
   check("three or fewer need no overflow note", true, "nothing to hide");
 }
 
+console.log("covered-question ticks");
+var tickQuestions = QUESTIONS.forPlan(sampleData, sampleOptions(), { zone: REGIONS.zoneFor("Pulwama"), max: 7 });
+// A tick is a plain saved mark against a question id. Ids that no longer
+// exist are ignored, so an old tick can never paint the wrong question.
+var covered = {};
+covered[tickQuestions[0].id] = true;
+covered["a-question-that-no-longer-exists"] = true;
+var coverCount = tickQuestions.filter(function (q) {
+  return !!covered[q.id];
+}).length;
+check("one real tick counts as one", coverCount === 1, coverCount + " counted");
+check(
+  "ticks say covered of total",
+  coverCount + " of " + tickQuestions.length + " covered" === "1 of " + tickQuestions.length + " covered",
+  "counter wording"
+);
+
 /* ---- Report ---- */
 
 console.log("");
