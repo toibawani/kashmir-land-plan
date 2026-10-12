@@ -2928,6 +2928,10 @@
       name: state.currentPlanName || "",
       data: JSON.parse(JSON.stringify(state.data)),
       interested: JSON.parse(JSON.stringify(state.interested)),
+      // The covered questions are part of the snapshot for the same reason
+      // the answers are: a plan someone printed and took to an office should
+      // still say what was covered when it is opened again next month.
+      coveredQuestions: JSON.parse(JSON.stringify(state.coveredQuestions || {})),
       // A snapshot of the option ids shown, so a later change to the scoring
       // cannot rewrite a plan someone already printed.
       options: state.options.map(function (o) {
@@ -3211,6 +3215,10 @@
     if (!plan) return false;
     state.data = Object.assign(blankData(), plan.data);
     state.interested = Object.assign({}, plan.interested || {});
+    // A saved plan remembers what the office already covered, so reopening
+    // it a week later does not wipe the visit. Unknown ids ride along
+    // harmlessly and are ignored at render time.
+    state.coveredQuestions = Object.assign({}, plan.coveredQuestions || {});
     state.currentPlanId = plan.id;
     state.currentPlanName = plan.name;
     state.isDemo = !!plan.isDemo;
@@ -3509,6 +3517,18 @@
       narrowQuery.addEventListener("change", function () {
         var el = $("#screen-compare");
         if (el && el.classList.contains("screen-active")) renderCompare();
+        // The saved-plans comparison picks its own shape (table or stacked)
+        // at render time, so a rotated phone gets the right shape here too.
+        var plansEl = $("#screen-plans");
+        if (plansEl && plansEl.classList.contains("screen-active")) renderPlans();
+      });
+    } else if (narrowQuery.addListener) {
+      // Older browsers only know addListener. Same re-render, older name.
+      narrowQuery.addListener(function () {
+        var el = $("#screen-compare");
+        if (el && el.classList.contains("screen-active")) renderCompare();
+        var plansEl = $("#screen-plans");
+        if (plansEl && plansEl.classList.contains("screen-active")) renderPlans();
       });
     }
 
