@@ -124,6 +124,102 @@ precache.forEach(function (r) {
   }
 });
 
+/* ---- 4. A recorded officer review must be complete ---- */
+
+// A half-filled review is worse than none at all: a bare "reviewed" flag
+// with no name and no date would look signed off without any officer behind
+// it. So whenever the catalogue claims a review, the build refuses to pass
+// until the name of the reviewer and the date of the check are both there.
+// This is run, not just parsed, which is safe here because the data modules
+// only define objects on a fake `window` and touch the network nowhere.
+var sandbox = { window: {} };
+try {
+  // The order is load order, not luck: activities.js refuses to load without
+  // the catalogue already on `window`, so the files are named in the same
+  // sequence index.html loads them in.
+  ["regions.js", "catalogue.js", "activities.js"]
+    .map(function (name) {
+      return path.join(root, "js", name);
+    })
+    .forEach(function (file) {
+      new vm.Script(fs.readFileSync(file, "utf8"), { filename: rel(file) }).runInNewContext(sandbox);
+    });
+} catch (err) {
+  failures.push("review check could not run the catalogue: " + err.message);
+}
+
+if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACTIVITIES) {
+  var catalogue = sandbox.window.MLMP_CATALOGUE;
+  var activities = sandbox.window.MLMP_ACTIVITIES;
+
+  // Dates are checked by shape (YYYY-MM-DD) rather than by calendar, because
+  // rejecting an unlikely-but-real date would be a worse mistake than
+  // accepting one nobody can vouch for. The officer's name carries the trust.
+  function dateLooksRight(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+  }
+
+  function checkReviewRecord(where, record) {
+    if (!record) {
+      failures.push(where + " has no review record");
+      return;
+    }
+    if (record.reviewStatus !== "not-reviewed" && record.reviewStatus !== "reviewed") {
+      failures.push(where + ' has reviewStatus "' + record.reviewStatus + '", which must be "not-reviewed" or "reviewed"');
+      return;
+    }
+    if (record.reviewStatus === "reviewed") {
+      if (!String(record.reviewedBy || "").trim()) {
+        failures.push(where + ' is marked "reviewed" but names no reviewer; leave it "not-reviewed" rather than guessing');
+      }
+      if (!dateLooksRight(record.reviewedOn)) {
+        failures.push(where + ' is marked "reviewed" but the date is missing or not YYYY-MM-DD; leave it "not-reviewed" rather than guessing');
+      }
+    }
+  }
+
+  checkReviewRecord("The whole-catalogue review", catalogue.review);
+
+  Object.keys(catalogue.activities || {}).forEach(function (id) {
+    var a = catalogue.activities[id];
+    checkReviewRecord('The "' + id + '" activity review', {
+      reviewStatus: a.reviewStatus || "not-reviewed",
+      reviewedBy: a.reviewedBy || "",
+      reviewedOn: a.reviewedOn || "",
+    });
+  });
+
+  // The wording the farmer hears and reads carries a standing instruction to
+  // confirm locally. If a future edit drops that sentence from one state, the
+  // build should fail here, not on someone's phone.
+  // Note the split: formatReview wordsmiths a single record, while reviewFor
+  // decides what the whole shown list may claim. The mixed state only exists
+  // at the list level, so that is where it is checked.
+  [{ status: "not-reviewed" }, { status: "reviewed", reviewedBy: "Test Officer", reviewedOn: "2026-01-01" }].forEach(
+    function (entry) {
+      var text = activities.formatReview(entry).text;
+      if (!/confirm locally/i.test(text)) {
+        failures.push('The "' + entry.status + '" review wording lost its confirm-locally sentence; a review must never remove it');
+      }
+    }
+  );
+
+  // Two entries where only one is reviewed must read as mixed, never as fully
+  // approved. That is the state most likely to be misread on a small screen,
+  // so it is pinned here: the mixed path only triggers when part of the list
+  // is still unchecked, which needs at least two entries on the list.
+  var mixed = activities.reviewFor([
+    { reviewStatus: "reviewed", reviewedBy: "Test Officer", reviewedOn: "2026-01-01" },
+    {},
+  ]);
+  if (mixed.status !== "mixed") {
+    failures.push('The half-reviewed list read as "' + mixed.status + '" instead of "mixed"; it must never look fully approved');
+  }
+  if (!/confirm locally/i.test(mixed.text)) {
+    failures.push('The "mixed" review wording lost its confirm-locally sentence; a review must never remove it');
+  }
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
