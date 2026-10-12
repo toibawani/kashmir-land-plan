@@ -2588,6 +2588,14 @@
     return chosenOptions().slice(0, 3);
   }
 
+  // The card fits three options on a page. When more are marked, the card
+  // must say so in words rather than quietly dropping the rest, because a
+  // farmer who marked five and sees three will assume the app forgot.
+  function visitOptionNote(count, total) {
+    if (total <= count) return "";
+    return "Showing the first " + count + " of the " + total + " options marked. The rest are in the plan summary.";
+  }
+
   function buildVisitCard() {
     var d = state.data;
     var options = visitOptions();
@@ -2674,6 +2682,9 @@
       "<h3>Options I want to discuss</h3>" +
       optionsHtml +
       '<p class="visit-note">These are options to discuss, not recommendations. Nothing about them has been checked against my plot.</p>' +
+      (visitOptionNote(options.length, chosenOptions().length)
+        ? '<p class="visit-note">' + escapeHtml(visitOptionNote(options.length, chosenOptions().length)) + "</p>"
+        : "") +
       "</div>" +
       '<div class="visit-section break-avoid">' +
       "<h3>Questions I would like to ask</h3>" +
@@ -2702,6 +2713,7 @@
     var d = state.data;
     var options = visitOptions();
     var questions = currentQuestions();
+    var allMarked = chosenOptions();
     var lines = [];
 
     lines.push("MY LAND, MY PLAN: OFFICE VISIT CARD");
@@ -2732,6 +2744,11 @@
         );
         lines.push("   An option to discuss, not a recommendation.");
       });
+      // The plain text download must carry the same warning as the printed
+      // card, or the file and the page will quietly disagree.
+      if (visitOptionNote(options.length, allMarked.length)) {
+        lines.push(visitOptionNote(options.length, allMarked.length));
+      }
     } else {
       lines.push("No options were marked or shown.");
     }
