@@ -16,12 +16,16 @@ My Land, My Plan helps a farmer turn basic details about an underused plot into 
 - Lets you compare options side by side, tick the questions you ask, and mark the ones you want to follow up
 - Gives a practical next-step checklist, and lists the official portals to check
 - Makes a one page office visit card: your answers, the options you marked, the questions to ask and the confirmation note, ready to print and carry
+- Puts a small scannable code beside the reference on the visit card, so a phone can read the code in one motion instead of someone retyping twelve characters
+- Trims the visit card to one clean page when it is printed, by removing only the notes area and, if needed, the support list, never the answers, the options, the questions or the review note
+- Has a visit mode on the card screen that hides everything except the card, the tickable questions and the reading controls, so it is easy to use while standing with an officer
+- Sets expectations for the office with a short, honest panel drawn only from general public knowledge, naming no amounts, deadlines or eligibility rules
 - Saves several named plans on the device, compares them side by side, and lets you pick which one goes to the office
 - Shows gentle, honest timing notes when the forecast is available (for example that rain is likely), pointing you to ask about timing rather than telling you what to do
 - Can read the plan, the visit card and the questions aloud using the voice built into your device
 - Shows general weather for a nearby town, from Open-Meteo
 - Saves a draft on the device and lets you print, save as PDF, download or copy the plan
-- Keeps working with no connection once it has been opened, and can be added to a home screen, with a calm offline indicator
+- Keeps working with no connection once it has been opened, and can be added to a home screen, with a calm offline indicator and a panel that lists plainly what still works offline and what needs a connection
 - States plainly whether the suggestions have been checked by an agriculture officer, on results, comparison, summary and the visit card
 
 No account is required. No personal, financial, or land-identification data is sent to any server. Two honest caveats: the typefaces load from Google Fonts, and the weather screen sends the district you select to Open-Meteo. Everything else stays on the device.
@@ -93,7 +97,7 @@ Opened from disk (`file://`) the app also skips installing its service worker, b
 4. Compare options
 5. Next steps and local support: the month ahead for your shortlist, the generated questions, the checklist and the official portals
 6. Plan summary (print, save as PDF, download, copy, read aloud, or save as a named plan)
-7. Office visit card: a one page summary to print and carry to the office
+7. Office visit card: a one page summary to print and carry, with the reference and a small scannable code, an optional visit mode, and a short "what to expect" panel
 8. My saved plans: several named plans, side by side, with one chosen for the office
 9. Weather near your district
 10. About, sources and limitations
@@ -113,6 +117,10 @@ js/weather.js         Open-Meteo geocoding and forecast, plus the timing-note fa
 js/questions.js       writes the questions to ask from your answers and options
 js/plans.js           stores several named plans and which one goes to the office
 js/speech.js          reads a plan aloud with the device's own speech voices
+js/qr.js              draws a small QR code on the device, with no library and no network
+js/offline.js         the one place that says what works offline and what needs a connection
+js/visitfit.js        trims the visit card to one page for printing, without touching the answers
+js/office.js          the short, honest "what to expect at the office" panel
 js/app.js             state, validation, sample scoring, rendering
 icons/                the app mark, as SVG and as PNG
 tools/make-icons.py   draws the PNG icons, with no image library involved
@@ -191,7 +199,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 
 ## New sources used for this round
 
-None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. The new features work only from data already present: the questions, the month ahead, the visit card and the saved plans are all built from your own answers and the existing catalogue and calendars. The timing notes read the Open-Meteo forecast that was already the app's one live source, and report a plain fact from it without adding any farming instruction. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
+None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. The visit-card work (the scannable code, the one-page print, the offline panel and the "what to expect at the office" panel) is built only from data already in the app and from general public knowledge about how a public agriculture counter works. The "what to expect" panel names no amounts, deadlines, documents or eligibility rules, and says plainly that the office decides; it is written from common public knowledge, not from any source that states an official position. The self-test harness grew to 123 checks and now reads the finished QR matrix back with an independent decoder, so a mistake in placement, masking or interleaving would show up as garbled text rather than pass unnoticed. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
 
 ## Licence
 
