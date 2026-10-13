@@ -2919,6 +2919,10 @@
     lines.push("");
     lines.push(ACTIVITIES.confirmationLine);
     lines.push("Made by the farmer using a prototype. Not an official document.");
+    // The printed and on-screen card also carry a small scannable code beside
+    // the reference. Plain text cannot hold one, so the download says so rather
+    // than leaving the farmer to wonder whether the reference alone is enough.
+    lines.push("The printed card also shows a scannable code beside the reference. It carries only that reference and nothing else.");
     return lines.join("\n");
   }
 
