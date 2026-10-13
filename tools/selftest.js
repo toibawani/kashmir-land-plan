@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
@@ -78,6 +78,7 @@ var SCHEMES = sandbox.window.MLMP_SCHEMES;
 var QUESTIONS = sandbox.window.MLMP_QUESTIONS;
 var PLANS = sandbox.window.MLMP_PLANS;
 var SPEECH = sandbox.window.MLMP_SPEECH;
+var QR = sandbox.window.MLMP_QR;
 
 console.log("review wording");
 
@@ -280,6 +281,176 @@ check(
   coverCount + " of " + tickQuestions.length + " covered" === "1 of " + tickQuestions.length + " covered",
   "counter wording"
 );
+
+/* ---- QR code on the device ---- */
+
+console.log("visit card QR");
+
+/**
+ * Read the data back out of a finished matrix, without asking the encoder what
+ * it put in. This rebuilds the reserved areas from the QR spec and walks the
+ * zig-zag in the same order, unmasking with the mask id the encoder recorded.
+ * If the placement, masking or interleaving were wrong anywhere, the text
+ * would come back garbled and these checks would fail.
+ */
+function decodeQr(built) {
+  var size = built.size;
+  var grid = built.grid;
+
+  var rowR = [];
+  var colR = [];
+  for (var i = 0; i < size; i++) {
+    rowR.push(new Array(size).fill(false));
+    colR.push(new Array(size).fill(false));
+  }
+  function mark(r, c) {
+    if (r < 0 || c < 0 || r >= size || c >= size) return;
+    rowR[r][c] = true;
+    colR[c][r] = true;
+  }
+  var corners = [
+    [0, 0],
+    [0, size - 7],
+    [size - 7, 0],
+  ];
+  corners.forEach(function (corner) {
+    for (var y = -1; y <= 7; y++) {
+      for (var x = -1; x <= 7; x++) mark(corner[0] + y, corner[1] + x);
+    }
+  });
+  for (var t = 8; t < size - 8; t++) {
+    mark(6, t);
+    mark(t, 6);
+  }
+  var table = { 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30], 6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50] };
+  var pos = table[built.version] || [];
+  pos.forEach(function (ar) {
+    pos.forEach(function (ac) {
+      if ((ar < 9 && ac < 9) || (ar < 9 && ac >= size - 8) || (ar >= size - 8 && ac < 9)) return;
+      for (var y = -2; y <= 2; y++) {
+        for (var x = -2; x <= 2; x++) mark(ar + y, ac + x);
+      }
+    });
+  });
+  for (var f = 0; f < 9; f++) {
+    mark(8, f);
+    mark(f, 8);
+  }
+  for (var g = 0; g < 8; g++) {
+    mark(8, size - 1 - g);
+    mark(size - 1 - g, 8);
+  }
+
+  var masks = [
+    function (r, c) { return (r + c) % 2 === 0 ? 1 : 0; },
+    function (r) { return r % 2 === 0 ? 1 : 0; },
+    function (r, c) { return c % 3 === 0 ? 1 : 0; },
+    function (r, c) { return (r + c) % 3 === 0 ? 1 : 0; },
+    function (r, c) { return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0 ? 1 : 0; },
+    function (r, c) { return ((r * c) % 2) + ((r * c) % 3) === 0 ? 1 : 0; },
+    function (r, c) { return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0 ? 1 : 0; },
+    function (r, c) { return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0 ? 1 : 0; },
+  ];
+  var mask = masks[built.mask];
+
+  var bits = [];
+  var upward = true;
+  for (var right = size - 1; right >= 1; right -= 2) {
+    if (right === 6) right = 5;
+    for (var step = 0; step < size; step++) {
+      var row = upward ? size - 1 - step : step;
+      for (var k = 0; k < 2; k++) {
+        var col = right - k;
+        if (col < 0 || col === 6) continue;
+        if (rowR[row][col] || colR[col][row]) continue;
+        bits.push(grid[row][col] ^ mask(row, col));
+      }
+    }
+    upward = !upward;
+  }
+
+  var at = 0;
+  function take(n) {
+    var v = 0;
+    for (var i = 0; i < n; i++) v = (v << 1) | bits[at++];
+    return v;
+  }
+  var mode = take(4);
+  var length = take(built.version >= 10 ? 16 : 8);
+  var bytes = [];
+  for (var b = 0; b < length; b++) {
+    var byte = 0;
+    for (var i2 = 0; i2 < 8; i2++) byte = (byte << 1) | bits[at++];
+    bytes.push(byte);
+  }
+  return { mode: mode, length: length, text: Buffer.from(bytes).toString("utf8") };
+}
+
+// A real plan reference is short, so version 1 must carry it. Over-choosing a
+// version would make the code needlessly dense and small for a camera.
+var refCode = "MLMP-PUL-3K-8F2C";
+var refMatrix = QR.matrix(refCode);
+check("a plan reference produces a matrix", !!refMatrix, "no matrix");
+check("a plan reference fits the smallest version", refMatrix && refMatrix.version === 1, "version " + (refMatrix && refMatrix.version));
+check("version 1 is 21 modules on a side", refMatrix && refMatrix.size === 21, "size " + (refMatrix && refMatrix.size));
+check("a mask was chosen from the eight", refMatrix && refMatrix.mask >= 0 && refMatrix.mask <= 7, "mask " + (refMatrix && refMatrix.mask));
+
+// The load-bearing check: whatever went in comes back out.
+var refBack = decodeQr(refMatrix);
+check("the reference reads back exactly", refBack && refBack.text === refCode, "got " + (refBack && JSON.stringify(refBack.text)));
+check("the mode is byte mode", refBack && refBack.mode === 4, "mode " + (refBack && refBack.mode));
+check("the length agrees", refBack && refBack.length === refCode.length, "length " + (refBack && refBack.length));
+
+// Longer strings move up a version and still round-trip. The last one is far
+// beyond anything the app will encode, to prove the version steps work.
+var longerCases = ["MLMP-ANA-9Q2-XYZ12", "A", "The quick brown fox jumps over the lazy dog, 1234567890."];
+longerCases.forEach(function (text) {
+  var built = QR.matrix(text);
+  var back = decodeQr(built);
+  check("longer text round-trips: \"" + text.slice(0, 20) + "\"", back && back.text === text, "got " + (back && JSON.stringify(back.text)));
+});
+
+check("something too long for version 10 is refused", QR.matrix(new Array(300).join("x")) === null, "should have refused");
+
+// The three finders must be intact, because a scanner locks onto them first.
+function finderOk(built, top, left) {
+  var expect = [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+  ];
+  for (var y = 0; y < 7; y++) {
+    for (var x = 0; x < 7; x++) {
+      if (built.grid[top + y][left + x] !== expect[y][x]) return false;
+    }
+  }
+  return true;
+}
+function sameGrid(a, b) {
+  for (var r = 0; r < a.length; r++) {
+    for (var c = 0; c < a.length; c++) if (a[r][c] !== b[r][c]) return false;
+  }
+  return true;
+}
+check("the top left finder is intact", finderOk(refMatrix, 0, 0));
+check("the top right finder is intact", finderOk(refMatrix, 0, refMatrix.size - 7));
+check("the bottom left finder is intact", finderOk(refMatrix, refMatrix.size - 7, 0));
+check("the dark module is always dark", refMatrix.grid[refMatrix.size - 8][8] === 1, "dark module light");
+check("the timing row alternates", refMatrix.grid[6][8] === 1 && refMatrix.grid[6][9] === 0 && refMatrix.grid[6][10] === 1, "timing broken");
+check("the separator ring is quiet", refMatrix.grid[7][8] === 0 && refMatrix.grid[8][7] === 0, "separator inked");
+
+// The same answers must always give the same code, on any device, because a
+// card printed last month has to match the plan saved last month.
+check("the code is deterministic", sameGrid(QR.matrix(refCode).grid, refMatrix.grid) && QR.matrix(refCode).mask === refMatrix.mask, "two builds differed");
+
+// The accessible caption has to name what the code holds and say plainly that
+// a scan shows nothing more, so no one expects the plan itself to appear.
+check("the caption names the reference", /MLMP-PUL-3K-8F2C/.test(QR.describe(refCode)), QR.describe(refCode));
+check("the caption promises nothing more than the reference", /nothing more/i.test(QR.describe(refCode)), QR.describe(refCode));
 
 /* ---- Report ---- */
 
