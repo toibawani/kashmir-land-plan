@@ -19,6 +19,9 @@
   var ACTIVITIES = window.MLMP_ACTIVITIES;
   var SCHEMES = window.MLMP_SCHEMES;
   var WEATHER = window.MLMP_WEATHER;
+  var QUESTIONS = window.MLMP_QUESTIONS;
+  var PLANS = window.MLMP_PLANS;
+  var SPEECH = window.MLMP_SPEECH;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -72,10 +75,20 @@
     options: [],
     checklist: [],
     interested: {},
+    // Which generated questions the farmer has already covered with the
+    // officer, keyed by the question id. The ids are stable for a plan, so a
+    // tick survives a re-render and a restart; ids that no longer exist are
+    // simply ignored when the lists are painted.
+    coveredQuestions: {},
     weather: { district: "", query: "", result: null, error: null, status: "idle" },
     weatherPlaceMode: "district",
     weatherCustomPlace: "",
     planReady: false,
+    /** The saved plan currently being edited, so saving again updates it. */
+    currentPlanId: null,
+    currentPlanName: "",
+    /** Held from beforeinstallprompt until the farmer asks to install. */
+    installPrompt: null,
   };
 
   // ------------------------------------------------------------- Helpers
@@ -127,6 +140,12 @@
 
   function showScreen(id, opts) {
     opts = opts || {};
+    // Moving to another screen stops anything being read out. Without this the
+    // voice carries on describing a page the farmer has already left.
+    var leaving = $(".screen-active");
+    if (leaving && leaving.id !== "screen-" + id && speechAvailable() && SPEECH.speaking()) {
+      stopReading();
+    }
     $$(".screen").forEach(function (s) {
       s.hidden = true;
       s.classList.remove("screen-active");
@@ -155,6 +174,10 @@
     });
   }
 
+  // One shared banner for the review state, used on the results screen, the
+  // comparison, the plan summary and the office visit card. Sharing one
+  // builder is deliberate: the farmer should never have to wonder whether
+  // two slightly different wordings mean two different things.
   function reviewBannerHtml(review, extraClass) {
     extraClass = extraClass || "";
     var status = review && review.status ? review.status : "not-reviewed";
@@ -163,9 +186,7 @@
       escapeHtml(status) +
       (extraClass ? " " + extraClass : "") +
       '" role="status">' +
-      '<p class="review-label">' +
-      (status === "reviewed" ? "Officer review" : status === "mixed" ? "Review status" : "Not yet reviewed") +
-      "</p>" +
+      '<p class="review-label">Officer review</p>' +
       "<p>" +
       escapeHtml(review.text) +
       "</p></div>"
@@ -428,9 +449,16 @@
           isDemo: state.isDemo,
           checklist: state.checklist || [],
           interested: state.interested || {},
+          // The covered questions ride with the answers, so a reopened draft
+          // still shows what the office already talked through.
+          coveredQuestions: state.coveredQuestions || {},
           planReady: !!state.planReady,
           weatherPlaceMode: state.weatherPlaceMode || "district",
           weatherCustomPlace: state.weatherCustomPlace || "",
+          // Which saved plan this draft belongs to, so saving again updates
+          // that plan instead of adding a duplicate.
+          currentPlanId: state.currentPlanId || null,
+          currentPlanName: state.currentPlanName || "",
         })
       );
       return true;
@@ -476,9 +504,15 @@
     state.isDemo = !!parsed.isDemo;
     state.checklist = Array.isArray(parsed.checklist) ? parsed.checklist : [];
     state.interested = parsed.interested && typeof parsed.interested === "object" ? parsed.interested : {};
+    // Only plain yes-marks are kept. Anything shaped otherwise is dropped on
+    // the floor instead of trusted, because this map is read on every render.
+    state.coveredQuestions =
+      parsed.coveredQuestions && typeof parsed.coveredQuestions === "object" ? parsed.coveredQuestions : {};
     state.planReady = !!parsed.planReady;
     state.weatherPlaceMode = parsed.weatherPlaceMode === "custom" ? "custom" : "district";
     state.weatherCustomPlace = parsed.weatherCustomPlace || "";
+    state.currentPlanId = parsed.currentPlanId || null;
+    state.currentPlanName = parsed.currentPlanName || "";
     return true;
   }
 
@@ -498,10 +532,17 @@
     state.options = [];
     state.checklist = [];
     state.interested = {};
+    // Starting over clears the ticks too. They describe a visit about
+    // answers that are being thrown away, so keeping them would be a lie.
+    state.coveredQuestions = {};
     state.planReady = false;
     state.weatherPlaceMode = "district";
     state.weatherCustomPlace = "";
     state.data = blankData();
+    // Starting over abandons the working copy but leaves saved plans alone, so
+    // nothing the farmer deliberately saved disappears with it.
+    state.currentPlanId = null;
+    state.currentPlanName = "";
     state.weather = { district: "", query: "", result: null, error: null, status: "idle" };
     var form = $("#land-form");
     if (form) form.reset();
@@ -983,6 +1024,23 @@
     var legend = $("#results-provenance");
     if (legend) legend.innerHTML = provenanceLegend({});
 
+    var nameTag = $("#results-plan-name");
+    if (nameTag) {
+      if (state.currentPlanId && state.currentPlanName) {
+        nameTag.hidden = false;
+        nameTag.textContent = 'Saved as "' + state.currentPlanName + '". Saving again updates that plan.';
+      } else {
+        nameTag.hidden = true;
+        nameTag.textContent = "";
+      }
+    }
+
+    // These three follow the shortlist, so they rebuild whenever the marks or
+    // a loaded forecast change.
+    renderTimingNote();
+    renderMonthView();
+    renderQuestions();
+
     updateInterestedStatus();
   }
 
@@ -1459,6 +1517,8 @@
         })
         .join("") +
       "</ul>" +
+      monthSummaryHtml() +
+      questionsSummaryHtml() +
       "<h3>Who to contact next</h3>" +
       "<ul>" +
       "<li>Your Kisan Khidmat Ghar or district agriculture office</li>" +
@@ -1843,6 +1903,35 @@
     );
     lines.push("");
 
+    var monthIndexNow = new Date().getMonth();
+    var monthOptions = chosenOptions();
+    if (monthOptions.length) {
+      lines.push(ACTIVITIES.MONTHS[monthIndexNow] + " IN THE OPTIONS YOU PICKED");
+      lines.push("----------------------------------------");
+      monthOptions.forEach(function (o) {
+        var cell = o.activity.calendar[monthIndexNow];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        lines.push(o.activity.title + ": " + phase.label + ", " + cell.t);
+      });
+      lines.push("General guidance only. Sowing, care and harvest move with elevation,");
+      lines.push("variety and the year.");
+      lines.push("");
+    }
+
+    var planQuestions = currentQuestions();
+    if (planQuestions.length) {
+      lines.push("QUESTIONS TO ASK AT THE OFFICE (illustrative, from your answers)");
+      lines.push("------------------------------------------------------------");
+      planQuestions.forEach(function (q, i) {
+        var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
+        lines.push(i + 1 + ". [" + (ticked ? "x" : " ") + "] " + q.text);
+      });
+      lines.push(questionCoverCount(planQuestions) + " of " + planQuestions.length + " covered.");
+      lines.push("");
+      lines.push("These are questions, not answers. No officer has seen or approved them.");
+      lines.push("");
+    }
+
     lines.push("YOUR NEXT STEPS");
     lines.push("---------------");
     var checklist = state.checklist && state.checklist.length
@@ -1955,6 +2044,11 @@
       text = buildPlanText();
     }
 
+    triggerDownload(text, filename, type);
+    setStatus("copy-status", "Downloaded " + filename + ".");
+  }
+
+  function triggerDownload(text, filename, type) {
     var blob = new Blob([text], { type: type });
     var url = URL.createObjectURL(blob);
     var link = document.createElement("a");
@@ -1966,7 +2060,1187 @@
     setTimeout(function () {
       URL.revokeObjectURL(url);
     }, 1000);
-    setStatus("copy-status", "Downloaded " + filename + ".");
+  }
+
+  function downloadVisitCard() {
+    var date = new Date().toISOString().slice(0, 10);
+    var filename = "my-land-my-plan-office-card-" + date + ".txt";
+    triggerDownload(buildVisitCardText(), filename, "text/plain;charset=utf-8");
+    setStatus("visit-status", "Downloaded " + filename + ". Print the page instead if you want it on paper.");
+  }
+
+  // ------------------------------------------------------------ Reading out
+
+  /**
+   * The options to carry forward: the ones marked, or everything shown when
+   * nothing is marked yet. Everything downstream uses this, so the questions,
+   * the month view and the office card all talk about the same shortlist.
+   */
+  function chosenOptions() {
+    if (!state.options.length) return [];
+    var marked = state.options.filter(function (o) {
+      return !!state.interested[o.activity.id];
+    });
+    return marked.length ? marked : state.options.slice();
+  }
+
+  function markedCount() {
+    return Object.keys(state.interested).filter(function (k) {
+      return state.interested[k];
+    }).length;
+  }
+
+  function questionsAvailable() {
+    return !!(QUESTIONS && QUESTIONS.forPlan);
+  }
+
+  function currentQuestions() {
+    if (!questionsAvailable() || !state.options.length) return [];
+    var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
+    return QUESTIONS.forPlan(state.data, chosenOptions(), {
+      zone: REGIONS.zoneFor(state.data.district),
+      timingHint: hint,
+      max: 7,
+    });
+  }
+
+  /**
+   * A forecast fact, the reason it is only a fact about a town, and the advice
+   * to ask rather than act. Deliberately no instruction, because a model grid
+   * cannot know a field.
+   */
+  function timingNoteText(hint) {
+    if (!hint) return "";
+    var lead;
+    if (hint.kind === "rain") {
+      lead =
+        "The forecast for " + hint.placeName + " puts the chance of rain at about " +
+        hint.value + "% around " + hint.dayLabel + ".";
+    } else if (hint.kind === "cold") {
+      lead =
+        "Night temperatures near " + hint.placeName + " are forecast close to " +
+        hint.value + hint.unit + " around " + hint.dayLabel + ".";
+    } else {
+      lead =
+        "Daytime temperatures near " + hint.placeName + " are forecast close to " +
+        hint.value + hint.unit + " around " + hint.dayLabel + ".";
+    }
+    return (
+      lead +
+      " This is a forecast for a town, not for your field, and it changes. Worth asking the officer whether it affects the timing you had in mind."
+    );
+  }
+
+  function renderTimingNote() {
+    var el = $("#timing-note");
+    if (!el) return;
+    var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
+    var text = timingNoteText(hint);
+    if (!text) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML =
+      "<h2>Something in the forecast</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-weather">Live weather</span></p>' +
+      "<p>" +
+      escapeHtml(text) +
+      "</p>" +
+      '<p class="option-note">Shown because a forecast was loaded for this district. It is one more thing to raise at the office, not a plan.</p>';
+  }
+
+  /** Which month each option is usually at, using the calendar already shown. */
+  function renderMonthView() {
+    var el = $("#month-view");
+    if (!el) return;
+    var options = chosenOptions();
+    if (!options.length) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    var monthIndex = new Date().getMonth();
+    var monthName = ACTIVITIES.MONTHS[monthIndex];
+    var rows = options
+      .map(function (o) {
+        var cell = o.activity.calendar[monthIndex];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        return (
+          '<li class="month-row">' +
+          '<span class="month-option">' +
+          escapeHtml(o.activity.title) +
+          "</span>" +
+          '<span class="month-phase phase-' +
+          cell.p +
+          '">' +
+          escapeHtml(phase.label) +
+          ": " +
+          escapeHtml(cell.t) +
+          "</span></li>"
+        );
+      })
+      .join("");
+    el.hidden = false;
+    el.innerHTML =
+      "<h2>" +
+      escapeHtml(monthName) +
+      " in the options you picked</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      '<ul class="month-list">' +
+      rows +
+      "</ul>" +
+      '<p class="option-note">Taken from the typical year shown for each option. Sowing, care and harvest move with elevation, variety and the year, so read this as what the month usually means for that option rather than as something to do now.</p>';
+  }
+
+  /** The month view again, in summary form, because the summary is what prints. */
+  function monthSummaryHtml() {
+    var options = chosenOptions();
+    if (!options.length) return "";
+    var monthIndex = new Date().getMonth();
+    var rows = options
+      .map(function (o) {
+        var cell = o.activity.calendar[monthIndex];
+        var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+        return (
+          "<li><strong>" +
+          escapeHtml(o.activity.title) +
+          ":</strong> " +
+          escapeHtml(phase.label + ", " + cell.t) +
+          "</li>"
+        );
+      })
+      .join("");
+    return (
+      "<h3>" +
+      escapeHtml(ACTIVITIES.MONTHS[monthIndex]) +
+      " in the options you picked</h3>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      "<ul>" +
+      rows +
+      "</ul>" +
+      '<p class="summary-note">From the typical year recorded for each option. General guidance only: sowing, care and harvest move with elevation, variety and the year.</p>'
+    );
+  }
+
+  function questionsSummaryHtml() {
+    var questions = currentQuestions();
+    if (!questions.length) return "";
+    return (
+      "<h3>Questions to ask at the office</h3>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      '<p class="summary-note">Written from your answers and the options you marked. They are questions, not answers, and no officer has seen them.</p>' +
+      questionsListHtml(questions, { hideAbout: true, ticked: true }) +
+      questionCounterHtml(questions)
+    );
+  }
+
+  function questionsListHtml(questions, opts) {
+    opts = opts || {};
+    if (!questions.length) return "";
+    // opts.checkable paints each question as a real checklist row with a box
+    // the farmer can tick during the visit, on the phone and then again with
+    // a pen when the card is printed. opts.ticked renders the saved ticks as
+    // plain [x] and [ ] marks for the summary, the card and the downloads,
+    // where an interactive box would print as nothing.
+    var checkable = !!opts.checkable;
+    var showTicks = checkable || !!opts.ticked;
+    return (
+      '<ol class="question-list' + (checkable ? " question-checklist" : "") + '">' +
+      questions
+        .map(function (q) {
+          var ticked = !!(state.coveredQuestions && state.coveredQuestions[q.id]);
+          if (checkable) {
+            return (
+              '<li class="question-item">' +
+              '<label class="question-tick">' +
+              '<input type="checkbox" data-question-tick="' +
+              escapeHtml(q.id) +
+              '"' +
+              (ticked ? " checked" : "") +
+              ' /><span class="question-box" aria-hidden="true"></span>' +
+              '<span class="question-text">' +
+              escapeHtml(q.text) +
+              "</span></label>" +
+              (q.about && !opts.hideAbout
+                ? '<span class="question-about">About: ' + escapeHtml(q.about) + "</span>"
+                : "") +
+              "</li>"
+            );
+          }
+          return (
+            '<li class="question-item">' +
+            '<span class="question-text">' +
+            (showTicks ? (ticked ? "[x] " : "[ ] ") : "") +
+            escapeHtml(q.text) +
+            "</span>" +
+            (q.about && !opts.hideAbout
+              ? '<span class="question-about">About: ' + escapeHtml(q.about) + "</span>"
+              : "") +
+            "</li>"
+          );
+        })
+        .join("") +
+      "</ol>"
+    );
+  }
+
+  // The counter under the checklist. "3 of 7 covered" needs no lesson to
+  // parse, and it updates as boxes are ticked, so progress is visible while
+  // the visit is still happening rather than only after it.
+  function questionCoverCount(questions) {
+    return questions.filter(function (q) {
+      return state.coveredQuestions && state.coveredQuestions[q.id];
+    }).length;
+  }
+
+  function questionCounterHtml(questions) {
+    return (
+      '<p class="question-counter" role="status">' +
+      escapeHtml(questionCoverCount(questions) + " of " + questions.length + " covered") +
+      "</p>"
+    );
+  }
+
+  function renderQuestions() {
+    var el = $("#questions-block");
+    if (!el) return;
+    var questions = currentQuestions();
+    if (!questions.length) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    el.hidden = false;
+    // The results screen carries the tickable checklist itself. Tick boxes
+    // during the visit, and the ticks follow the same questions into the
+    // summary, the visit card and the downloads.
+    el.innerHTML =
+      "<h2>Questions to ask at the office</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
+      "<p>Written from what you entered and from the options you marked. They are questions, not answers, and no officer has seen them.</p>" +
+      '<p class="option-note">Tick each one as the officer covers it. The tick is saved on this device and shows on the visit card too.</p>' +
+      questionsListHtml(questions, { checkable: true }) +
+      questionCounterHtml(questions) +
+      '<p class="option-note">Take these to your Kisan Khidmat Ghar or district agriculture office, along with any soil test report you have. The office visit card collects them onto one page.</p>';
+  }
+
+  // ------------------------------------------------------------ Reading out
+
+  // ------------------------------------------------------------ Reading out
+
+  // Reading is tap to play, tap to hold, tap to carry on. A smaller Stop sits
+  // beside the big button while anything plays, and leaving the screen stops
+  // the voice outright. The two big buttons live on different screens and
+  // never play at once, so starting one always stops the other and resets it.
+  //
+  // Which read is active is tracked in activeReadId, not guessed from the
+  // voice alone; guessing is how buttons end up saying Stop while nothing is
+  // playing. The paused label ("Carry on reading") is what makes the hold
+  // state visible to someone who cannot hear the silence.
+  var READ_CONTROLS = {
+    "btn-read-plan": {
+      play: "Read the plan aloud",
+      pause: "Pause the reading",
+      stop: "btn-read-plan-stop",
+      status: "read-plan-status",
+      fallback: "read-plan-fallback",
+    },
+    "btn-visit-read": {
+      play: "Read the card aloud",
+      pause: "Pause the reading",
+      stop: "btn-visit-read-stop",
+      status: "read-visit-status",
+      fallback: "read-visit-fallback",
+    },
+  };
+  var activeReadId = null;
+
+  function speechAvailable() {
+    return !!(SPEECH && SPEECH.supported && SPEECH.supported());
+  }
+
+  function readPaused() {
+    return !!(SPEECH && SPEECH.paused && SPEECH.paused());
+  }
+
+  // One renderer for every read button, driven by the voice engine state
+  // rather than by optimistic flags set at click time.
+  function setReadState(activeId) {
+    Object.keys(READ_CONTROLS).forEach(function (id) {
+      var c = READ_CONTROLS[id];
+      var play = $("#" + id);
+      var stop = $("#" + c.stop);
+      if (!play) return;
+      var isActive = activeId != null && id === activeId && SPEECH.speaking();
+      var paused = isActive && readPaused();
+      play.setAttribute("aria-pressed", isActive && !paused ? "true" : "false");
+      if (isActive && !paused) play.textContent = c.pause;
+      else if (isActive && paused) play.textContent = "Carry on reading";
+      else play.textContent = c.play;
+      // The stop control only exists while its own reading plays, so it can
+      // never stop silence or someone else's voice.
+      if (stop) stop.hidden = !isActive;
+    });
+  }
+
+  function readStatusElement(id) {
+    var c = READ_CONTROLS[id];
+    return c ? $("#" + c.status) : null;
+  }
+
+  // The spoken status names the section being read and the count, because
+  // "something is playing" on its own is not enough to follow a long plan.
+  function setReadProgress(id, index, total, label) {
+    var el = readStatusElement(id);
+    if (!el) return;
+    el.textContent = "Reading: " + label + " (" + (index + 1) + " of " + total + "). Press Pause to hold it.";
+    el.hidden = false;
+  }
+
+  function clearReadProgress(id) {
+    var el = readStatusElement(id);
+    if (!el) return;
+    el.textContent = "";
+    el.hidden = true;
+  }
+
+  function stopReading() {
+    // Stopping is safe to call any time, including from a screen change while
+    // nothing plays. The guards inside make the no-op genuinely free.
+    if (SPEECH.speaking()) SPEECH.stop();
+    activeReadId = null;
+    setReadState(null);
+    Object.keys(READ_CONTROLS).forEach(clearReadProgress);
+  }
+
+  function toggleRead(id, sections) {
+    if (!READ_CONTROLS[id]) return;
+    // Tapping the active button holds or carries on. The voice carries on
+    // from the held word rather than starting over.
+    if (activeReadId === id && SPEECH.speaking()) {
+      if (readPaused()) SPEECH.resume();
+      else if (SPEECH.pause) SPEECH.pause();
+      else stopReading();
+      setReadState(id);
+      return;
+    }
+    // Anything playing from the other screen is stopped first, and then the
+    // new text starts. A previous version just stopped and went quiet here,
+    // which read as a broken button: tap the card's reader while the plan is
+    // playing and nothing seemed to happen at all.
+    if (SPEECH.speaking()) stopReading();
+    if (!speechAvailable()) {
+      var silent = readStatusElement(id);
+      if (silent) {
+        silent.textContent = "This browser does not offer a reading voice. The text stays on screen, and it can still be printed.";
+        silent.hidden = false;
+      }
+      return;
+    }
+    if (!sections || !sections.length) {
+      var empty = readStatusElement(id);
+      if (empty) {
+        empty.textContent = "There is nothing to read yet.";
+        empty.hidden = false;
+      }
+      return;
+    }
+    activeReadId = id;
+    setReadState(id);
+    SPEECH.speak(sections, {
+      onState: function (s) {
+        if (activeReadId !== id) return;
+        if (s === "paused" || s === "resumed" || s === "speaking") {
+          setReadState(id);
+          return;
+        }
+        if (s === "done" || s === "stopped") {
+          stopReading();
+          return;
+        }
+        if (s === "unavailable") {
+          stopReading();
+          var failed = readStatusElement(id);
+          if (failed) {
+            failed.textContent = "This device could not read it out. The text is still on screen and can be printed.";
+            failed.hidden = false;
+          }
+        }
+      },
+      onSection: function (index, total, label) {
+        if (activeReadId === id) setReadProgress(id, index, total, label);
+      },
+    });
+  }
+
+  // Browsers with no voice never get a dead button. The play controls are
+  // swapped for a plain sentence that says so. The sentence lives in the
+  // static HTML too, so it shows even before any reading was attempted.
+  function initReadButtons() {
+    var ok = speechAvailable();
+    Object.keys(READ_CONTROLS).forEach(function (id) {
+      var c = READ_CONTROLS[id];
+      var play = $("#" + id);
+      var note = $("#" + c.fallback);
+      if (!play) return;
+      if (ok) {
+        if (note) note.hidden = true;
+      } else {
+        play.hidden = true;
+        var stop = $("#" + c.stop);
+        if (stop) stop.hidden = true;
+        if (note) note.hidden = false;
+      }
+    });
+  }
+
+  // ---------------------------------------------------------- Reading aloud
+
+  // The plan, cut into named sections so the ear can follow what the eye sees
+  // as headings. Each section is read in order, and the interface names the
+  // one being read: "Reading: Questions to ask at the office (5 of 7)".
+  // Portal addresses are left out on purpose. A spelled-out web address is
+  // useful on paper but only noise in a spoken sentence.
+  function buildSpokenSections() {
+    var d = state.data;
+    var sections = [];
+    sections.push({
+      label: "Your plan summary",
+      text:
+        "My Land, My Plan. Your plan summary for " + (d.district || "your district") + ". " +
+        currentReview().text,
+    });
+    sections.push({
+      label: "What you entered",
+      text:
+        "You entered " + (d.size || "a plot") + " " + (d.unit || "") + ", " + labelLandUse(d.landUse) +
+        ", with " + labelWater(d.water) + " water, " + labelTerrain(d.terrain) + " ground, and " +
+        labelConstraint(d.constraint) + " as the main thing holding you back.",
+    });
+
+    var options = chosenOptions();
+    if (options.length) {
+      var optionsText =
+        (markedCount()
+          ? "You marked " + markedCount() + " of the options to follow up."
+          : "No options were marked, so these are all the ones shown.") +
+        " ";
+      optionsText += options
+        .map(function (o, i) {
+          return "Option " + (i + 1) + ": " + o.activity.title + ". " + o.activity.why;
+        })
+        .join(" ");
+      sections.push({ label: "Options to explore", text: optionsText });
+    }
+
+    var hint = WEATHER && WEATHER.timingHint ? WEATHER.timingHint(weatherForPlan()) : null;
+    if (hint) {
+      sections.push({ label: "Something in the forecast", text: timingNoteText(hint) });
+    }
+
+    var monthIndex = new Date().getMonth();
+    if (options.length) {
+      var monthText = "In " + ACTIVITIES.MONTHS[monthIndex] + ", the typical year says: ";
+      monthText += options
+        .map(function (o) {
+          var cell = o.activity.calendar[monthIndex];
+          var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+          return o.activity.title + ": " + phase.label + ", " + cell.t + ".";
+        })
+        .join(" ");
+      monthText += " That is general guidance only, and it moves with elevation and the year.";
+      sections.push({ label: ACTIVITIES.MONTHS[monthIndex] + " in the options you picked", text: monthText });
+    }
+
+    var questions = currentQuestions();
+    if (questions.length) {
+      sections.push({
+        label: "Questions to ask at the office",
+        text: questions
+          .map(function (q, i) {
+            return "Question " + (i + 1) + ". " + q.text;
+          })
+          .join(" "),
+      });
+    }
+
+    var checklist = state.checklist && state.checklist.length ? state.checklist : [];
+    var stepsText = checklist.length
+      ? checklist
+          .map(function (item) {
+            return (item.checked ? "Done: " : "To do: ") + item.text;
+          })
+          .join(" ")
+      : getChecklistItems().join(" ");
+    sections.push({ label: "Your next steps", text: stepsText });
+
+    sections.push({
+      label: "A last word",
+      text: ACTIVITIES.confirmationLine + " This is an illustrative prototype, not an official service.",
+    });
+    return sections;
+  }
+
+  // The office visit card, cut the same way: short sections with the card's
+  // own headings, so what the card names in print is what the voice names.
+  function buildVisitSections() {
+    var d = state.data;
+    var options = visitOptions();
+    var questions = currentQuestions();
+    return [
+      {
+        label: "Office visit card",
+        text: "My Land, My Plan. Your office visit card. " + currentReview().text,
+      },
+      {
+        label: "What you entered",
+        text:
+          "District " + (d.district || "not given") + ". Village or locality " + (d.village || "not given") +
+          ". About " + (d.size || "not given") + " " + (d.unit || "") + ". Currently " + labelLandUse(d.landUse) +
+          ", water " + labelWater(d.water) + ", terrain " + labelTerrain(d.terrain) +
+          ", soil test " + labelSoil(d.soil) + ", main constraint " + labelConstraint(d.constraint) + ".",
+      },
+      {
+        label: "Options to discuss",
+        text: options.length
+          ? "Options to discuss, not recommendations. " +
+            options
+              .map(function (o, i) {
+                return "Option " + (i + 1) + ": " + o.activity.title + ".";
+              })
+              .join(" ")
+          : "No options were marked or shown, so there is nothing listed here.",
+      },
+      {
+        label: "Questions to ask",
+        text: questions.length
+          ? "Questions to ask at the office. " +
+            questions
+              .map(function (q, i) {
+                return "Question " + (i + 1) + ". " + q.text;
+              })
+              .join(" ")
+          : "No questions were generated.",
+      },
+      {
+        label: "A last word",
+        text: ACTIVITIES.confirmationLine + " This card was made by the farmer using a prototype, not by any department.",
+      },
+    ];
+  }
+
+  // The plain-text ear version survives for copying, and any older caller
+  // that only knows strings. It is the same content as the sections, joined.
+  function buildSpokenText() {
+    return buildSpokenSections()
+      .map(function (s) {
+        return s.label + ".\n\n" + s.text;
+      })
+      .join("\n\n");
+  }
+
+  // ------------------------------------------------------------ Visit card
+
+  // A short reference the farmer can quote and the officer can write down.
+  // It is a fingerprint of the answers plus the options the farmer marked,
+  // made on this device from a tiny hash, so no network or account is needed
+  // and the same answers always give the same code on any phone.
+  //
+  // What it is for: matching a printed card to the saved plan on the device
+  // it was made on, and naming the plan in a phone call ("we talked about
+  // MLMP-PUL-3K-8F2C"). What it is not: it links nowhere and looks up
+  // nothing. An officer with a different phone cannot open the plan from it,
+  // and this app must never pretend otherwise.
+  function planReferenceFor(data, interested) {
+    var marked = Object.keys(interested || {})
+      .filter(function (k) {
+        return !!interested[k];
+      })
+      .sort();
+    var seed = [
+      data.district,
+      data.village,
+      data.size,
+      data.unit,
+      data.landUse,
+      data.water,
+      data.terrain,
+      data.soil,
+      data.constraint,
+      marked.join(","),
+    ].join("|");
+    // FNV-1a, 32 bits. Small, deterministic, and good enough for a short
+    // human code; it is not security, it is a nametag.
+    var hash = 0x811c9dc5;
+    for (var i = 0; i < seed.length; i++) {
+      hash ^= seed.charCodeAt(i);
+      hash = (hash * 0x01000193) >>> 0;
+    }
+    var alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+    var code = "";
+    var value = hash;
+    for (var n = 0; n < 5; n++) {
+      code += alphabet[value % alphabet.length];
+      value = Math.floor(value / alphabet.length);
+    }
+    // Skip the easily misread characters (0, O, 1, I, L) at the source, so
+    // the card prints nothing an officer has to guess at over the phone.
+    var district = String(data.district || "")
+      .replace(/[^A-Za-z]/g, "")
+      .slice(0, 3)
+      .toUpperCase();
+    return "MLMP-" + (district || "JK") + "-" + code.slice(0, 2) + "-" + code.slice(2);
+  }
+
+  function currentPlanReference() {
+    return planReferenceFor(state.data, state.interested);
+  }
+
+  function formatVisitDate() {
+    return new Date().toLocaleDateString("en-IN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  function visitOptions() {
+    return chosenOptions().slice(0, 3);
+  }
+
+  // The card fits three options on a page. When more are marked, the card
+  // must say so in words rather than quietly dropping the rest, because a
+  // farmer who marked five and sees three will assume the app forgot.
+  function visitOptionNote(count, total) {
+    if (total <= count) return "";
+    return "Showing the first " + count + " of the " + total + " options marked. The rest are in the plan summary.";
+  }
+
+  function buildVisitCard() {
+    var d = state.data;
+    var options = visitOptions();
+    var questions = currentQuestions();
+
+    var answerRows = [
+      ["District", d.district || "not given"],
+      ["Village or locality", d.village || "not given"],
+      ["Approximate size", (d.size || "not given") + " " + (d.unit || "")],
+      ["Currently", labelLandUse(d.landUse)],
+      ["Water access", labelWater(d.water)],
+      ["Terrain", labelTerrain(d.terrain)],
+      ["Soil test", labelSoil(d.soil)],
+      ["Main constraint", labelConstraint(d.constraint)],
+    ];
+
+    var optionsHtml = options.length
+      ? "<ol class=\"visit-options\">" +
+        options
+          .map(function (o) {
+            return (
+              "<li>" +
+              escapeHtml(o.activity.title) +
+              (state.interested[o.activity.id] ? ' <span class="visit-flag">marked to follow up</span>' : "") +
+              "</li>"
+            );
+          })
+          .join("") +
+        "</ol>"
+      : "<p>No options were marked or shown, so there is nothing listed here.</p>";
+
+    var supportHtml = (function () {
+      var ids = options.length
+        ? options.map(function (o) {
+            return o.activity.id;
+          })
+        : state.options.map(function (o) {
+            return o.activity.id;
+          });
+      if (!ids.length) return "";
+      var entries = SCHEMES.relevantTo(ids).filter(function (e) {
+        return e.relevant;
+      });
+      if (!entries.length) return "";
+      return (
+        "<ul class=\"visit-support\">" +
+        entries
+          .slice(0, 5)
+          .map(function (e) {
+            return "<li>" + escapeHtml(e.scheme.category) + ": " + escapeHtml(e.scheme.title) + "</li>";
+          })
+          .join("") +
+        "</ul>" +
+        '<p class="visit-note">Ask which of these applies to a plot like mine, and what to bring. The app lists no amounts, deadlines or eligibility rules because those change.</p>'
+      );
+    })();
+
+    var lines = "";
+    for (var i = 0; i < 5; i++) lines += '<div class="visit-line"></div>';
+
+    // The review banner here is the same shared banner used on the results
+    // screen and the summary, word for word. The visit card is the page an
+    // officer actually looks at, so its review state has to be as loud as it
+    // is everywhere else, never a quieter paragraph.
+    return (
+      '<div class="visit-head">' +
+      "<h2>My Land, My Plan: office visit card</h2>" +
+      '<p class="visit-date">Prepared ' + escapeHtml(formatVisitDate()) +
+      (state.isDemo ? " from the sample journey" : "") +
+      ".</p>" +
+      // The reference sits directly under the date, before anything else, so
+      // it is the first line of every phone call, letter and file name.
+      '<p class="visit-reference">Plan reference: <strong>' + escapeHtml(currentPlanReference()) + "</strong></p>" +
+      '<p class="visit-reference-note">Made on this device from your answers. Quote it when you call about this plan.</p>' +
+      reviewBannerHtml(currentReview()) +
+      "</div>" +
+      '<div class="visit-section">' +
+      "<h3>What I entered</h3>" +
+      '<dl class="visit-answers">' +
+      answerRows
+        .map(function (row) {
+          return "<dt>" + escapeHtml(row[0]) + "</dt><dd>" + escapeHtml(row[1]) + "</dd>";
+        })
+        .join("") +
+      "</dl>" +
+      "</div>" +
+      '<div class="visit-section break-avoid">' +
+      "<h3>Options I want to discuss</h3>" +
+      optionsHtml +
+      '<p class="visit-note">These are options to discuss, not recommendations. Nothing about them has been checked against my plot.</p>' +
+      (visitOptionNote(options.length, chosenOptions().length)
+        ? '<p class="visit-note">' + escapeHtml(visitOptionNote(options.length, chosenOptions().length)) + "</p>"
+        : "") +
+      "</div>" +
+      '<div class="visit-section break-avoid">' +
+      "<h3>Questions I would like to ask</h3>" +
+      (questions.length
+        ? questionsListHtml(questions, { hideAbout: true, ticked: true, checkable: true }) +
+          questionCounterHtml(questions) +
+          '<p class="visit-note no-print">Ticked boxes are saved on this device. Tick the rest with a pen once this is printed.</p>'
+        : "<p>No questions were generated.</p>") +
+      "</div>" +
+      (supportHtml
+        ? '<div class="visit-section break-avoid"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
+        : "") +
+      '<div class="visit-section break-avoid">' +
+      "<h3>Notes from the visit</h3>" +
+      '<div class="visit-lines">' +
+      lines +
+      "</div>" +
+      "</div>" +
+      '<p class="visit-foot">' +
+      escapeHtml(ACTIVITIES.confirmationLine) +
+      " This card was made by the farmer using a prototype, not by any department. It is not an official document and it does not establish eligibility for anything." +
+      "</p>"
+    );
+  }
+
+  /** The same card as plain text, for downloading and for reading aloud. */
+  function buildVisitCardText() {
+    var d = state.data;
+    var options = visitOptions();
+    var questions = currentQuestions();
+    var allMarked = chosenOptions();
+    var lines = [];
+
+    lines.push("MY LAND, MY PLAN: OFFICE VISIT CARD");
+    lines.push("=".repeat(36));
+    lines.push("");
+    lines.push("Prepared " + formatVisitDate() + (state.isDemo ? " from the sample journey" : ""));
+    lines.push("Plan reference: " + currentPlanReference());
+    lines.push(currentReview().text);
+    lines.push("");
+    lines.push("WHAT I ENTERED");
+    lines.push("--------------");
+    lines.push("District: " + (d.district || "not given"));
+    lines.push("Village or locality: " + (d.village || "not given"));
+    lines.push("Approximate size: " + (d.size || "not given") + " " + (d.unit || ""));
+    lines.push("Currently: " + labelLandUse(d.landUse));
+    lines.push("Water access: " + labelWater(d.water));
+    lines.push("Terrain: " + labelTerrain(d.terrain));
+    lines.push("Soil test: " + labelSoil(d.soil));
+    lines.push("Main constraint: " + labelConstraint(d.constraint));
+    lines.push("");
+
+    lines.push("OPTIONS I WANT TO DISCUSS");
+    lines.push("------------------------");
+    if (options.length) {
+      options.forEach(function (o, i) {
+        lines.push(
+          i + 1 + ". " + o.activity.title +
+            (state.interested[o.activity.id] ? "   [marked to follow up]" : "")
+        );
+        lines.push("   An option to discuss, not a recommendation.");
+      });
+      // The plain text download must carry the same warning as the printed
+      // card, or the file and the page will quietly disagree.
+      if (visitOptionNote(options.length, allMarked.length)) {
+        lines.push(visitOptionNote(options.length, allMarked.length));
+      }
+    } else {
+      lines.push("No options were marked or shown.");
+    }
+    lines.push("");
+
+    lines.push("QUESTIONS I WOULD LIKE TO ASK");
+    lines.push("-----------------------------");
+    if (questions.length) {
+      questions.forEach(function (q, i) {
+        // The tick rides along into the download, so a downloaded card read
+        // later still shows what the office already covered.
+        var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
+        lines.push(i + 1 + ". [" + (ticked ? "x" : " ") + "] " + q.text);
+      });
+      lines.push(questionCoverCount(questions) + " of " + questions.length + " covered.");
+    } else {
+      lines.push("No questions were generated.");
+    }
+    lines.push("");
+
+    lines.push("NOTES FROM THE VISIT");
+    lines.push("--------------------");
+    lines.push("");
+    lines.push("");
+    lines.push("");
+    lines.push("");
+    lines.push("");
+    lines.push(ACTIVITIES.confirmationLine);
+    lines.push("Made by the farmer using a prototype. Not an official document.");
+    return lines.join("\n");
+  }
+
+  function renderVisitCard() {
+    var host = $("#visit-card");
+    if (host) host.innerHTML = buildVisitCard();
+  }
+
+  // ------------------------------------------------------------- My plans
+
+  function plansAvailable() {
+    return !!(PLANS && PLANS.list);
+  }
+
+  function planSnapshot() {
+    var zone = REGIONS.zoneFor(state.data.district);
+    return {
+      id: state.currentPlanId || undefined,
+      name: state.currentPlanName || "",
+      data: JSON.parse(JSON.stringify(state.data)),
+      interested: JSON.parse(JSON.stringify(state.interested)),
+      // The covered questions are part of the snapshot for the same reason
+      // the answers are: a plan someone printed and took to an office should
+      // still say what was covered when it is opened again next month.
+      coveredQuestions: JSON.parse(JSON.stringify(state.coveredQuestions || {})),
+      // A snapshot of the option ids shown, so a later change to the scoring
+      // cannot rewrite a plan someone already printed.
+      options: state.options.map(function (o) {
+        return { id: o.activity.id };
+      }),
+      zoneId: zone ? zone.id : null,
+      isDemo: state.isDemo,
+    };
+  }
+
+  function saveCurrentPlan() {
+    if (!plansAvailable()) {
+      setStatus("copy-status", "This browser blocked local storage, so plans cannot be saved.");
+      return null;
+    }
+    if (!state.planReady || !state.options.length) {
+      setStatus("copy-status", "Finish the plot details first, then this can be saved.");
+      return null;
+    }
+    var snapshot = planSnapshot();
+    if (!state.currentPlanId) {
+      var taken = PLANS.list().map(function (p) {
+        return p.name;
+      });
+      snapshot.name = PLANS.suggestName(chosenOptions(), taken);
+    }
+    var saved = PLANS.upsert(snapshot);
+    if (saved) {
+      state.currentPlanId = saved.id;
+      state.currentPlanName = saved.name;
+    }
+    return saved;
+  }
+
+  function planById(id) {
+    return PLANS.get(id);
+  }
+
+  function activityTitleFor(id) {
+    var a = ACTIVITIES.ALL[id];
+    return a ? a.title : id;
+  }
+
+  /** Titles of the options in a saved plan, marked ones first. */
+  function planOptionLines(plan) {
+    var ids = (plan.options || []).map(function (o) {
+      return o.id;
+    });
+    var marked = ids.filter(function (id) {
+      return plan.interested && plan.interested[id];
+    });
+    var others = ids.filter(function (id) {
+      return marked.indexOf(id) === -1;
+    });
+    return { marked: marked, others: others, ids: ids };
+  }
+
+  function planMonthLine(plan) {
+    var ids = planOptionLines(plan);
+    var leadId = (ids.marked.length ? ids.marked : ids.ids)[0];
+    var activity = leadId ? ACTIVITIES.ALL[leadId] : null;
+    if (!activity) return "not available";
+    var cell = activity.calendar[new Date().getMonth()];
+    var phase = ACTIVITIES.PHASES[cell.p] || { label: cell.p };
+    return phase.label + ": " + cell.t;
+  }
+
+  function savedDate(iso) {
+    if (!iso) return "not recorded";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "not recorded";
+    try {
+      return d.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" });
+    } catch (_) {
+      return "not recorded";
+    }
+  }
+
+  function compareRows(plans) {
+    var rows = [
+      { label: "District and village", value: function (p) { return (p.data.district || "not given") + (p.data.village ? ", " + p.data.village : ""); } },
+      { label: "Plot size", value: function (p) { return (p.data.size || "not given") + " " + (p.data.unit || ""); } },
+      { label: "Currently", value: function (p) { return labelLandUse(p.data.landUse); } },
+      { label: "Water access", value: function (p) { return labelWater(p.data.water); } },
+      { label: "Terrain", value: function (p) { return labelTerrain(p.data.terrain); } },
+      { label: "Main constraint", value: function (p) { return labelConstraint(p.data.constraint); } },
+      { label: "Soil test", value: function (p) { return labelSoil(p.data.soil); } },
+      {
+        label: "Options to explore",
+        value: function (p) {
+          var ids = planOptionLines(p);
+          if (!ids.ids.length) return "none recorded";
+          return ids.ids
+            .map(function (id) {
+              return activityTitleFor(id) + (p.interested && p.interested[id] ? " (marked)" : "");
+            })
+            .join("; ");
+        },
+      },
+      { label: "Usually at this time of year", value: planMonthLine },
+      { label: "Saved on", value: function (p) { return savedDate(p.updatedAt || p.createdAt); } },
+    ];
+    return rows;
+  }
+
+  function renderPlansList() {
+    var host = $("#plans-list");
+    var empty = $("#plans-empty");
+    if (!host) return;
+
+    if (!plansAvailable()) {
+      host.innerHTML = "";
+      if (empty) {
+        empty.hidden = false;
+        empty.innerHTML =
+          "<h2>Plans cannot be saved here</h2><p>This browser is blocking local storage, so nothing can be kept between visits. The plan still works on this screen and can be printed or downloaded.</p>";
+      }
+      return;
+    }
+
+    var plans = PLANS.list();
+    if (!plans.length) {
+      host.innerHTML = "";
+      if (empty) {
+        empty.hidden = false;
+        empty.innerHTML =
+          "<h2>No saved plans yet</h2>" +
+          "<p>Finish a plan, then use Save this plan on the summary. Saving a second one lets you put them side by side here and decide which to take to the office.</p>";
+      }
+      return;
+    }
+
+    if (empty) {
+      empty.hidden = true;
+      empty.innerHTML = "";
+    }
+
+    host.innerHTML =
+      '<h2 class="plans-heading">' +
+      plans.length +
+      (plans.length === 1 ? " saved plan" : " saved plans") +
+      "</h2>" +
+      '<ul class="plans-cards">' +
+      plans
+        .map(function (p) {
+          var ids = planOptionLines(p);
+          var lead = (ids.marked.length ? ids.marked : ids.ids)[0];
+          return (
+            '<li class="plan-card' +
+            (p.chosen ? " is-chosen" : "") +
+            '">' +
+            '<h3>' +
+            escapeHtml(p.name) +
+            (p.chosen ? ' <span class="pill">taking this one to the office</span>' : "") +
+            "</h3>" +
+            '<p class="plan-meta">' +
+            escapeHtml(p.data.district || "district not given") +
+            " | " +
+            escapeHtml((p.data.size || "size not given") + " " + (p.data.unit || "")) +
+            " | saved " +
+            escapeHtml(savedDate(p.updatedAt || p.createdAt)) +
+            (p.isDemo ? " | sample " : "") +
+            "</p>" +
+            // The reference printed on a visit card always matches the plan
+            // it came from, on the device it came from, so a stack of cards
+            // and a stack of saved plans can be paired up later.
+            '<p class="plan-reference">Reference: ' +
+            escapeHtml(planReferenceFor(p.data || {}, p.interested || {})) +
+            "</p>" +
+            (lead
+              ? '<p class="plan-lead">Leads with ' + escapeHtml(activityTitleFor(lead)) + "</p>"
+              : "") +
+            '<div class="plan-actions">' +
+            '<button type="button" class="btn btn-secondary" data-plan-open="' +
+            escapeHtml(p.id) +
+            '">Open this plan</button>' +
+            '<button type="button" class="btn btn-primary" data-plan-choose="' +
+            escapeHtml(p.id) +
+            '" aria-pressed="' +
+            (p.chosen ? "true" : "false") +
+            '">' +
+            (p.chosen ? "Taking this one" : "Take this one to the office") +
+            "</button>" +
+            '<button type="button" class="btn btn-secondary" data-plan-rename="' +
+            escapeHtml(p.id) +
+            '">Rename</button>' +
+            '<button type="button" class="btn btn-quiet" data-plan-remove="' +
+            escapeHtml(p.id) +
+            '">Delete</button>' +
+            "</div></li>"
+          );
+        })
+        .join("") +
+      "</ul>";
+  }
+
+  function renderPlansCompare() {
+    var host = $("#plans-compare");
+    if (!host) return;
+    if (!plansAvailable()) {
+      host.hidden = true;
+      return;
+    }
+    var plans = PLANS.list().slice(0, 3);
+    if (plans.length < 2) {
+      host.hidden = true;
+      host.innerHTML = "";
+      return;
+    }
+
+    var rows = compareRows(plans);
+    var narrow = window.matchMedia("(max-width: 700px)").matches;
+
+    var head =
+      "<h2 class=\"plans-heading\">Side by side</h2>" +
+      '<p class="section-kind"><span class="kind-tag kind-user">Your answers</span></p>' +
+      '<p>Only your own answers and the options recorded with each plan. Nothing here is compared against any standard.</p>';
+
+    if (narrow) {
+      host.innerHTML =
+        head +
+        '<div class="compare-stacked">' +
+        plans
+          .map(function (p) {
+            return (
+              '<div class="stacked-option">' +
+              "<h3>" +
+              escapeHtml(p.name) +
+              (p.chosen ? ' <span class="pill">chosen</span>' : "") +
+              "</h3>" +
+              '<dl class="rating-list">' +
+              rows
+                .map(function (row) {
+                  return ratingRow(row.label, String(row.value(p)));
+                })
+                .join("") +
+              "</dl></div>"
+            );
+          })
+          .join("") +
+        "</div>";
+    } else {
+      host.innerHTML =
+        head +
+        '<div class="table-wrap">' +
+        '<table class="compare-table"><thead><tr><th scope="col">Field</th>' +
+        plans
+          .map(function (p) {
+            return "<th scope=\"col\">" + escapeHtml(p.name) + (p.chosen ? " (chosen)" : "") + "</th>";
+          })
+          .join("") +
+        "</tr></thead><tbody>" +
+        rows
+          .map(function (row) {
+            return (
+              '<tr><th scope="row">' +
+              escapeHtml(row.label) +
+              "</th>" +
+              plans
+                .map(function (p) {
+                  return "<td>" + escapeHtml(String(row.value(p))) + "</td>";
+                })
+                .join("") +
+              "</tr>"
+            );
+          })
+          .join("") +
+        "</tbody></table></div>";
+    }
+    host.hidden = false;
+  }
+
+  function renderPlans() {
+    renderPlansList();
+    renderPlansCompare();
+  }
+
+  /** Load a saved plan back into the working state so it can be edited. */
+  function openSavedPlan(id) {
+    var plan = planById(id);
+    if (!plan) return false;
+    state.data = Object.assign(blankData(), plan.data);
+    state.interested = Object.assign({}, plan.interested || {});
+    // A saved plan remembers what the office already covered, so reopening
+    // it a week later does not wipe the visit. Unknown ids ride along
+    // harmlessly and are ignored at render time.
+    state.coveredQuestions = Object.assign({}, plan.coveredQuestions || {});
+    state.currentPlanId = plan.id;
+    state.currentPlanName = plan.name;
+    state.isDemo = !!plan.isDemo;
+    state.checklist = [];
+    state.weather = { district: "", query: "", result: null, error: null, status: "idle" };
+    fillFormFromState();
+    updateFormLocationContext();
+    computeOptions();
+    state.planReady = true;
+    // If the option ids recorded with the plan are no longer in the catalogue,
+    // the plan still opens; it just cannot mark anything that has gone.
+    var known = {};
+    ACTIVITIES.ids.forEach(function (x) {
+      known[x] = true;
+    });
+    Object.keys(state.interested).forEach(function (x) {
+      if (!known[x]) delete state.interested[x];
+    });
+    renderResults();
+    showScreen("results");
+    saveDraft();
+    return true;
   }
 
   // --------------------------------------------------------------- Events
@@ -2043,6 +3317,11 @@
       else card.classList.remove("is-interested");
     }
     updateInterestedStatus();
+    // The questions, the month view and the forecast note all follow the
+    // shortlist, so they have to be rebuilt when a mark changes.
+    renderTimingNote();
+    renderMonthView();
+    renderQuestions();
   }
 
   function confirmStartOver() {
@@ -2077,6 +3356,60 @@
     if (!banner) return;
     var offline = WEATHER.isOffline ? WEATHER.isOffline() : navigator.onLine === false;
     banner.hidden = !offline;
+  }
+
+  /**
+   * The add to home screen path. Chrome and Android offer a real install
+   * prompt and it is held here until it is asked for, because prompting on
+   * arrival is exactly the kind of nagging this app avoids. Where there is no
+   * prompt event, most often Safari, the written instruction stays visible
+   * instead of a dead button.
+   */
+  function initInstall() {
+    var button = $("#btn-install");
+    var hint = $("#install-hint");
+
+    function showHintOnly() {
+      if (button) button.hidden = true;
+      if (hint) hint.hidden = false;
+    }
+
+    // Already installed: say nothing about installing.
+    var standalone = false;
+    try {
+      standalone = window.matchMedia("(display-mode: standalone)").matches;
+    } catch (_) {}
+    if (standalone) {
+      if (button) button.hidden = true;
+      if (hint) hint.hidden = true;
+      return;
+    }
+
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      state.installPrompt = e;
+      if (button) button.hidden = false;
+      if (hint) hint.hidden = true;
+    });
+
+    if (button) {
+      button.addEventListener("click", function () {
+        var promptEvent = state.installPrompt;
+        state.installPrompt = null;
+        if (!promptEvent || typeof promptEvent.prompt !== "function") {
+          showHintOnly();
+          return;
+        }
+        promptEvent.prompt();
+        button.hidden = true;
+        if (hint) hint.hidden = false;
+      });
+    }
+
+    window.addEventListener("appinstalled", function () {
+      state.installPrompt = null;
+      if (button) button.hidden = true;
+    });
   }
 
   function registerServiceWorker() {
@@ -2184,6 +3517,18 @@
       narrowQuery.addEventListener("change", function () {
         var el = $("#screen-compare");
         if (el && el.classList.contains("screen-active")) renderCompare();
+        // The saved-plans comparison picks its own shape (table or stacked)
+        // at render time, so a rotated phone gets the right shape here too.
+        var plansEl = $("#screen-plans");
+        if (plansEl && plansEl.classList.contains("screen-active")) renderPlans();
+      });
+    } else if (narrowQuery.addListener) {
+      // Older browsers only know addListener. Same re-render, older name.
+      narrowQuery.addListener(function () {
+        var el = $("#screen-compare");
+        if (el && el.classList.contains("screen-active")) renderCompare();
+        var plansEl = $("#screen-plans");
+        if (plansEl && plansEl.classList.contains("screen-active")) renderPlans();
       });
     }
 
@@ -2232,6 +3577,110 @@
         renderSchemes();
         showScreen("next");
       });
+
+    // ---- Office visit card and my plans
+
+    function openVisitCard() {
+      if (!state.planReady || !state.options.length) {
+        setStatus("copy-status", "Finish the plot details first, then the card can be made.");
+        return;
+      }
+      renderVisitCard();
+      showScreen("visit");
+    }
+
+    function openPlans() {
+      renderPlans();
+      showScreen("plans");
+    }
+
+    $("#btn-visit-card") && $("#btn-visit-card").addEventListener("click", openVisitCard);
+    $("#btn-visit-plans") && $("#btn-visit-plans").addEventListener("click", openPlans);
+    $("#btn-results-plans") && $("#btn-results-plans").addEventListener("click", openPlans);
+    $("#btn-plans-visit") && $("#btn-plans-visit").addEventListener("click", openVisitCard);
+    $("#btn-visit-back") &&
+      $("#btn-visit-back").addEventListener("click", function () {
+        renderSummary();
+        showScreen("summary");
+      });
+    $("#btn-plans-back") &&
+      $("#btn-plans-back").addEventListener("click", function () {
+        if (state.planReady && state.options.length) showScreen("results");
+        else showScreen("home");
+      });
+    $("#btn-visit-print") && $("#btn-visit-print").addEventListener("click", function () { window.print(); });
+    $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
+    $("#btn-visit-read") &&
+      $("#btn-visit-read").addEventListener("click", function () {
+        renderVisitCard();
+        toggleRead("btn-visit-read", buildVisitSections());
+      });
+    $("#btn-visit-read-stop") &&
+      $("#btn-visit-read-stop").addEventListener("click", stopReading);
+
+    $("#btn-read-plan") &&
+      $("#btn-read-plan").addEventListener("click", function () {
+        toggleRead("btn-read-plan", buildSpokenSections());
+      });
+    $("#btn-read-plan-stop") &&
+      $("#btn-read-plan-stop").addEventListener("click", stopReading);
+
+    $("#btn-save-named") &&
+      $("#btn-save-named").addEventListener("click", function () {
+        var saved = saveCurrentPlan();
+        if (saved) {
+          setStatus("copy-status", 'Saved as "' + saved.name + '" on this device. My plans shows it beside any others.');
+          var nameTag = $("#results-plan-name");
+          if (nameTag) {
+            nameTag.hidden = false;
+            nameTag.textContent = 'Saved as "' + saved.name + '". Saving again updates that plan.';
+          }
+        }
+      });
+
+    // One delegated listener covers every card in the saved list, including
+    // ones rendered after this runs.
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest) return;
+      var open = e.target.closest("[data-plan-open]");
+      if (open) {
+        openSavedPlan(open.getAttribute("data-plan-open"));
+        return;
+      }
+      var choose = e.target.closest("[data-plan-choose]");
+      if (choose) {
+        PLANS.choose(choose.getAttribute("data-plan-choose"));
+        renderPlans();
+        setStatus("plans-status", "Noted. The office visit card will carry the plan you marked.");
+        return;
+      }
+      var rename = e.target.closest("[data-plan-rename]");
+      if (rename) {
+        var plan = PLANS.get(rename.getAttribute("data-plan-rename"));
+        if (!plan) return;
+        var next = window.prompt("Name for this plan", plan.name);
+        if (next === null) return;
+        PLANS.rename(plan.id, next);
+        if (state.currentPlanId === plan.id) state.currentPlanName = PLANS.get(plan.id).name;
+        renderPlans();
+        setStatus("plans-status", "Renamed.");
+        return;
+      }
+      var remove = e.target.closest("[data-plan-remove]");
+      if (remove) {
+        var target = PLANS.get(remove.getAttribute("data-plan-remove"));
+        if (!target) return;
+        var ok = window.confirm('Delete "' + target.name + '"? This removes it from this device only.');
+        if (!ok) return;
+        PLANS.remove(target.id);
+        if (state.currentPlanId === target.id) {
+          state.currentPlanId = null;
+          state.currentPlanName = "";
+        }
+        renderPlans();
+        setStatus("plans-status", "Deleted.");
+      }
+    });
 
     var districtSelectLive = $("#district");
     if (districtSelectLive) {
@@ -2332,6 +3781,31 @@
       if (btn) toggleInterested(btn.getAttribute("data-interest"));
     });
 
+    // One listener covers every question tick in the app, including the boxes
+    // the visit card renders after this runs. The tick is saved at once, the
+    // counter beside it is repainted, and the summary and card read the same
+    // map the next time they render, so nothing can drift.
+    document.addEventListener("change", function (e) {
+      var box = e.target && e.target.closest ? e.target.closest("[data-question-tick]") : null;
+      if (!box || box.type !== "checkbox") return;
+      var key = box.getAttribute("data-question-tick");
+      if (!key) return;
+      if (!state.coveredQuestions || typeof state.coveredQuestions !== "object") state.coveredQuestions = {};
+      if (box.checked) state.coveredQuestions[key] = true;
+      else delete state.coveredQuestions[key];
+      saveDraft();
+      // Repaint the counter in place without a full re-render, which would
+      // steal the farmer's place on the page mid-visit.
+      var list = box.closest(".question-checklist");
+      var questions = currentQuestions();
+      if (list && list.parentElement) {
+        var counter = list.parentElement.querySelector(".question-counter");
+        if (counter) {
+          counter.textContent = questionCoverCount(questions) + " of " + questions.length + " covered";
+        }
+      }
+    });
+
     $$("[data-nav]").forEach(function (a) {
       a.addEventListener("click", function (e) {
         e.preventDefault();
@@ -2339,6 +3813,10 @@
         if (target === "home") goHome();
         else if (target === "plan") startPlan();
         else if (target === "about") showScreen("about");
+        else if (target === "plans") {
+          renderPlans();
+          showScreen("plans");
+        }
         else if (target === "weather") {
           var select = $("#weather-district");
           if (select && state.data.district) select.value = state.data.district;
@@ -2373,7 +3851,11 @@
     var restore = function () { return loadDraft(); };
 
     if (h === "about") showScreen("about", { focus: focus });
-    else if (h === "weather") {
+    else if (h === "plans") {
+      // Saved plans stand on their own, so this deep link never needs a draft.
+      renderPlans();
+      showScreen("plans", { focus: focus });
+    } else if (h === "weather") {
       showScreen("weather", { focus: focus });
       renderWeather();
       if (state.weather.status === "idle" && state.data.district) {
@@ -2397,7 +3879,17 @@
       if (!state.options.length) computeOptions();
       renderSummary();
       showScreen("summary", { focus: focus });
-    } else if (h === "summary" || h === "results" || h === "compare" || h === "next") {
+    } else if (h === "visit" && (state.options.length || restore())) {
+      if (!state.options.length) computeOptions();
+      renderVisitCard();
+      showScreen("visit", { focus: focus });
+    } else if (
+      h === "summary" ||
+      h === "results" ||
+      h === "compare" ||
+      h === "next" ||
+      h === "visit"
+    ) {
       // A deep link with nothing saved behind it falls back home rather than
       // showing an empty screen.
       showScreen("home", { focus: focus });
@@ -2426,6 +3918,8 @@
     bind();
     setAboutReviewStatus();
     updateOfflineBanner();
+    initInstall();
+    initReadButtons();
     registerServiceWorker();
     window.addEventListener("online", updateOfflineBanner);
     window.addEventListener("offline", function () {

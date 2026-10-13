@@ -38,6 +38,7 @@
           <li><a href="#home" data-nav="home">Home</a></li>
           <li><a href="#plan" data-nav="plan">Start plan</a></li>
           <li><a href="#weather" data-nav="weather">Weather</a></li>
+          <li><a href="#plans" data-nav="plans">My plans</a></li>
           <li><a href="#about" data-nav="about">About</a></li>
         </ul>
       </nav>
@@ -89,6 +90,18 @@
             <h2>Live weather</h2>
             <p>A nearby town forecast from Open-Meteo, only when you are online.</p>
           </div>
+        </div>
+
+        <div class="home-offline" id="install-card">
+          <h2>Works without a signal</h2>
+          <p>
+            Once this page has loaded, the whole plan works with no connection: the form, the options,
+            the months ahead, the questions to ask and the office visit card. Only the weather needs the internet.
+          </p>
+          <p class="hint" id="install-hint">
+            To keep it on a phone, open your browser menu and choose the option to add this page to your home screen.
+          </p>
+          <button type="button" class="btn btn-secondary" id="btn-install" hidden>Add to home screen</button>
         </div>
 
         <div class="home-note">
@@ -269,14 +282,21 @@
           <button type="button" class="btn btn-secondary" id="btn-results-weather">Check weather for a nearby town</button>
         </div>
 
+        <p class="plan-name-tag" id="results-plan-name" hidden></p>
+
         <div id="options-list" class="options-list"></div>
 
         <p class="inline-status" id="interested-status" role="status"></p>
+
+        <div id="timing-note" class="timing-note" hidden></div>
+        <div id="month-view" class="month-view" hidden></div>
+        <div id="questions-block" class="questions-block" hidden></div>
 
         <div class="results-actions no-print">
           <button type="button" class="btn btn-secondary" id="btn-edit">Edit details</button>
           <button type="button" class="btn btn-primary" id="btn-compare">Compare options</button>
         </div>
+        <button type="button" class="btn btn-secondary no-print" id="btn-results-plans">My saved plans</button>
         <button type="button" class="btn btn-quiet no-print" id="btn-reset-results">Start over with new details</button>
 
         <div class="provenance-wrap">
@@ -364,7 +384,19 @@
           <h2 class="tools-title">Keep this plan</h2>
           <p class="hint">Nothing is uploaded. Print, download or copy stays on this device.</p>
           <div class="results-actions">
-            <button type="button" class="btn btn-primary" id="btn-print">Print or save as PDF</button>
+            <button type="button" class="btn btn-primary" id="btn-visit-card">Make the office visit card</button>
+            <button type="button" class="btn btn-secondary" id="btn-save-named">Save this plan</button>
+          </div>
+          <div class="read-controls">
+            <div class="results-actions">
+              <button type="button" class="btn btn-read" id="btn-read-plan" aria-pressed="false">Read the plan aloud</button>
+              <button type="button" class="btn btn-secondary" id="btn-read-plan-stop" hidden>Stop reading</button>
+            </div>
+            <p class="read-status" id="read-plan-status" role="status" hidden></p>
+            <p class="read-fallback" id="read-plan-fallback" hidden>This browser has no reading voice. The plan above stays on screen, and it can still be printed.</p>
+          </div>
+          <div class="results-actions">
+            <button type="button" class="btn btn-secondary" id="btn-print">Print or save as PDF</button>
             <button type="button" class="btn btn-secondary" id="btn-download-text">Download as text</button>
             <button type="button" class="btn btn-secondary" id="btn-download-html">Download for a browser</button>
             <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
@@ -428,6 +460,54 @@
       </div>
     </section>
 
+    <!-- OFFICE VISIT CARD -->
+    <section id="screen-visit" class="screen" aria-labelledby="visit-title" hidden>
+      <div class="container narrow">
+        <h1 id="visit-title" class="screen-title no-print">Office visit card</h1>
+        <p class="screen-intro no-print">
+          One page to take with you. It carries what you entered, the options you marked, and the
+          questions to ask. Nothing on it is a recommendation, and none of it is approved by anyone.
+        </p>
+        <div class="visit-card" id="visit-card"></div>
+        <div class="results-actions no-print">
+          <button type="button" class="btn btn-primary" id="btn-visit-print">Print or save as PDF</button>
+          <button type="button" class="btn btn-secondary" id="btn-visit-download">Download as text</button>
+        </div>
+        <div class="read-controls no-print">
+          <div class="results-actions">
+            <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
+            <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+          </div>
+          <p class="read-status" id="read-visit-status" role="status" hidden></p>
+          <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
+        </div>
+        <div class="results-actions no-print">
+          <button type="button" class="btn btn-secondary" id="btn-visit-back">Back to summary</button>
+          <button type="button" class="btn btn-secondary" id="btn-visit-plans">My saved plans</button>
+        </div>
+        <p class="inline-status no-print" id="visit-status" role="status" hidden></p>
+      </div>
+    </section>
+
+    <!-- SAVED PLANS -->
+    <section id="screen-plans" class="screen" aria-labelledby="plans-title" hidden>
+      <div class="container">
+        <h1 id="plans-title" class="screen-title">My saved plans</h1>
+        <p class="screen-intro">
+          Plans are kept on this device only. Save more than one to weigh them side by side, and mark
+          the one you are taking to the office.
+        </p>
+        <div id="plans-empty" class="plans-empty" hidden></div>
+        <div id="plans-list" class="plans-list"></div>
+        <div id="plans-compare" class="plans-compare" hidden></div>
+        <div class="results-actions">
+          <button type="button" class="btn btn-secondary" id="btn-plans-back">Back</button>
+          <button type="button" class="btn btn-primary" id="btn-plans-visit">Office visit card</button>
+        </div>
+        <p class="inline-status" id="plans-status" role="status" hidden></p>
+      </div>
+    </section>
+
     <!-- ABOUT -->
     <section id="screen-about" class="screen" aria-labelledby="about-title" hidden>
       <div class="container narrow">
@@ -443,6 +523,10 @@
             <li>Describes a typical year for each option, as general guidance</li>
             <li>Shows general weather for a nearby town from Open-Meteo, when you are online</li>
             <li>Links to official portals, without inventing amounts, deadlines or eligibility rules</li>
+            <li>Turns your answers into questions to put to an officer, and shows which month each option is usually at</li>
+            <li>Makes a one page office visit card you can print and carry</li>
+            <li>Saves a draft and lets you keep several named plans to compare</li>
+            <li>Can read the plan aloud using the voice built into your device</li>
             <li>Saves a draft on this device and can print, copy or download the plan</li>
           </ul>
 
@@ -452,16 +536,44 @@
             <li>Does not assess your particular plot, predict yield, or guarantee that a crop will suit it</li>
             <li>Does not approve subsidies, decide eligibility, or list documents you would need</li>
             <li>Does not give a field-level weather forecast, frost warning or irrigation schedule</li>
+            <li>Does not answer any of the questions it generates, and does not advise what to grow</li>
+            <li>Does not translate. The text is English, and the voice reads that English text</li>
             <li>Does not collect personal, financial, or land-identification data beyond what you type for this plan</li>
           </ul>
 
+          <h2>Reading it aloud</h2>
+          <p>
+            The read aloud buttons use the speech voices built into your device, so the accent and the
+            quality vary from phone to phone, and a few browsers offer no voice at all. Nothing depends on
+            it: the same words are always on screen, and the plan prints either way. This is only a way to
+            take the reading load off, not a translation, and the wording is still English.
+          </p>
+
           <h2>Officer review</h2>
           <p>
-            The activity list lives in a separate catalogue so an agriculture officer can check it.
-            Until that happens, the app says plainly that the suggestions have not yet been checked.
-            A reviewed catalogue still needs local confirmation before anyone acts on it.
+            The activity list lives in a separate catalogue so an agriculture
+            officer can check it. Until then, every screen that touches the
+            suggestions says plainly and loudly that the suggestions have not
+            been reviewed: "Not yet reviewed by an agriculture officer. Treat
+            every suggestion as a question to discuss, not as advice to act
+            on. Always confirm locally before acting."
+          </p>
+          <p>
+            A recorded review changes that panel to
+            "Reviewed by [name], [designation] on [date]. Still confirm
+            locally before acting." The catalogue is the data an officer
+            fills in, with a clear status of not-reviewed or reviewed, and a
+            name and a date. If a record says reviewed without a name or a
+            date, the app refuses to build, because a review that has no one
+            behind it is only a promise from the app, not a review.
           </p>
           <p id="about-review-status"></p>
+          <p class="option-note">
+            Only the officer's recorded review changes this panel. The plan
+            itself is never marked reviewed, and being checked once does not
+            mean the officer checked your plot. Everything here still carries
+            the same instruction: confirm locally before acting.
+          </p>
 
           <h2>What is yours, what is illustrative, what is live</h2>
           <ul>
@@ -469,6 +581,13 @@
             <li><strong>Illustrative.</strong> The option list, the five ratings, the reasons shown for each suggestion, the calendars and the checklist. These come from simple rules and published general information. They are not an assessment.</li>
             <li><strong>Regional background.</strong> The district grouping, elevation bands and crop patterns, taken from the published sources below. These describe an area, never your field.</li>
             <li><strong>Live weather.</strong> Fetched from Open-Meteo when you ask for it, for a named town. It changes, and it is the only live data in the app.</li>
+          </ul>
+          <p>
+            The questions on the results screen and the office visit card are written from your own answers
+            and from the option entries. They are not a checklist from any department, and no officer has
+            seen them. Treat them as a starting point for a conversation, not as a script.
+          </p>
+          <ul>
           </ul>
 
           <h2>Sources</h2>
@@ -543,6 +662,9 @@
   <script src="js/activities.js"></script>
   <script src="js/schemes.js"></script>
   <script src="js/weather.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/plans.js"></script>
+  <script src="js/speech.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

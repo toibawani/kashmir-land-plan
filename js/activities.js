@@ -16,11 +16,20 @@
     return !!(entry && entry.reviewStatus === "reviewed" && entry.reviewedBy);
   }
 
+  // The exact words below matter, because they are shown word for word on the
+  // results screen, the plan summary, the office visit card and its plain
+  // text download, and they are read out by the reading voice. Every state
+  // keeps a sentence that tells the farmer to confirm locally before acting,
+  // and a review must never remove that sentence. A review adds trust, it
+  // never turns an illustrative suggestion into an instruction.
   function formatReview(entry) {
     if (!isReviewed(entry)) {
       return {
         status: "not-reviewed",
-        text: "These suggestions have not yet been checked by an agriculture officer.",
+        text:
+          "Not yet reviewed by an agriculture officer. Treat every suggestion " +
+          "as a question to discuss, not as advice to act on. " +
+          "Always confirm locally before acting.",
       };
     }
     var parts = [entry.reviewedBy];
@@ -53,11 +62,16 @@
     if (reviewed === list.length) {
       return formatReview(list[0]);
     }
+    // Half-reviewed is told plainly as half-reviewed. Mixing a reviewed entry
+    // with unreviewed ones must never look fully approved, so the wording
+    // names the split and keeps the same standing instruction to confirm.
     if (reviewed > 0) {
       return {
         status: "mixed",
         text:
-          "Some of these suggestions have been checked and some have not. Still confirm locally before acting.",
+          "Some of these suggestions have been reviewed by an agriculture officer and some have not. " +
+          "Treat the unreviewed ones like questions to discuss. " +
+          "Always confirm locally before acting.",
       };
     }
     return catalogue;

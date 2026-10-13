@@ -427,6 +427,53 @@ a:focus-visible {
   text-decoration: none;
 }
 
+/* The read-aloud controls are the biggest buttons in the app on purpose: the
+   farmer reaching for them is often listening, not looking, and may be doing
+   both poorly in bright sun. Big tap target, short calm label, and a spoken
+   status line that names the section being read. No icons, no emoji, the words
+   say what happens. */
+.btn-read {
+  min-height: 56px;
+  font-size: 1.1rem;
+  background: var(--color-accent);
+  color: #fff;
+  border-color: var(--color-accent);
+}
+
+.btn-read:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.btn-read[aria-pressed="true"] {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.read-controls {
+  margin: var(--space-4) 0;
+}
+
+.read-controls .results-actions {
+  margin-bottom: var(--space-2);
+}
+
+.read-status {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.read-fallback {
+  margin: var(--space-2) 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 /* Progress */
 .progress-wrap {
   margin-bottom: var(--space-5);
@@ -1956,5 +2003,531 @@ select:focus {
   .option-card {
     border: 1px solid #ccc;
     box-shadow: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Additions: the forecast note, the month view, the generated questions,
+   the office visit card, saved plans, reading aloud and the home screen
+   offline card. Same tokens and spacing scale as the rest of the file.
+   On the results screen the colour washes stay reserved for where they
+   say where something came from, so content sections keep the plain
+   surface and name their kind with a chip.
+   ------------------------------------------------------------------ */
+
+/* -- Something in the forecast -- */
+
+.timing-note {
+  background: #dde8f2;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin: 0 0 var(--space-5);
+}
+
+.timing-note h2 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.timing-note p {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+}
+
+.timing-note p:last-child {
+  margin-bottom: 0;
+}
+
+/* -- The month ahead, for the options on the shortlist -- */
+
+.month-view,
+.questions-block,
+.plans-empty {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin: 0 0 var(--space-5);
+}
+
+.month-view h2,
+.questions-block h2,
+.plans-empty h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.month-view > p,
+.questions-block > p {
+  margin: 0 0 var(--space-3);
+  font-size: 0.95rem;
+}
+
+.month-list {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+}
+
+.month-row {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.month-row:last-child {
+  border-bottom: none;
+}
+
+.month-option {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* The month is tagged with the same phase tint the calendar uses, so the two
+   views read as the same information told twice rather than two ideas. */
+.month-phase {
+  display: inline-block;
+  justify-self: start;
+  font-size: 0.88rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+/* -- Questions to ask -- */
+
+.question-list {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.question-item {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-1);
+}
+
+.question-item:last-child {
+  margin-bottom: 0;
+}
+
+.question-text {
+  display: block;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.question-about {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+/* -- Questions as a tickable checklist -- */
+
+/* The visit list doubles as the list to tick during the visit. The rows are
+   labels around real checkboxes, so the whole row is a tap target big enough
+   for a thumb, and keyboard users land on the box itself, not on the words. */
+.question-checklist {
+  list-style: none;
+  padding-left: 0;
+}
+
+.question-tick {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--space-2);
+  align-items: start;
+  cursor: pointer;
+  padding: var(--space-2) var(--space-1);
+  margin: 0 calc(var(--space-1) * -1);
+  border-radius: var(--radius-sm);
+}
+
+.question-tick:hover {
+  background: var(--color-accent-soft);
+}
+
+/* The box is drawn by hand so it stays visible at any magnification and
+   prints as a box even where browsers would fade a native checkbox. The
+   native input stays in charge of state, hidden off screen where a mouse
+   cannot click it twice. */
+.question-tick input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.question-box {
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  border: 2px solid var(--color-text);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  flex: none;
+}
+
+.question-tick input[type="checkbox"]:checked + .question-box {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* The tick itself is drawn, not printed as a font glyph, because font ticks
+   are the first thing to vanish on cheap printers. Two short bars make the
+   tick, and they read as done even in plain black and white. */
+.question-tick input[type="checkbox"]:checked + .question-box::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 12px;
+  margin: 2px 0 0 8px;
+  border: solid #fff;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+.question-tick input[type="checkbox"]:focus-visible + .question-box {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.question-counter {
+  margin: var(--space-3) 0 0;
+  font-weight: 700;
+}
+
+/* On paper the boxes are ink on the page and the tick instruction is gone,
+   because there is nobody left to tick for. Native-looking boxes print best
+   when they are this simple. */
+@media print {
+  .question-tick {
+    display: block;
+    padding: 0 0 var(--space-1);
+  }
+
+  .question-box {
+    display: inline-block;
+    width: 11pt;
+    height: 11pt;
+    margin: 0 6pt 0 0;
+    vertical-align: baseline;
+  }
+
+  .question-tick input[type="checkbox"]:checked + .question-box {
+    background: #fff;
+    border-color: #000;
+  }
+
+  /* Ink on paper cannot rely on the green fill, so a printed tick is drawn
+     in black bars. A checked box prints as a boxed tick; an unchecked box
+     prints empty for a pen to fill in during the visit. */
+  .question-tick input[type="checkbox"]:checked + .question-box::after {
+    content: "";
+    display: block;
+    width: 3pt;
+    height: 7pt;
+    margin: 0 0 0 3.5pt;
+    border: solid #000;
+    border-width: 0 1.5pt 1.5pt 0;
+    transform: rotate(45deg);
+  }
+}
+
+/* -- Office visit card -- */
+
+.visit-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+}
+
+.visit-head {
+  border-bottom: 2px solid var(--color-accent);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* The shared review banner also sits in the visit card head, so it shares the
+   same card spacing without a second copy of the rules. */
+.visit-head .review-card {
+  margin-top: var(--space-3);
+}
+
+.visit-head h2 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.visit-date {
+  margin: 0 0 var(--space-2);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.visit-section {
+  margin: 0 0 var(--space-5);
+}
+
+.visit-section h3 {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.visit-answers {
+  display: grid;
+  grid-template-columns: 11rem 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.visit-answers dt {
+  font-weight: 600;
+}
+
+.visit-answers dd {
+  margin: 0;
+}
+
+.visit-options {
+  margin: 0 0 var(--space-2);
+  padding-left: 1.4em;
+  font-size: 0.95rem;
+}
+
+.visit-options li {
+  margin: 0 0 var(--space-2);
+}
+
+.visit-flag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--color-accent-soft);
+  color: #263c1d;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.visit-support {
+  margin: 0 0 var(--space-2);
+  padding-left: 1.2em;
+  font-size: 0.92rem;
+}
+
+.visit-support li {
+  margin: 0 0 var(--space-1);
+}
+
+.visit-note,
+.visit-foot {
+  margin: var(--space-2) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.visit-lines {
+  margin-top: var(--space-2);
+}
+
+.visit-line {
+  height: 26px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.visit-reference {
+  margin: var(--space-2) 0 0;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.visit-reference-note {
+  margin: var(--space-1) 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.plan-reference {
+  margin: var(--space-1) 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Give the printing of the card one page, and keep sections whole. */
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  .visit-card {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    font-size: 10.5pt;
+    line-height: 1.35;
+  }
+
+  .visit-section,
+  .visit-head {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .visit-answers,
+  .visit-options,
+  .visit-support,
+  .visit-reference,
+  .question-text {
+    font-size: 10.5pt;
+  }
+
+  .visit-head .review-card {
+    background: #f2f2f2;
+    border: 1px solid #999;
+  }
+
+  .visit-line {
+    height: 24px;
+    border-bottom: 1px solid #999;
+  }
+
+  .visit-flag {
+    background: none;
+    border: 1px solid #666;
+    color: #000;
+  }
+}
+
+/* -- Saved plans -- */
+
+.plans-list,
+.plans-compare {
+  margin: 0 0 var(--space-5);
+}
+
+.plans-heading {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.plans-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin: 0 0 var(--space-4);
+}
+
+.plan-card.is-chosen {
+  border-color: var(--color-accent);
+  border-width: 2px;
+  padding: calc(var(--space-4) - 1px);
+}
+
+.plan-card h3 {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-2);
+}
+
+.plan-meta,
+.plan-lead {
+  margin: 0 0 var(--space-2);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.plan-lead {
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.plan-actions .btn {
+  flex: 1 1 auto;
+}
+
+/* -- The name of the plan being edited, on the results screen -- */
+
+.plan-name-tag {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+/* -- Home screen offline card -- */
+
+.home-offline {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin: 0 0 var(--space-5);
+}
+
+.home-offline h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.home-offline p {
+  margin: 0 0 var(--space-3);
+  font-size: 0.95rem;
+}
+
+.home-offline .hint {
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 520px) {
+  .visit-answers {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .visit-answers dt {
+    margin-top: var(--space-2);
+  }
+
+  .plan-actions .btn {
+    flex: 1 1 100%;
   }
 }

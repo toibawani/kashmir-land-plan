@@ -9,7 +9,13 @@
  * - Or fill reviewStatus, reviewedBy, designation and reviewedOn on a single
  *   activity if only that entry has been checked.
  * - reviewStatus must be "not-reviewed" or "reviewed".
+ * - When reviewStatus is "reviewed", reviewedBy (the officer's name) and
+ *   reviewedOn (the date of the check, as YYYY-MM-DD) are both required.
+ *   `npm run build` fails loudly if either is missing, so a half-recorded
+ *   review can never slip through looking finished.
  * - Leave fields empty rather than guessing a name or a date.
+ * - A review never changes the confirmation line. Everything stays a
+ *   question to confirm locally, reviewed or not.
  *
  * The ratings, calendars and "why" text are illustrative. Regional crop
  * patterns follow the sources in js/regions.js and the README. Do not add a
