@@ -557,22 +557,21 @@
 
     var quiet = 4;
     var total = built.size + quiet * 2;
-    // pixelSize is the on-screen side length wanted. The canvas is drawn at a
-    // whole number of pixels per module so no module is ever split across a
-    // pixel edge, which is what turns a crisp code into mush.
+    // The bitmap is drawn at a whole number of pixels per module so no module
+    // is ever split across a pixel edge, which is what turns a crisp code into
+    // mush. pixelSize is the smallest display size the code will be shown at,
+    // so the bitmap is drawn at least that large and any CSS shrink stays a
+    // clean downscale rather than a blurry stretch.
     var wanted = options.pixelSize || total * 6;
-    var scale = Math.max(1, Math.floor(wanted / total));
+    var scale = Math.max(1, Math.ceil(wanted / total));
     var side = total * scale;
 
+    // Only the bitmap resolution is set here, as the canvas width and height
+    // attributes. The displayed size is left to CSS, so the on-screen card and
+    // the printed page can each choose their own size without fighting an
+    // inline style that would win over a print rule.
     canvas.width = side;
     canvas.height = side;
-    // The element itself is the exact pixel side, so the drawing is never
-    // stretched by the layout. A print caller may pass cssSize to cap it.
-    var cssSide = options.cssSize ? Math.min(side, Math.round(options.cssSize)) : side;
-    canvas.style.width = cssSide + "px";
-    canvas.style.height = cssSide + "px";
-    canvas.setAttribute("width", String(side));
-    canvas.setAttribute("height", String(side));
 
     // Ink on white, always. A dark plate behind the code inverts it and no
     // scanner would read it, so the light square goes down first.
