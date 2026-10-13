@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
@@ -81,6 +81,7 @@ var SPEECH = sandbox.window.MLMP_SPEECH;
 var QR = sandbox.window.MLMP_QR;
 var OFFLINE = sandbox.window.MLMP_OFFLINE;
 var FIT = sandbox.window.MLMP_FIT;
+var OFFICE = sandbox.window.MLMP_OFFICE;
 
 console.log("review wording");
 
@@ -627,6 +628,47 @@ var noCardDrop = withFakeCard(null, function () {
   return FIT.calculateFit();
 });
 check("no card means no trim and no error", noCardDrop.length === 0, "trimmed " + noCardDrop.join(", "));
+
+// ---- What to expect at the office ----
+
+console.log("office expectations");
+
+var officeItems = OFFICE.items();
+check("there is a short list of expectations", officeItems.length >= 4 && officeItems.length <= 7, officeItems.length + " items");
+
+// The whole point of this panel is that it stays honest. Every invented number
+// would be a promise the app cannot keep, so the panel is scanned the same way
+// the catalogue is: no rupee amounts, no large figures, no percentages, no
+// dates a reader would take as a deadline, and no words that promise an
+// outcome or list a required document.
+var officeBody = officeItems.join(" ") + " " + OFFICE.closing() + " " + OFFICE.heading();
+check("the panel quotes no rupee amount", !/₹|rs\.?\\s*\\d|inr/i.test(officeBody), "a rupee figure appeared");
+check("the panel states no percentage", !/\\d+\\s*%/.test(officeBody), "a percentage appeared");
+check("the panel gives no four digit year as a deadline", !/\\b(19|20)\\d{2}\\b/.test(officeBody), "a year appeared");
+check("the panel names no scheme figure like lakh or crore", !/lakh|crore/i.test(officeBody), "an amount word appeared");
+
+// Promises and guarantees are the real danger: a farmer reads them as fact.
+var promiseWords = /\bguarantee[ds]?\b|\byou will (?:get|receive|be given|be eligible)\b|\bis eligible\b|\byou are entitled\b|\bwill be paid\b|\bassured\b/i;
+check("the panel promises no outcome", !promiseWords.test(officeBody), "a promise appeared");
+check("the panel does not tell you what to bring as required", !/you must bring|bring the following|required documents/i.test(officeBody), "a document list appeared");
+
+// It must keep the confirm-locally idea: the office decides, not the app.
+check("the closing says the department decides", /set by the department|department/i.test(OFFICE.closing()), OFFICE.closing());
+check("the closing names what it withholds", /names no amounts, deadlines or eligibility/i.test(OFFICE.closing()), OFFICE.closing());
+
+// The panel renders as an ordered list inside a labelled section, so a screen
+// reader can move item to item, and it never drops the closing line.
+var officeHtml = OFFICE.panelHtml();
+check("the panel is a labelled section", /<section[^>]*aria-labelledby=/.test(officeHtml), "no label");
+check("the panel uses an ordered list", /<ol class="office-list">/.test(officeHtml), "not an ordered list");
+check("every item is rendered", officeItems.every(function (t) { return officeHtml.indexOf(t) !== -1; }), "an item is missing");
+check("the closing is on the panel", officeHtml.indexOf(OFFICE.closing()) !== -1, "closing missing");
+
+// The plain-text form carries the same honesty, so the download and the voice
+// agree with the screen.
+var officeText = OFFICE.plainText();
+check("the text form carries every item", officeItems.every(function (t) { return officeText.indexOf(t) !== -1; }), "an item is missing from the text");
+check("the text form carries the closing", officeText.indexOf(OFFICE.closing()) !== -1, "closing missing from text");
 
 /* ---- Report ---- */
 
