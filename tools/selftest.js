@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
@@ -79,6 +79,7 @@ var QUESTIONS = sandbox.window.MLMP_QUESTIONS;
 var PLANS = sandbox.window.MLMP_PLANS;
 var SPEECH = sandbox.window.MLMP_SPEECH;
 var QR = sandbox.window.MLMP_QR;
+var OFFLINE = sandbox.window.MLMP_OFFLINE;
 
 console.log("review wording");
 
@@ -451,6 +452,44 @@ check("the code is deterministic", sameGrid(QR.matrix(refCode).grid, refMatrix.g
 // a scan shows nothing more, so no one expects the plan itself to appear.
 check("the caption names the reference", /MLMP-PUL-3K-8F2C/.test(QR.describe(refCode)), QR.describe(refCode));
 check("the caption promises nothing more than the reference", /nothing more/i.test(QR.describe(refCode)), QR.describe(refCode));
+
+// ---- Offline guidance ----
+
+console.log("offline guidance");
+
+// The one thing this app must never do is present a stored weather reading as
+// live. Every bit of offline wording is checked against that rule.
+var works = OFFLINE.whatWorks();
+var needs = OFFLINE.whatNeeds();
+check("some things are listed as working offline", works.length >= 5, works.length + " listed");
+check("the visit card is listed as working offline", works.some(function (w) { return /visit card/i.test(w); }), "card missing");
+check("the questions are listed as working offline", works.some(function (w) { return /question/i.test(w); }), "questions missing");
+check("only weather is listed as needing a connection", needs.length === 1 && /weather/i.test(needs[0].what), needs.map(function (n) { return n.what; }).join(", "));
+check(
+  "the weather entry admits it is not saved as current",
+  /never saved as|not saved as|is not saved/i.test(needs[0].why),
+  needs[0].why
+);
+
+// The notice must name both halves in either state, so a farmer who reads only
+// the top strip still learns what to do next.
+var offNotice = OFFLINE.notice(true);
+var onNotice = OFFLINE.notice(false);
+check("offline notice says weather needs a connection", /weather/i.test(offNotice) && /connection|internet/i.test(offNotice), offNotice);
+check("offline notice says the plan still works", /still works|works/i.test(offNotice), offNotice);
+check("offline notice never claims a stored forecast is current", !/saved.*current|current.*saved/i.test(offNotice) || /not saved/i.test(offNotice), offNotice);
+check("online notice sets the expectation early", /weather/i.test(onNotice), onNotice);
+
+// The panel has to carry both columns and the state line, in both states.
+var offPanel = OFFLINE.panelHtml(true);
+var onPanel = OFFLINE.panelHtml(false);
+check("offline panel says the device is offline", /offline right now/i.test(offPanel), "state line missing");
+check("offline panel is marked for styling", /is-offline/.test(offPanel), "no is-offline class");
+check("offline panel lists what works", /Works without a connection/i.test(offPanel), "no works column");
+check("offline panel lists what needs a connection", /Needs a connection/i.test(offPanel), "no needs column");
+check("offline panel is not marked as offline when online", !/is-offline/.test(onPanel), "wrongly marked offline");
+check("online panel still names weather", /weather/i.test(onPanel), "weather missing when online");
+check("the panel carries a live region for the state line", /role=\"status\"/.test(offPanel), "no status role");
 
 /* ---- Report ---- */
 

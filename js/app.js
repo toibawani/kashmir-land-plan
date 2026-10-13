@@ -22,6 +22,8 @@
   var QUESTIONS = window.MLMP_QUESTIONS;
   var PLANS = window.MLMP_PLANS;
   var SPEECH = window.MLMP_SPEECH;
+  var QR = window.MLMP_QR;
+  var OFFLINE = window.MLMP_OFFLINE;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -3351,11 +3353,36 @@
       '<strong>Current catalogue status.</strong> ' + escapeHtml(review.text);
   }
 
+  /**
+   * The strip at the top says the short version. The panel on the home page
+   * says the whole answer, listing what still works beside the one thing that
+   * does not. Both read the same module, so they can never disagree about
+   * which part of the app needs a connection.
+   */
+  function isDeviceOffline() {
+    if (OFFLINE && OFFLINE.isOffline) return OFFLINE.isOffline();
+    if (WEATHER && WEATHER.isOffline) return WEATHER.isOffline();
+    return navigator.onLine === false;
+  }
+
   function updateOfflineBanner() {
     var banner = $("#offline-banner");
-    if (!banner) return;
-    var offline = WEATHER.isOffline ? WEATHER.isOffline() : navigator.onLine === false;
-    banner.hidden = !offline;
+    var offline = isDeviceOffline();
+    if (banner) {
+      if (OFFLINE && OFFLINE.notice) {
+        banner.textContent = OFFLINE.notice(offline);
+      }
+      banner.hidden = !offline;
+    }
+    renderOfflinePanel(offline);
+  }
+
+  function renderOfflinePanel(offline) {
+    var host = $("#offline-panel-host");
+    if (!host) return;
+    if (OFFLINE && OFFLINE.panelHtml) {
+      host.innerHTML = OFFLINE.panelHtml(offline);
+    }
   }
 
   /**

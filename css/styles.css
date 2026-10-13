@@ -2517,6 +2517,71 @@ select:focus {
   font-size: 0.88rem;
 }
 
+/* -- Offline guidance panel -- */
+
+/* A calm panel, not an error. The point is to answer "what can I still do",
+   so the half that works comes first and the single item that does not is
+   kept small and unalarming. The tint only deepens when the device is
+   genuinely offline, which is the moment it earns the attention. */
+.offline-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+.offline-panel.is-offline {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.offline-panel-state {
+  margin: 0 0 var(--space-3);
+  font-weight: 700;
+}
+
+.offline-panel-cols {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 560px) {
+  .offline-panel-cols {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+  }
+}
+
+.offline-panel-col h3 {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.offline-works,
+.offline-needs {
+  margin: 0;
+  padding-left: 1.3em;
+  font-size: 0.92rem;
+}
+
+.offline-works li {
+  margin: 0 0 var(--space-1);
+}
+
+.offline-needs li {
+  margin: 0 0 var(--space-2);
+}
+
+.offline-needs strong {
+  display: block;
+}
+
 @media (max-width: 520px) {
   .visit-answers {
     grid-template-columns: 1fr;
