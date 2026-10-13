@@ -2365,6 +2365,35 @@ select:focus {
   color: var(--color-text-muted);
 }
 
+/* The code on the card. It sits with the reference so the two are read as one
+   thing, and it is kept in a quiet white box because a dark or patterned
+   background would stop a camera reading it. On screen it is centred in a
+   narrow card; on paper it keeps the same size. */
+.visit-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+}
+
+.visit-qr-canvas {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  padding: 6px;
+  width: 156px;
+  height: 156px;
+  box-sizing: content-box;
+}
+
+.visit-qr-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  max-width: 24rem;
+}
+
 .plan-reference {
   margin: var(--space-1) 0 0;
   font-size: 0.85rem;
@@ -2397,6 +2426,19 @@ select:focus {
   .visit-reference,
   .question-text {
     font-size: 10.5pt;
+  }
+
+  /* On paper the code is kept a fixed, generous size so it stays readable by
+     a phone camera. It is never stretched past the pixels it was drawn in. */
+  .visit-qr-canvas {
+    width: 40mm;
+    height: 40mm;
+    box-sizing: content-box;
+  }
+
+  .visit-qr {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .visit-head .review-card {

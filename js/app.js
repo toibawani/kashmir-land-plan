@@ -2794,6 +2794,14 @@
       // it is the first line of every phone call, letter and file name.
       '<p class="visit-reference">Plan reference: <strong>' + escapeHtml(currentPlanReference()) + "</strong></p>" +
       '<p class="visit-reference-note">Made on this device from your answers. Quote it when you call about this plan.</p>' +
+      // The code beside the letters. An officer can point a phone at it instead
+      // of typing twelve characters, and the caption keeps it honest: the scan
+      // shows the same characters and nothing more. There is no server here
+      // and no plan to fetch, and the app must never pretend otherwise.
+      '<div class="visit-qr">' +
+      '<canvas class="visit-qr-canvas" id="visit-qr-canvas" role="img" aria-label=""></canvas>' +
+      '<p class="visit-qr-note">Scan to see the same reference. It carries nothing else.</p>' +
+      "</div>" +
       reviewBannerHtml(currentReview()) +
       "</div>" +
       '<div class="visit-section">' +
@@ -2914,7 +2922,31 @@
 
   function renderVisitCard() {
     var host = $("#visit-card");
-    if (host) host.innerHTML = buildVisitCard();
+    if (!host) return;
+    host.innerHTML = buildVisitCard();
+    drawVisitQr();
+  }
+
+  /**
+   * Draw the code into the canvas the card just built. The reference is drawn
+   * fresh on every render rather than saved, so the letters and the code can
+   * never disagree. It is drawn after the HTML is in place, because the canvas
+   * only exists once it is.
+   *
+   * The code is meant to be scanned off paper, so it is drawn big enough for a
+   * camera and kept in whole pixels to stay crisp when it is printed. If there
+   * is no canvas support the letters alone still carry the reference, which is
+   * why the note beside it never claims the code is the only way.
+   */
+  function drawVisitQr() {
+    var canvas = $("#visit-qr-canvas");
+    if (!canvas || !QR || !QR.draw) return;
+    var reference = currentPlanReference();
+    // Screen: large enough to scan on a phone. The card is narrow, so the
+    // width is capped and the quiet zone is kept by the encoder itself.
+    QR.draw(canvas, reference, { pixelSize: 168 });
+    var label = QR.describe ? QR.describe(reference) : "A QR code holding the plan reference " + reference;
+    canvas.setAttribute("aria-label", label);
   }
 
   // ------------------------------------------------------------- My plans
