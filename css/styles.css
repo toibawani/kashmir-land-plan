@@ -2420,12 +2420,38 @@ select:focus {
     page-break-inside: avoid;
   }
 
+  /* Every section, not just these, must keep its shape, and the whole card is
+     allowed to be a little tighter on paper than on screen. */
+  .visit-section {
+    margin: 0 0 8pt;
+  }
+
+  .visit-section h3 {
+    font-size: 10.5pt;
+    margin: 0 0 3pt;
+    padding-bottom: 1pt;
+  }
+
   .visit-answers,
   .visit-options,
   .visit-support,
   .visit-reference,
   .question-text {
     font-size: 10.5pt;
+  }
+
+  .visit-answers dt,
+  .visit-answers dd {
+    padding: 0 0 1pt;
+  }
+
+  .visit-note {
+    font-size: 9pt;
+    margin: 2pt 0 0;
+  }
+
+  .visit-qr-note {
+    font-size: 9pt;
   }
 
   /* On paper the code is kept a fixed, generous size so it stays readable by
@@ -2439,6 +2465,7 @@ select:focus {
   .visit-qr {
     break-inside: avoid;
     page-break-inside: avoid;
+    margin: 6pt 0;
   }
 
   .visit-head .review-card {
@@ -2455,6 +2482,30 @@ select:focus {
     background: none;
     border: 1px solid #666;
     color: #000;
+  }
+
+  /* A short, ruled area for the office to write in, not the five full lines
+     of the screen card. On a full card the notes are the first thing that
+     would spill onto a second page, and a half-drawn ruled area across a page
+     break is worse than none, so the space for it comes out of the print
+     layout rather than pushing the questions onto a second sheet. */
+  .visit-lines .visit-line:nth-child(n + 4) {
+    display: none;
+  }
+
+  .visit-line {
+    height: 20px;
+  }
+
+  /* The one-page fitter marks a part for trimming by setting data-fit-trim="1"
+     on it, only when it measured the card as too tall for the sheet. A trimmed
+     part is hidden on paper but never on screen, and only the notes area and
+     the support list are ever eligible, so the answers, the options, the
+     questions and the review wording always survive to paper. */
+  @media print {
+    [data-fit-part][data-fit-trim="1"] {
+      display: none;
+    }
   }
 }
 

@@ -24,6 +24,7 @@
   var SPEECH = window.MLMP_SPEECH;
   var QR = window.MLMP_QR;
   var OFFLINE = window.MLMP_OFFLINE;
+  var FIT = window.MLMP_FIT;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -2831,9 +2832,9 @@
         : "<p>No questions were generated.</p>") +
       "</div>" +
       (supportHtml
-        ? '<div class="visit-section break-avoid"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
+        ? '<div class="visit-section break-avoid" data-fit-part="support"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
         : "") +
-      '<div class="visit-section break-avoid">' +
+      '<div class="visit-section break-avoid" data-fit-part="notes">' +
       "<h3>Notes from the visit</h3>" +
       '<div class="visit-lines">' +
       lines +
@@ -3667,7 +3668,13 @@
         if (state.planReady && state.options.length) showScreen("results");
         else showScreen("home");
       });
-    $("#btn-visit-print") && $("#btn-visit-print").addEventListener("click", function () { window.print(); });
+    $("#btn-visit-print") && $("#btn-visit-print").addEventListener("click", function () {
+      // Trim the card to one page if it measured as too tall, then print, then
+      // put everything back. If there is no fitter the card still prints as it
+      // is, so a missing module can never leave a farmer with a dead button.
+      if (FIT && FIT.prepareForPrint) FIT.prepareForPrint();
+      window.print();
+    });
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
     $("#btn-visit-read") &&
       $("#btn-visit-read").addEventListener("click", function () {

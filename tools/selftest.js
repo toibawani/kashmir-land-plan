@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
@@ -80,6 +80,7 @@ var PLANS = sandbox.window.MLMP_PLANS;
 var SPEECH = sandbox.window.MLMP_SPEECH;
 var QR = sandbox.window.MLMP_QR;
 var OFFLINE = sandbox.window.MLMP_OFFLINE;
+var FIT = sandbox.window.MLMP_FIT;
 
 console.log("review wording");
 
@@ -490,6 +491,142 @@ check("offline panel lists what needs a connection", /Needs a connection/i.test(
 check("offline panel is not marked as offline when online", !/is-offline/.test(onPanel), "wrongly marked offline");
 check("online panel still names weather", /weather/i.test(onPanel), "weather missing when online");
 check("the panel carries a live region for the state line", /role=\"status\"/.test(offPanel), "no status role");
+
+// ---- One-page print fit ----
+
+console.log("print fit");
+
+// The printable height is A4 minus the 24mm of margins the stylesheet sets.
+// A4 is 297mm, so 273mm, which at 96 CSS pixels per inch is about 1031px.
+var fitLimit = FIT.printableHeightPx();
+check("the printable height matches A4 minus the margins", fitLimit > 1000 && fitLimit < 1050, fitLimit + "px");
+
+// The parts the fitter is ever allowed to hide. The farmer's own answers, the
+// options, the questions and the review wording are not in this list, so a
+// print can never drop the things that carry meaning.
+var trimOrder = FIT.TRIM_ORDER;
+check("only filler is ever trimmed", trimOrder.length === 2 && trimOrder.indexOf("notes") !== -1 && trimOrder.indexOf("support") !== -1, trimOrder.join(", "));
+check("the answers are never trimmed", trimOrder.indexOf("answers") === -1 && trimOrder.indexOf("questions") === -1, "answers or questions in the trim list");
+check("notes go before support", trimOrder.indexOf("notes") < trimOrder.indexOf("support"), "wrong order");
+
+// A tiny stand-in for the parts of the DOM the fitter touches: a card element
+// with querySelector, querySelectorAll, style, and a scrollHeight that reacts
+// to the trims the way a real layout would. scrollHeight is a getter, so as
+// soon as the fitter sets data-fit-trim="1" on a part, the reported height
+// drops by that part's height, exactly as display:none would in a browser.
+function makeFakeCard(initialHeight, partHeights) {
+  var parts = (partHeights || []).map(function (spec) {
+    var part = {
+      name: spec.name,
+      height: spec.height,
+      attrs: { "data-fit-part": spec.name, "data-fit-trim": "0" },
+      setAttribute: function (key, value) {
+        part.attrs[key] = String(value);
+      },
+      getAttribute: function (key) {
+        return part.attrs[key];
+      },
+    };
+    return part;
+  });
+  var card = {
+    parts: parts,
+    style: {},
+    querySelector: function (selector) {
+      var match = selector.match(/data-fit-part="([^"]+)"/);
+      if (!match) return null;
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].name === match[1]) return parts[i];
+      }
+      return null;
+    },
+    querySelectorAll: function () {
+      return parts;
+    },
+  };
+  Object.defineProperty(card, "scrollHeight", {
+    get: function () {
+      var visible = initialHeight;
+      parts.forEach(function (p) {
+        if (p.attrs["data-fit-trim"] === "1") visible -= p.height;
+      });
+      return visible;
+    },
+  });
+  return card;
+}
+
+function withFakeCard(card, fn) {
+  var prevDoc = sandbox.document;
+  var prevGet = null;
+  sandbox.document = {
+    getElementById: function (id) {
+      return id === "visit-card" ? card : null;
+    },
+  };
+  try {
+    return fn();
+  } finally {
+    sandbox.document = prevDoc;
+  }
+}
+
+// A short card already fits, so nothing is trimmed.
+var shortCard = makeFakeCard(600, [
+  { name: "notes", height: 100 },
+  { name: "support", height: 150 },
+]);
+var shortDrop = withFakeCard(shortCard, function () {
+  return FIT.calculateFit();
+});
+check("a card that already fits is left alone", shortDrop.length === 0, "trimmed " + shortDrop.join(", "));
+
+// A tall card needs the notes gone. Dropping 100px from 1100 brings it under
+// the limit, and the support list must survive because it was not needed.
+var tallCard = makeFakeCard(1100, [
+  { name: "notes", height: 100 },
+  { name: "support", height: 150 },
+]);
+var tallDrop = withFakeCard(tallCard, function () {
+  return FIT.calculateFit();
+});
+check("a card just over the limit loses only the notes", tallDrop.length === 1 && tallDrop[0] === "notes", "trimmed " + tallDrop.join(", "));
+check("the support list survives when it is not needed", tallCard.querySelector('data-fit-part="support"').attrs["data-fit-trim"] === "0", "support was trimmed");
+
+// A card so tall that even the notes are not enough also loses the support
+// list, and both trims stay applied.
+var hugeCard = makeFakeCard(1400, [
+  { name: "notes", height: 100 },
+  { name: "support", height: 150 },
+]);
+var hugeDrop = withFakeCard(hugeCard, function () {
+  return FIT.calculateFit();
+});
+check("a very tall card loses notes then support", hugeDrop.length === 2 && hugeDrop.indexOf("notes") !== -1 && hugeDrop.indexOf("support") !== -1, "trimmed " + hugeDrop.join(", "));
+
+// A part tried but not needed is put back, so the card keeps everything it can.
+var justFitsCard = makeFakeCard(fitLimit + 10, [
+  { name: "notes", height: 60 },
+  { name: "support", height: 60 },
+]);
+withFakeCard(justFitsCard, function () {
+  FIT.calculateFit();
+});
+check("a part that was not needed is untrimmed again", justFitsCard.querySelector('data-fit-part="support"').attrs["data-fit-trim"] === "0", "support left trimmed");
+
+// clearFit puts every part back, which is what runs after printing so the
+// on-screen card is untouched.
+withFakeCard(hugeCard, function () {
+  FIT.clearFit();
+});
+check("clearFit restores every part", hugeCard.querySelector('data-fit-part="notes"').attrs["data-fit-trim"] === "0" && hugeCard.querySelector('data-fit-part="support"').attrs["data-fit-trim"] === "0", "a part stayed trimmed");
+
+// With no card in the DOM, nothing throws and nothing is trimmed, so the
+// print button on a screen with no card cannot break.
+var noCardDrop = withFakeCard(null, function () {
+  return FIT.calculateFit();
+});
+check("no card means no trim and no error", noCardDrop.length === 0, "trimmed " + noCardDrop.join(", "));
 
 /* ---- Report ---- */
 
