@@ -25,6 +25,7 @@
   var QR = window.MLMP_QR;
   var OFFLINE = window.MLMP_OFFLINE;
   var FIT = window.MLMP_FIT;
+  var OFFICE = window.MLMP_OFFICE;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -2926,6 +2927,21 @@
     if (!host) return;
     host.innerHTML = buildVisitCard();
     drawVisitQr();
+    renderOfficePanel();
+  }
+
+  /**
+   * Fill the "what to expect" panel below the card. It is separate from the
+   * card itself because it is guidance for the journey, not part of the
+   * one-page artefact, and it is rendered from the same module the self test
+   * checks for honesty. If the module is missing the screen still works, so a
+   * broken panel can never take the card down with it.
+   */
+  function renderOfficePanel() {
+    var host = $("#office-host");
+    if (!host) return;
+    if (OFFICE && OFFICE.panelHtml) host.innerHTML = OFFICE.panelHtml();
+    else host.innerHTML = "";
   }
 
   /**
@@ -3645,8 +3661,43 @@
         setStatus("copy-status", "Finish the plot details first, then the card can be made.");
         return;
       }
+      setVisitMode(false);
       renderVisitCard();
       showScreen("visit");
+    }
+
+    /**
+     * Visit mode. Standing in front of an officer, the only things worth having
+     * on the screen are the card, the tickable questions and the reading
+     * controls. Everything else, the intro paragraph, the download button, the
+     * saved-plans buttons, the guidance panel, is chrome for a different moment.
+     *
+     * The toggle only adds a class to the screen and flips a couple of buttons.
+     * The nodes stay in place, so leaving visit mode restores the exact same
+     * screen with no re-render and nothing lost. That matters because a farmer
+     * may switch in and out of it while talking to an officer, and a re-render
+     * would reset a scrolled position or a ticked question at the wrong moment.
+     */
+    function setVisitMode(on) {
+      var screen = $("#screen-visit");
+      if (!screen) return;
+      screen.classList.toggle("is-visit-mode", !!on);
+      var onBtn = $("#btn-visit-mode");
+      if (onBtn) onBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      var exitRow = $("#visit-mode-exit-row");
+      if (exitRow) exitRow.hidden = !on;
+      var hint = $("#visit-mode-hint");
+      if (hint) hint.hidden = !!on;
+      // The reading controls stay usable in visit mode, so the status line and
+      // the stop button must not be swept away by the hiding rule. They are
+      // outside the visit-mode-hide markers already, so nothing to do here, but
+      // the screen is scrolled to the top so the card is the first thing seen.
+      if (on) window.scrollTo({ top: 0, behavior: scrollBehavior() });
+    }
+
+    function visitModeOn() {
+      var screen = $("#screen-visit");
+      return !!screen && screen.classList.contains("is-visit-mode");
     }
 
     function openPlans() {
@@ -3676,6 +3727,14 @@
       window.print();
     });
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
+    $("#btn-visit-mode") &&
+      $("#btn-visit-mode").addEventListener("click", function () {
+        setVisitMode(!visitModeOn());
+      });
+    $("#btn-visit-mode-exit") &&
+      $("#btn-visit-mode-exit").addEventListener("click", function () {
+        setVisitMode(false);
+      });
     $("#btn-visit-read") &&
       $("#btn-visit-read").addEventListener("click", function () {
         renderVisitCard();

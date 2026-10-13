@@ -2243,6 +2243,105 @@ select:focus {
 
 /* -- Office visit card -- */
 
+/* -- Office visit card hero -- */
+
+/* The visit card is the artefact this whole app exists to produce, so its
+   screen is treated as a hero, not as one result among many. The actions sit
+   above the card where a thumb can reach them, and the primary action is
+   large. No gradient, no glass, just clear spacing and one big button. */
+.visit-hero {
+  margin-bottom: var(--space-5);
+}
+
+.visit-hero-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-2);
+}
+
+.visit-hero .screen-title {
+  margin-top: 0;
+}
+
+.visit-hero-actions .btn-primary {
+  min-height: 3.25rem;
+  font-size: 1.05rem;
+}
+
+.btn-lg {
+  padding: var(--space-3) var(--space-5);
+  font-size: 1.05rem;
+}
+
+.visit-mode-hint {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* -- Visit mode -- */
+
+/* Standing with an officer, the farmer needs only the card, the questions to
+   tick and the reading controls. Everything else is chrome for a different
+   moment, so visit mode hides it. The class is on the screen and the hiding
+   is done here rather than by removing nodes, so leaving visit mode restores
+   the exact same screen with no re-render and no lost scroll position. */
+#screen-visit.is-visit-mode .visit-mode-hide {
+  display: none !important;
+}
+
+#screen-visit.is-visit-mode #visit-mode-exit-row {
+  display: block;
+}
+
+#screen-visit.is-visit-mode .visit-hero .screen-title {
+  font-size: 1.15rem;
+}
+
+/* In visit mode the reading controls should stay put and be easy to hit, so
+   the stop button keeps its size and the status line is given a little room. */
+#screen-visit.is-visit-mode .read-controls {
+  margin-top: var(--space-3);
+}
+
+/* -- What to expect at the office -- */
+
+.office-panel {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-5);
+  margin: var(--space-5) 0;
+}
+
+.office-panel h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.office-list {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.4em;
+}
+
+.office-list li {
+  margin: 0 0 var(--space-3);
+  line-height: 1.5;
+}
+
+.office-closing {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
 .visit-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);

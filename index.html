@@ -464,25 +464,39 @@
     <!-- OFFICE VISIT CARD -->
     <section id="screen-visit" class="screen" aria-labelledby="visit-title" hidden>
       <div class="container narrow">
-        <h1 id="visit-title" class="screen-title no-print">Office visit card</h1>
-        <p class="screen-intro no-print">
-          One page to take with you. It carries what you entered, the options you marked, and the
-          questions to ask. Nothing on it is a recommendation, and none of it is approved by anyone.
-        </p>
-        <div class="visit-card" id="visit-card"></div>
-        <div class="results-actions no-print">
-          <button type="button" class="btn btn-primary" id="btn-visit-print">Print or save as PDF</button>
-          <button type="button" class="btn btn-secondary" id="btn-visit-download">Download as text</button>
-        </div>
-        <div class="read-controls no-print">
-          <div class="results-actions">
-            <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
-            <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+          <div class="visit-hero no-print">
+            <p class="visit-hero-eyebrow visit-mode-hide">Your takeaway</p>
+            <h1 id="visit-title" class="screen-title">Office visit card</h1>
+            <p class="screen-intro visit-mode-hide">
+              This is the one thing worth carrying to the office. It holds what you entered, the options you
+              marked and the questions to ask, all on one page. Nothing on it is a recommendation, and none
+              of it has been approved by anyone.
+            </p>
+            <div class="results-actions visit-hero-actions">
+              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print">Print or save as PDF</button>
+              <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download">Download as text</button>
+            </div>
+            <div class="read-controls">
+              <div class="results-actions">
+                <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
+                <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+              </div>
+              <p class="read-status" id="read-visit-status" role="status" hidden></p>
+              <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
+            </div>
+            <div class="results-actions visit-mode-hide">
+              <button type="button" class="btn btn-secondary" id="btn-visit-mode" aria-pressed="false">Visit mode</button>
+            </div>
+            <p class="visit-mode-hint visit-mode-hide" id="visit-mode-hint">
+              Visit mode hides everything except the card, the questions and the reading controls, so it is easy to use while you stand with an officer.
+            </p>
+            <div class="results-actions" id="visit-mode-exit-row" hidden>
+              <button type="button" class="btn btn-secondary" id="btn-visit-mode-exit">Leave visit mode</button>
+            </div>
           </div>
-          <p class="read-status" id="read-visit-status" role="status" hidden></p>
-          <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
-        </div>
-        <div class="results-actions no-print">
+        <div class="visit-card" id="visit-card"></div>
+        <div class="office-host no-print visit-mode-hide" id="office-host"></div>
+        <div class="results-actions no-print visit-mode-hide">
           <button type="button" class="btn btn-secondary" id="btn-visit-back">Back to summary</button>
           <button type="button" class="btn btn-secondary" id="btn-visit-plans">My saved plans</button>
         </div>
