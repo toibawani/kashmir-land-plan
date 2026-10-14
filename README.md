@@ -148,7 +148,7 @@ To extend it, replace the catalogue and the scoring with real advisory data, and
 
 ## Accessibility
 
-Labelled form controls, a fieldset per step, a progress bar that reports its value, error text tied to its field with `aria-describedby`, `aria-invalid` on anything that failed, focus moved to the first problem, focus moved to the new heading when a screen or step changes, `aria-pressed` on the interested toggles, a live region for status messages, visible focus rings, and a skip link.
+Labelled form controls, a fieldset per step, a progress bar that reports its value, error text tied to its field with `aria-describedby`, `aria-invalid` on anything that failed, focus moved to the first problem, focus moved to the new heading when a screen or step changes, `aria-pressed` on the interested toggles, a live region for status messages, visible focus rings, and a skip link. Opening visit mode moves focus onto the card so a screen reader announces it as the new position, and closing it puts focus back on the toggle; the card takes this focus without a visible ring, the way the screen titles do, because nothing reaches it by Tab.
 
 I checked contrast, horizontal overflow and target size on every screen at 320px: no contrast failures, no horizontal overflow, and no control under 24px (the WCAG 2.2 minimum). Buttons and selects are at least 44px tall, and the scheme and footer links were given padding so they clear that too. Each calendar phase uses a light ground with dark text on it, so the colour coding never drops below AA. Motion is a progress bar and short button transitions, and it is switched off under `prefers-reduced-motion`.
 
