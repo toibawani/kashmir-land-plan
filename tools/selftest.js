@@ -246,6 +246,17 @@ check(
   "an empty chunk slipped through"
 );
 
+// Section jumping is a convenience on top of a live voice. With no voice here,
+// the jump must refuse cleanly rather than half-move or throw, and the section
+// counters must report nothing rather than a nonsense number. A farmer whose
+// phone has no voice simply never sees the controls, so the safe no-op is the
+// correct behaviour and must not be mistaken for a working jump.
+console.log("section jumping");
+check("with no voice there is no current section", SPEECH.currentSection() === -1, "section " + SPEECH.currentSection());
+check("with no voice there are no sections to count", SPEECH.sectionCount() === 0, "count " + SPEECH.sectionCount());
+check("a jump with no voice is refused, not faked", SPEECH.jumpToSection(0) === false, "jump returned true");
+check("a jump past the end is refused", SPEECH.jumpToSection(99) === false, "jump to a missing section returned true");
+
 console.log("visit card honesty");
 var cardData = {
   district: "Pulwama",
