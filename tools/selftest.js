@@ -226,6 +226,61 @@ check("deleting removes one and only one", PLANS.list().length === 1, PLANS.list
 var named = PLANS.suggestName([{ activity: { title: "Temperate fruit and nut trees" } }], ["Temperate fruit and nut trees"]);
 check("a taken name gets a number, not a clash", named !== "Temperate fruit and nut trees", named);
 
+// The questions covered at the office have to survive a save-and-reopen round
+// trip, or a visit recorded on the card is silently wiped the next time the
+// plan is opened. This is the one thing a farmer is doing while standing at
+// the counter, so a lost tick is the worst possible failure.
+var visitPlan = PLANS.upsert({
+  name: "Visit plan",
+  data: sampleData,
+  interested: { kitchen_garden: true },
+  options: [{ id: "kitchen_garden" }],
+  zoneId: "valley_temperate",
+  coveredQuestions: { "q-water-source": true, "q-soil-test": true },
+});
+check("covered questions are stored with the plan", visitPlan.coveredQuestions && visitPlan.coveredQuestions["q-water-source"] === true, "lost at save");
+
+// Saving again (the "save again updates that plan" path) must not drop them.
+var reSaved = PLANS.upsert({
+  id: visitPlan.id,
+  name: "Visit plan",
+  data: sampleData,
+  interested: { kitchen_garden: true },
+  options: [{ id: "kitchen_garden" }],
+  zoneId: "valley_temperate",
+});
+check("saving again keeps the covered questions", reSaved.coveredQuestions && reSaved.coveredQuestions["q-water-source"] === true && reSaved.coveredQuestions["q-soil-test"] === true, "dropped on re-save");
+
+// And reopening the plan reads them back.
+check("reopening the plan restores the covered questions", PLANS.get(visitPlan.id).coveredQuestions["q-soil-test"] === true, "not restored on reopen");
+
+// A tick added after reopening must persist too, which is the mid-visit path.
+var midVisit = PLANS.get(visitPlan.id);
+midVisit.coveredQuestions = Object.assign({}, midVisit.coveredQuestions, { "q-market": true });
+PLANS.upsert({
+  id: midVisit.id,
+  name: midVisit.name,
+  data: midVisit.data,
+  interested: midVisit.interested,
+  coveredQuestions: midVisit.coveredQuestions,
+  options: midVisit.options,
+  zoneId: midVisit.zoneId,
+  isDemo: midVisit.isDemo,
+  chosen: midVisit.chosen,
+});
+check("a tick added mid-visit is stored", PLANS.get(visitPlan.id).coveredQuestions["q-market"] === true, "mid-visit tick lost");
+
+// A covered map that is not a plain object must not corrupt the field.
+var guarded = PLANS.upsert({
+  id: visitPlan.id,
+  name: "Visit plan",
+  data: sampleData,
+  interested: {},
+  coveredQuestions: "not-an-object",
+});
+check("a non-object covered map falls back to the previous value", guarded.coveredQuestions["q-water-source"] === true, "corrupted: " + JSON.stringify(guarded.coveredQuestions));
+PLANS.remove(visitPlan.id);
+
 console.log("speech chunking");
 check("no voice here, so reading is honestly unavailable", SPEECH.supported() === false, "supported() true with no voice");
 var spoken = "First sentence. Second sentence. " + new Array(40).join("A very long sentence that keeps going and going. ");

@@ -3033,6 +3033,36 @@
     return saved;
   }
 
+  /**
+   * Write the covered questions back to the saved plan this draft belongs to.
+   *
+   * Ticking a question mid-visit updates the working state and the draft, but
+   * a draft that was opened from a saved plan has to push those ticks into the
+   * plan itself. Otherwise the next time that plan is opened the visit is
+   * silently lost, which is exactly the wrong outcome for the one thing a
+   * farmer is doing while standing at the counter.
+   *
+   * Only the covered questions move. The answers, options and reasons in the
+   * plan stay frozen, so a card already printed cannot change under the farmer.
+   */
+  function saveCoveredToSavedPlan() {
+    if (!plansAvailable() || !state.currentPlanId) return null;
+    var plan = PLANS.get(state.currentPlanId);
+    if (!plan) return null;
+    PLANS.upsert({
+      id: plan.id,
+      name: plan.name,
+      data: plan.data,
+      interested: plan.interested || {},
+      coveredQuestions: state.coveredQuestions || {},
+      options: plan.options || [],
+      zoneId: plan.zoneId || null,
+      isDemo: plan.isDemo,
+      chosen: plan.chosen,
+    });
+    return plan.id;
+  }
+
   function planById(id) {
     return PLANS.get(id);
   }
@@ -3935,6 +3965,13 @@
       if (box.checked) state.coveredQuestions[key] = true;
       else delete state.coveredQuestions[key];
       saveDraft();
+      // If this working draft is a saved plan that was reopened, the tick has
+      // to reach the saved plan too, or a visit recorded on the card would be
+      // wiped the next time that plan is opened. The answers and options stay
+      // frozen in the snapshot; only the covered questions are written back,
+      // so nothing a farmer already printed and showed an officer can shift
+      // underneath them.
+      saveCoveredToSavedPlan();
       // Repaint the counter in place without a full re-render, which would
       // steal the farmer's place on the page mid-visit.
       var list = box.closest(".question-checklist");

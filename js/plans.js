@@ -51,6 +51,13 @@
     return true;
   }
 
+  // A covered-questions map is keyed by question id, so only a plain object
+  // is ever trusted as one. Anything else (a string, an array, null) falls
+  // back to the previous value rather than corrupting the field.
+  function isPlainObject(value) {
+    return !!value && typeof value === "object" && !Array.isArray(value);
+  }
+
   function writeRaw(plans) {
     try {
       window.localStorage.setItem(
@@ -115,6 +122,13 @@
       chosen: previous ? !!previous.chosen : !!input.chosen,
       data: input.data,
       interested: input.interested || {},
+      // The covered questions ride with the plan, not the draft. A plan is a
+      // frozen snapshot of the answers and options, but the questions covered
+      // at the office are meant to keep updating: reopening the plan a week
+      // later must still show what was already talked through, and a tick
+      // made during a visit must not vanish the next time the plan is opened.
+      // Without this, upsert would quietly drop the field every save.
+      coveredQuestions: isPlainObject(input.coveredQuestions) ? input.coveredQuestions : (previous && previous.coveredQuestions) || {},
       options: input.options || [],
       zoneId: input.zoneId || null,
       isDemo: !!input.isDemo,
