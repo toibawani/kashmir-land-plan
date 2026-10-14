@@ -2675,11 +2675,27 @@
               .join(" ")
           : "No questions were generated.",
       },
+      // The "What to expect" panel is on the same screen, so it belongs in the
+      // spoken card too. Reading the card aloud and then leaving this panel
+      // silent would mean the ear misses what the eye can see. It is guarded,
+      // because a missing module must never stop the rest of the card being
+      // read.
+      OFFICE && OFFICE.plainText
+        ? {
+            label: OFFICE.heading ? OFFICE.heading() : "What to expect at the office",
+            text:
+              OFFICE.items().map(function (item, i) {
+                return i + 1 + ". " + item;
+              }).join(" ") + " " + OFFICE.closing(),
+          }
+        : null,
       {
         label: "A last word",
         text: ACTIVITIES.confirmationLine + " This card was made by the farmer using a prototype, not by any department.",
       },
-    ];
+      // Drop any section that was turned off, so the reader never sees a gap
+      // where a missing module would have been.
+    ].filter(Boolean);
   }
 
   // The plain-text ear version survives for copying, and any older caller

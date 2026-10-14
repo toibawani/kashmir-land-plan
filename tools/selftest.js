@@ -735,6 +735,14 @@ check("the closing is on the panel", officeHtml.indexOf(OFFICE.closing()) !== -1
 var officeText = OFFICE.plainText();
 check("the text form carries every item", officeItems.every(function (t) { return officeText.indexOf(t) !== -1; }), "an item is missing from the text");
 check("the text form carries the closing", officeText.indexOf(OFFICE.closing()) !== -1, "closing missing from text");
+// The voice reads the panel straight into the spoken visit card, so the very
+// same honesty checks have to hold for the pieces the reader joins up: each
+// item and the closing, on their own. If a future edit slipped a figure into
+// one item only, this would still catch it before a farmer heard it.
+var officeSpoken = officeItems.join(" ") + " " + OFFICE.closing();
+check("the spoken panel quotes no rupee amount", !/₹|rs\.?\s*\d|inr/i.test(officeSpoken), "a rupee figure in the spoken text");
+check("the spoken panel gives no deadline year", !/\b(19|20)\d{2}\b/.test(officeSpoken), "a year in the spoken text");
+check("the spoken panel names no amount word", !/lakh|crore/i.test(officeSpoken), "an amount word in the spoken text");
 
 /* ---- Report ---- */
 
