@@ -2614,11 +2614,18 @@
     if (questions.length) {
       sections.push({
         label: "Questions to ask at the office",
-        text: questions
-          .map(function (q, i) {
-            return "Question " + (i + 1) + ". " + q.text;
-          })
-          .join(" "),
+        text:
+          questions
+            .map(function (q, i) {
+              var wasCovered = state.coveredQuestions && state.coveredQuestions[q.id];
+              return (
+                "Question " + (i + 1) + (wasCovered ? ", already covered at the office" : "") + ". " + q.text
+              );
+            })
+            .join(" ") +
+          (questionCoverCount(questions) > 0
+            ? " " + questionCoverCount(questions) + " of " + questions.length + " covered."
+            : ""),
       });
     }
 
