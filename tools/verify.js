@@ -335,6 +335,45 @@ contrastPairs.forEach(function (p) {
   }
 });
 
+/* ---- 6. Every element the code wires up must exist in the page ---- */
+
+// app.js reaches its buttons and panels by id: $("#btn-visit-print"). A typo
+// in the id, or a rename in the markup that misses one call site, leaves a
+// button that is present on screen but wired to nothing. It looks fine and
+// does nothing, which is the worst kind of break. Every id that the code
+// attaches an event listener to is checked against the ids in index.html, so
+// this class of dead control fails the build rather than a farmer's tap.
+//
+// Only ids that are followed by an addEventListener call are checked, because
+// those are the ones where a missing element silently swallows an action. Ids
+// read for content (innerHTML, textContent) are allowed to be built at run
+// time, so they are deliberately left out.
+var pageIds = [];
+var idRe = /id="([^"]+)"/g;
+var idMatch;
+while ((idMatch = idRe.exec(html)) !== null) {
+  pageIds.push(idMatch[1]);
+}
+
+["js/app.js"].forEach(function (relFile) {
+  var code = fs.readFileSync(path.join(root, relFile), "utf8");
+  // $("#the-id") immediately followed by .addEventListener( on the same or
+  // next line. The dot-star-newline covers the common split across two lines.
+  var wireRe = /\$\(\s*"#([\w-]+)"\s*\)[^\n]*addEventListener/g;
+  var m;
+  var seen = [];
+  while ((m = wireRe.exec(code)) !== null) {
+    var elId = m[1];
+    if (seen.indexOf(elId) !== -1) continue;
+    seen.push(elId);
+    if (pageIds.indexOf(elId) === -1) {
+      failures.push(
+        relFile + ' wires an event listener on "#' + elId + '" but no element with that id exists in index.html, so the control is dead'
+      );
+    }
+  }
+});
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
