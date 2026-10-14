@@ -244,10 +244,13 @@ main {
 }
 
 /* Headings receive focus only to move the reading position for screen
-   readers. They are not reachable by Tab, so no ring is needed. */
+   readers. They are not reachable by Tab, so no ring is needed. The visit
+   card joins them: visit mode focuses it so a screen reader announces the
+   card as the new position, but nothing reaches it by Tab. */
 .screen-title:focus,
 .hero h1:focus,
-.step-legend:focus {
+.step-legend:focus,
+.visit-card:focus {
   outline: none;
 }
 
