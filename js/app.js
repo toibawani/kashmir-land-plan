@@ -1032,7 +1032,20 @@
     if (nameTag) {
       if (state.currentPlanId && state.currentPlanName) {
         nameTag.hidden = false;
-        nameTag.textContent = 'Saved as "' + state.currentPlanName + '". Saving again updates that plan.';
+        // When this plan is the one marked for the office, say so here. A
+        // farmer who keeps several plans and opens one should not have to go
+        // back to the plans list to remember which one the card will follow.
+        var chosenHere = false;
+        if (plansAvailable()) {
+          var stored = PLANS.get(state.currentPlanId);
+          chosenHere = !!stored && !!stored.chosen;
+        }
+        nameTag.textContent =
+          'Saved as "' +
+          state.currentPlanName +
+          '".' +
+          (chosenHere ? " This is the one marked to take to the office." : "") +
+          " Saving again updates that plan.";
       } else {
         nameTag.hidden = true;
         nameTag.textContent = "";
