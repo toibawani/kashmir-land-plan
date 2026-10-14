@@ -2690,13 +2690,24 @@
       },
       {
         label: "Questions to ask",
+        // The printed card greys nothing out: a covered question still reads in
+        // full, and the counter says how many were covered. The voice mirrors
+        // that rather than skipping what was asked: a skipped line would sound
+        // like a missing question, while the counter tells a revisiting farmer
+        // exactly what the office already talked through.
         text: questions.length
           ? "Questions to ask at the office. " +
             questions
               .map(function (q, i) {
-                return "Question " + (i + 1) + ". " + q.text;
+                var wasCovered = state.coveredQuestions && state.coveredQuestions[q.id];
+                return (
+                  "Question " + (i + 1) + (wasCovered ? ", already covered at the office" : "") + ". " + q.text
+                );
               })
-              .join(" ")
+              .join(" ") +
+            (questionCoverCount(questions) > 0
+              ? " " + questionCoverCount(questions) + " of " + questions.length + " covered."
+              : "")
           : "No questions were generated.",
       },
       // The "What to expect" panel is on the same screen, so it belongs in the
