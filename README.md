@@ -83,7 +83,14 @@ python3 -m http.server 8080
 
 There are no dependencies to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
 
-`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the check that actually matters here: it syntax-checks every JavaScript file the way `node --check` does, confirms every local reference in `index.html` is on disk, and reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first. It uses only Node built-ins and exits non-zero on any problem.
+`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the checks that actually matter here, and it exits non-zero on any problem. It uses only Node built-ins. In order:
+
+- It syntax-checks every JavaScript file the way `node --check` does.
+- It confirms every local reference in `index.html` is on disk.
+- It reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first.
+- It refuses a half-recorded officer review: a "reviewed" flag with no name or no date would look signed off with no officer behind it.
+- It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
+- It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
 
 Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
 
@@ -200,7 +207,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 
 ## New sources used for this round
 
-None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. The visit-card work (the scannable code, the one-page print, the offline panel and the "what to expect at the office" panel) is built only from data already in the app and from general public knowledge about how a public agriculture counter works. The "what to expect" panel names no amounts, deadlines, documents or eligibility rules, and says plainly that the office decides; it is written from common public knowledge, not from any source that states an official position. The self-test harness grew to 132 checks and now reads the finished QR matrix back with an independent decoder, so a mistake in placement, masking or interleaving would show up as garbled text rather than pass unnoticed. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
+None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. The visit-card work (the scannable code, the one-page print, the offline panel and the "what to expect at the office" panel) is built only from data already in the app and from general public knowledge about how a public agriculture counter works. The "what to expect" panel names no amounts, deadlines, documents or eligibility rules, and says plainly that the office decides; it is written from common public knowledge, not from any source that states an official position. The self-test harness is now at 140 checks and grew in three directions this round: it reads the finished QR matrix back with an independent decoder, so a mistake in placement, masking or interleaving would show up as garbled text rather than pass unnoticed; it drives the print fitter through a simulated dialog close to prove a trimmed card is put back whole; and it scans the office panel for invented figures or promises the app cannot keep. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
 
 ## Licence
 
