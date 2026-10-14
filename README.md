@@ -47,7 +47,7 @@ They are labelled in the interface, and the same labels are used in the plan you
 
 **Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary, the office visit card and the About page, in these words: "Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting." The visit card carries it too, because that is the page that leaves the phone and reaches the office.
 
-The catalogue lives in `js/catalogue.js`, kept apart from the scoring and rendering code so an officer can read the data without reading any JavaScript logic. To record a review, either fill in `CATALOGUE_REVIEW` at the top of that file for the whole list, or fill in `reviewStatus`, `reviewedBy`, `designation` and `reviewedOn` on a single entry if only that one has been checked. Leave the fields empty rather than guessing a name or a date.
+The suggestion data lives in `js/catalogue.js`, kept apart from the scoring and rendering code so it stays readable on its own. Officers never edit it. The review process for them is written up in `REVIEW.md` at the repo root: they check the list and reply by message, on paper, in person or by email, and the maintainer records the review afterwards by updating the review fields (`reviewStatus`, `reviewedBy`, `designation`, `reviewedOn`, following the steps in that file). Never mark anything reviewed on an officer's behalf, and never guess a name or a date.
 
 Once a review is recorded, every screen changes to say "Reviewed by [name], [designation] on [date]. Still confirm locally before acting." A partly reviewed list says so too. The confirmation line that every option and every scheme entry already carries does not go away when a review is added: a reviewed catalogue still has to be checked locally, because the officer reviewed the catalogue, not your plot.
 
@@ -138,7 +138,7 @@ tools/make-icons.py   draws the PNG icons, with no image library involved
 The JavaScript is plain browser scripts in one namespace, no framework and no bundler, so the page still works when opened straight from disk. The parts worth knowing:
 
 - `js/regions.js` groups the 20 districts into three coarse zones and records the source for each statement.
-- `js/catalogue.js` holds the activity data. Each entry carries a zone note, a twelve month calendar, five approximate ratings, a short water note, and the review fields an officer fills in. `js/activities.js` only reads it and works out the review wording, which keeps the data readable on its own.
+- `js/catalogue.js` holds the activity data. Each entry carries a zone note, a twelve month calendar, five approximate ratings, a short water note, and the review record the maintainer updates after an officer has replied (see `REVIEW.md`). `js/activities.js` only reads it and works out the review wording.
 - `sw.js` precaches the plan for offline use. It serves the app's own files network first, so an edited file appears on the next load rather than one load later, and it deliberately never caches a weather response.
 - `computeOptions()` in `js/app.js` scores the catalogue against the answers, and records a plain language reason for every point it awards. Activities that do not belong in a zone are excluded outright rather than ranked low.
 - `COMPARE_ROWS` defines the comparison. Under 700px it renders as stacked blocks instead of a table, because a seven column table on a phone is unreadable.
