@@ -220,6 +220,160 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   }
 }
 
+/* ---- 5. The shipped palette must meet WCAG AA ---- */
+
+// This is a static, no-build site for farmers who will read it outdoors on a
+// cheap phone, so legibility is not cosmetic, it is the whole product. Rather
+// than trusting the colours by eye, the real palette is read out of the
+// stylesheet and every foreground/background pair that actually ships is run
+// through the WCAG contrast formula. AA needs 4.5:1 for normal text, 3:1 for
+// large text and for the boundaries of controls. If someone later lightens a
+// muted grey or darkens an accent, this build fails here, before it reaches a
+// field in daylight, instead of quietly becoming unreadable.
+var cssText = fs.readFileSync(path.join(root, "css", "styles.css"), "utf8");
+
+function readPalette(css) {
+  var root = css.match(/:root\s*\{([\s\S]*?)\}/);
+  var vars = {};
+  if (!root) return vars;
+  var re = /--([\w-]+):\s*([^;]+);/g;
+  var m;
+  while ((m = re.exec(root[1])) !== null) {
+    vars[m[1]] = m[2].trim();
+  }
+  return vars;
+}
+
+var palette = readPalette(cssText);
+
+function hexToRgb(hex) {
+  var h = String(hex).trim().replace("#", "");
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16),
+  };
+}
+
+function luminance(hex) {
+  var rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  function channel(v) {
+    v = v / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+  return 0.2126 * channel(rgb.r) + 0.7152 * channel(rgb.g) + 0.0722 * channel(rgb.b);
+}
+
+function contrastRatio(fgHex, bgHex) {
+  var lf = luminance(fgHex);
+  var lb = luminance(bgHex);
+  if (lf === null || lb === null) return null;
+  var hi = Math.max(lf, lb);
+  var lo = Math.min(lf, lb);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Resolve a token to a hex literal, or null if the token is not a plain colour
+// (a gradient, rgba, or a token this checker does not know). Anything unresolved
+// is reported as a note rather than passed or failed, because guessing at an
+// rgba over an unknown backdrop would be a lie.
+function resolve(token) {
+  if (!token) return null;
+  var value = palette[token];
+  if (!value) return null;
+  if (hexToRgb(value)) return value;
+  return null;
+}
+
+// The pairs the stylesheet actually renders, taken from the components a farmer
+// touches. "min" is 4.5 for body text and 3 for large text and control borders.
+// White text on the primary button is listed as a literal because the button
+// sets color: #fff directly rather than through a token.
+var contrastPairs = [
+  { fg: "color-text", bg: "color-bg", min: 4.5, what: "body text on the page" },
+  { fg: "color-text", bg: "color-surface", min: 4.5, what: "body text on a card" },
+  { fg: "color-text-muted", bg: "color-bg", min: 4.5, what: "muted text on the page" },
+  { fg: "color-text-muted", bg: "color-surface", min: 4.5, what: "muted text on a card" },
+  { fg: "color-accent", bg: "color-surface", min: 4.5, what: "accent text and links on a card" },
+  { fg: "color-accent", bg: "color-accent-soft", min: 4.5, what: "accent text on its soft tint" },
+  { fg: "color-error", bg: "color-surface", min: 4.5, what: "error text on a card" },
+  { fg: "color-focus", bg: "color-surface", min: 3, what: "focus ring against a card" },
+  { fg: "color-focus", bg: "color-bg", min: 3, what: "focus ring against the page" },
+  { fg: "phase-prepare-fg", bg: "phase-prepare-bg", min: 4.5, what: "calendar, prepare phase" },
+  { fg: "phase-sow-fg", bg: "phase-sow-bg", min: 4.5, what: "calendar, sow phase" },
+  { fg: "phase-care-fg", bg: "phase-care-bg", min: 4.5, what: "calendar, care phase" },
+  { fg: "phase-harvest-fg", bg: "phase-harvest-bg", min: 4.5, what: "calendar, harvest phase" },
+  { fg: "phase-quiet-fg", bg: "phase-quiet-bg", min: 4.5, what: "calendar, quiet phase" },
+];
+
+var whiteOnAccent = contrastRatio("#ffffff", resolve("color-accent"));
+if (whiteOnAccent === null) {
+  notes.push("could not check white-on-accent button text; --color-accent is not a plain hex");
+} else if (whiteOnAccent < 4.5) {
+  failures.push(
+    "Primary button text is white on " + resolve("color-accent") + " at " + whiteOnAccent.toFixed(2) +
+      ":1, below the 4.5:1 AA floor; darken --color-accent"
+  );
+}
+
+contrastPairs.forEach(function (p) {
+  var fg = resolve(p.fg);
+  var bg = resolve(p.bg);
+  if (!fg || !bg) {
+    notes.push("skipped the contrast check for " + p.what + " (" + p.fg + " / " + p.bg + "): not a plain hex token");
+    return;
+  }
+  var ratio = contrastRatio(fg, bg);
+  if (ratio === null) return;
+  if (ratio < p.min) {
+    failures.push(
+      "Contrast for " + p.what + " is " + ratio.toFixed(2) + ":1, below the " + p.min + ":1 AA floor (" + fg + " on " + bg + ")"
+    );
+  }
+});
+
+/* ---- 6. Every element the code wires up must exist in the page ---- */
+
+// app.js reaches its buttons and panels by id: $("#btn-visit-print"). A typo
+// in the id, or a rename in the markup that misses one call site, leaves a
+// button that is present on screen but wired to nothing. It looks fine and
+// does nothing, which is the worst kind of break. Every id that the code
+// attaches an event listener to is checked against the ids in index.html, so
+// this class of dead control fails the build rather than a farmer's tap.
+//
+// Only ids that are followed by an addEventListener call are checked, because
+// those are the ones where a missing element silently swallows an action. Ids
+// read for content (innerHTML, textContent) are allowed to be built at run
+// time, so they are deliberately left out.
+var pageIds = [];
+var idRe = /id="([^"]+)"/g;
+var idMatch;
+while ((idMatch = idRe.exec(html)) !== null) {
+  pageIds.push(idMatch[1]);
+}
+
+["js/app.js"].forEach(function (relFile) {
+  var code = fs.readFileSync(path.join(root, relFile), "utf8");
+  // $("#the-id") immediately followed by .addEventListener( on the same or
+  // next line. The dot-star-newline covers the common split across two lines.
+  var wireRe = /\$\(\s*"#([\w-]+)"\s*\)[^\n]*addEventListener/g;
+  var m;
+  var seen = [];
+  while ((m = wireRe.exec(code)) !== null) {
+    var elId = m[1];
+    if (seen.indexOf(elId) !== -1) continue;
+    seen.push(elId);
+    if (pageIds.indexOf(elId) === -1) {
+      failures.push(
+        relFile + ' wires an event listener on "#' + elId + '" but no element with that id exists in index.html, so the control is dead'
+      );
+    }
+  }
+});
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {

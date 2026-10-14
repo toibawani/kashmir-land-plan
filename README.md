@@ -83,7 +83,14 @@ python3 -m http.server 8080
 
 There are no dependencies to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
 
-`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the check that actually matters here: it syntax-checks every JavaScript file the way `node --check` does, confirms every local reference in `index.html` is on disk, and reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first. It uses only Node built-ins and exits non-zero on any problem.
+`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the checks that actually matter here, and it exits non-zero on any problem. It uses only Node built-ins. In order:
+
+- It syntax-checks every JavaScript file the way `node --check` does.
+- It confirms every local reference in `index.html` is on disk.
+- It reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first.
+- It refuses a half-recorded officer review: a "reviewed" flag with no name or no date would look signed off with no officer behind it.
+- It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
+- It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
 
 Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
 
@@ -141,7 +148,7 @@ To extend it, replace the catalogue and the scoring with real advisory data, and
 
 ## Accessibility
 
-Labelled form controls, a fieldset per step, a progress bar that reports its value, error text tied to its field with `aria-describedby`, `aria-invalid` on anything that failed, focus moved to the first problem, focus moved to the new heading when a screen or step changes, `aria-pressed` on the interested toggles, a live region for status messages, visible focus rings, and a skip link.
+Labelled form controls, a fieldset per step, a progress bar that reports its value, error text tied to its field with `aria-describedby`, `aria-invalid` on anything that failed, focus moved to the first problem, focus moved to the new heading when a screen or step changes, `aria-pressed` on the interested toggles, a live region for status messages, visible focus rings, and a skip link. Opening visit mode moves focus onto the card so a screen reader announces it as the new position, and closing it puts focus back on the toggle; the card takes this focus without a visible ring, the way the screen titles do, because nothing reaches it by Tab.
 
 I checked contrast, horizontal overflow and target size on every screen at 320px: no contrast failures, no horizontal overflow, and no control under 24px (the WCAG 2.2 minimum). Buttons and selects are at least 44px tall, and the scheme and footer links were given padding so they clear that too. Each calendar phase uses a light ground with dark text on it, so the colour coding never drops below AA. Motion is a progress bar and short button transitions, and it is switched off under `prefers-reduced-motion`.
 
@@ -158,7 +165,7 @@ I checked contrast, horizontal overflow and target size on every screen at 320px
 - The office visit card. It carries your answers, up to three marked options, the questions, the relevant official portals, the review status and the confirmation line. It prints as one page: before printing, the card trims only its note lines and support list if it measured as too tall, and never the answers, options or questions. Beside the printed reference it carries a scannable code drawn on the device, which holds only the reference and nothing else. A calm "what to expect at the office" panel sets expectations from general public knowledge, naming no amounts, deadlines, documents or eligibility, and says plainly that the office decides.
 - Visit mode. From the visit card, one button hides everything except the card, the tickable questions and the read-aloud controls, so the phone is usable while standing at the counter, with one clear way back.
 - Several saved plans. They are stored on the device only, can be renamed, deleted, opened for editing, and compared side by side, and one can be marked as the one going to the office.
-- Reading aloud. The read aloud buttons use the device's own speech voices, and fall back to a written message on a browser with no voice. Nothing depends on it.
+- Reading aloud. The read aloud buttons use the device's own speech voices, and fall back to a written message on a browser with no voice. Nothing depends on it. A long plan is read section by section, and while one is playing a pair of controls appear to step to the part before or after, so a line that was missed can be heard again without starting the whole card over. The status line names the section being read and how many there are.
 - Weather timing notes. When a forecast is available, a note surfaces a plain fact (for example that rain is likely) and suggests asking an officer about timing. It never instructs what to plant, spray or harvest.
 - Deep links (`#results`, `#summary`, `#weather`) rebuild the plan from the saved draft, and fall back home when there is nothing to rebuild.
 - Offline use. With the connection off, and with the server stopped entirely, the form, options, comparison, calendars, checklist, schemes and summary all still work, and the plan still downloads. A guidance panel on the home page lists, side by side, what works with no signal and the one part that does not: the weather forecast, which is fetched live and never cached as current.
@@ -200,7 +207,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 
 ## New sources used for this round
 
-None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. The visit-card work (the scannable code, the one-page print, the offline panel and the "what to expect at the office" panel) is built only from data already in the app and from general public knowledge about how a public agriculture counter works. The "what to expect" panel names no amounts, deadlines, documents or eligibility rules, and says plainly that the office decides; it is written from common public knowledge, not from any source that states an official position. The self-test harness grew to 132 checks and now reads the finished QR matrix back with an independent decoder, so a mistake in placement, masking or interleaving would show up as garbled text rather than pass unnoticed. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
+None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. The visit-card work (the scannable code, the one-page print, the offline panel and the "what to expect at the office" panel) is built only from data already in the app and from general public knowledge about how a public agriculture counter works. The "what to expect" panel names no amounts, deadlines, documents or eligibility rules, and says plainly that the office decides; it is written from common public knowledge, not from any source that states an official position. The self-test harness is now at 140 checks and grew in three directions this round: it reads the finished QR matrix back with an independent decoder, so a mistake in placement, masking or interleaving would show up as garbled text rather than pass unnoticed; it drives the print fitter through a simulated dialog close to prove a trimmed card is put back whole; and it scans the office panel for invented figures or promises the app cannot keep. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
 
 ## Licence
 

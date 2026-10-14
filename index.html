@@ -393,6 +393,10 @@
               <button type="button" class="btn btn-read" id="btn-read-plan" aria-pressed="false">Read the plan aloud</button>
               <button type="button" class="btn btn-secondary" id="btn-read-plan-stop" hidden>Stop reading</button>
             </div>
+            <div class="read-skip" id="read-plan-skip" hidden>
+              <button type="button" class="btn btn-quiet btn-sm" id="btn-read-plan-prev" aria-label="Go back to the previous part">Previous part</button>
+              <button type="button" class="btn btn-quiet btn-sm" id="btn-read-plan-next" aria-label="Skip to the next part">Next part</button>
+            </div>
             <p class="read-status" id="read-plan-status" role="status" hidden></p>
             <p class="read-fallback" id="read-plan-fallback" hidden>This browser has no reading voice. The plan above stays on screen, and it can still be printed.</p>
           </div>
@@ -481,6 +485,10 @@
                 <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
                 <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
               </div>
+              <div class="read-skip" id="read-visit-skip" hidden>
+                <button type="button" class="btn btn-quiet btn-sm" id="btn-visit-read-prev" aria-label="Go back to the previous part">Previous part</button>
+                <button type="button" class="btn btn-quiet btn-sm" id="btn-visit-read-next" aria-label="Skip to the next part">Next part</button>
+              </div>
               <p class="read-status" id="read-visit-status" role="status" hidden></p>
               <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
             </div>
@@ -494,7 +502,7 @@
               <button type="button" class="btn btn-secondary" id="btn-visit-mode-exit">Leave visit mode</button>
             </div>
           </div>
-        <div class="visit-card" id="visit-card"></div>
+        <div class="visit-card" id="visit-card" role="region" aria-label="Office visit card"></div>
         <div class="office-host no-print visit-mode-hide" id="office-host"></div>
         <div class="results-actions no-print visit-mode-hide">
           <button type="button" class="btn btn-secondary" id="btn-visit-back">Back to summary</button>
@@ -541,7 +549,7 @@
             <li>Turns your answers into questions to put to an officer, and shows which month each option is usually at</li>
             <li>Makes a one page office visit card you can print and carry, with a small scannable code beside the reference and an optional visit mode for standing at the counter</li>
             <li>Saves a draft and lets you keep several named plans to compare</li>
-            <li>Can read the plan aloud using the voice built into your device</li>
+            <li>Can read the plan aloud using the voice built into your device, section by section, with controls to step back or forward a part while it plays</li>
             <li>Saves a draft on this device and can print, copy or download the plan</li>
             <li>Works offline once the page has loaded, and shows a plain list of what still works without a connection</li>
           </ul>

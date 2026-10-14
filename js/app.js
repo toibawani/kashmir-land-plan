@@ -1032,7 +1032,20 @@
     if (nameTag) {
       if (state.currentPlanId && state.currentPlanName) {
         nameTag.hidden = false;
-        nameTag.textContent = 'Saved as "' + state.currentPlanName + '". Saving again updates that plan.';
+        // When this plan is the one marked for the office, say so here. A
+        // farmer who keeps several plans and opens one should not have to go
+        // back to the plans list to remember which one the card will follow.
+        var chosenHere = false;
+        if (plansAvailable()) {
+          var stored = PLANS.get(state.currentPlanId);
+          chosenHere = !!stored && !!stored.chosen;
+        }
+        nameTag.textContent =
+          'Saved as "' +
+          state.currentPlanName +
+          '".' +
+          (chosenHere ? " This is the one marked to take to the office." : "") +
+          " Saving again updates that plan.";
       } else {
         nameTag.hidden = true;
         nameTag.textContent = "";
@@ -2068,7 +2081,12 @@
 
   function downloadVisitCard() {
     var date = new Date().toISOString().slice(0, 10);
-    var filename = "my-land-my-plan-office-card-" + date + ".txt";
+    // The reference goes into the filename for the same reason it is printed on
+    // the card: two cards downloaded on the same day must not land in the
+    // folder with the same name, and a file is matched back to its card by the
+    // code, not by the date. The reference is already made of letters, digits
+    // and hyphens, so it is safe in a filename on any phone.
+    var filename = "my-land-my-plan-office-card-" + currentPlanReference() + "-" + date + ".txt";
     triggerDownload(buildVisitCardText(), filename, "text/plain;charset=utf-8");
     setStatus("visit-status", "Downloaded " + filename + ". Print the page instead if you want it on paper.");
   }
@@ -2350,6 +2368,9 @@
       stop: "btn-read-plan-stop",
       status: "read-plan-status",
       fallback: "read-plan-fallback",
+      skip: "read-plan-skip",
+      prev: "btn-read-plan-prev",
+      next: "btn-read-plan-next",
     },
     "btn-visit-read": {
       play: "Read the card aloud",
@@ -2357,6 +2378,9 @@
       stop: "btn-visit-read-stop",
       status: "read-visit-status",
       fallback: "read-visit-fallback",
+      skip: "read-visit-skip",
+      prev: "btn-visit-read-prev",
+      next: "btn-visit-read-next",
     },
   };
   var activeReadId = null;
@@ -2386,6 +2410,12 @@
       // The stop control only exists while its own reading plays, so it can
       // never stop silence or someone else's voice.
       if (stop) stop.hidden = !isActive;
+      // The part-to-part controls appear only while a sectioned read plays.
+      // A single chunk has no parts to skip between, so they stay hidden then.
+      var skip = c.skip ? $("#" + c.skip) : null;
+      if (skip) {
+        skip.hidden = !(isActive && SPEECH.sectionCount && SPEECH.sectionCount() > 1);
+      }
     });
   }
 
@@ -2396,11 +2426,20 @@
 
   // The spoken status names the section being read and the count, because
   // "something is playing" on its own is not enough to follow a long plan.
+  // The part-to-part buttons are greyed at the ends, so it is obvious when
+  // there is nothing further that way.
   function setReadProgress(id, index, total, label) {
     var el = readStatusElement(id);
     if (!el) return;
     el.textContent = "Reading: " + label + " (" + (index + 1) + " of " + total + "). Press Pause to hold it.";
     el.hidden = false;
+    var c = READ_CONTROLS[id];
+    if (c && c.prev) {
+      var prev = $("#" + c.prev);
+      var next = $("#" + c.next);
+      if (prev) prev.disabled = index <= 0;
+      if (next) next.disabled = index >= total - 1;
+    }
   }
 
   function clearReadProgress(id) {
@@ -2408,6 +2447,19 @@
     if (!el) return;
     el.textContent = "";
     el.hidden = true;
+  }
+
+  // Move the active reading to the part before or after the one being spoken.
+  // The buttons are only reachable while a sectioned read plays, so the guard
+  // is belt and braces: a stray tap after it stops does nothing rather than
+  // throwing. A jump returns false when it cannot move, and the status line is
+  // left as it is so the reader does not think the button silently failed.
+  function jumpReadSection(id, delta) {
+    if (!activeReadId || activeReadId !== id) return;
+    if (!SPEECH.speaking() || !SPEECH.jumpToSection) return;
+    var current = SPEECH.currentSection ? SPEECH.currentSection() : -1;
+    if (current < 0) return;
+    SPEECH.jumpToSection(current + delta);
   }
 
   function stopReading() {
@@ -2562,11 +2614,18 @@
     if (questions.length) {
       sections.push({
         label: "Questions to ask at the office",
-        text: questions
-          .map(function (q, i) {
-            return "Question " + (i + 1) + ". " + q.text;
-          })
-          .join(" "),
+        text:
+          questions
+            .map(function (q, i) {
+              var wasCovered = state.coveredQuestions && state.coveredQuestions[q.id];
+              return (
+                "Question " + (i + 1) + (wasCovered ? ", already covered at the office" : "") + ". " + q.text
+              );
+            })
+            .join(" ") +
+          (questionCoverCount(questions) > 0
+            ? " " + questionCoverCount(questions) + " of " + questions.length + " covered."
+            : ""),
       });
     }
 
@@ -2593,10 +2652,15 @@
     var d = state.data;
     var options = visitOptions();
     var questions = currentQuestions();
+    // The named plan is spoken first for the same reason it leads the printed
+    // card and the downloaded file: a farmer with several plans cannot tell one
+    // spoken card from another unless the voice says which one this is.
+    var heading = "My Land, My Plan. Your office visit card.";
+    if (state.currentPlanName) heading += " Plan: " + state.currentPlanName + ".";
     return [
       {
         label: "Office visit card",
-        text: "My Land, My Plan. Your office visit card. " + currentReview().text,
+        text: heading + " " + currentReview().text,
       },
       {
         label: "What you entered",
@@ -2608,31 +2672,72 @@
       },
       {
         label: "Options to discuss",
+        // When more options were marked than fit, the card and the download
+        // say so in words. The voice must say it too, or a listener who marked
+        // five and hears three will assume the app forgot. Marked options are
+        // named as such for the same reason. visitOptionNote stays the single
+        // source of the overflow words everywhere.
         text: options.length
           ? "Options to discuss, not recommendations. " +
             options
               .map(function (o, i) {
-                return "Option " + (i + 1) + ": " + o.activity.title + ".";
+                return (
+                  "Option " +
+                  (i + 1) +
+                  ": " +
+                  o.activity.title +
+                  (state.interested[o.activity.id] ? ", marked to follow up." : ".")
+                );
               })
-              .join(" ")
+              .join(" ") +
+            (visitOptionNote(options.length, chosenOptions().length)
+              ? " " + visitOptionNote(options.length, chosenOptions().length)
+              : "")
           : "No options were marked or shown, so there is nothing listed here.",
       },
       {
         label: "Questions to ask",
+        // The printed card greys nothing out: a covered question still reads in
+        // full, and the counter says how many were covered. The voice mirrors
+        // that rather than skipping what was asked: a skipped line would sound
+        // like a missing question, while the counter tells a revisiting farmer
+        // exactly what the office already talked through.
         text: questions.length
           ? "Questions to ask at the office. " +
             questions
               .map(function (q, i) {
-                return "Question " + (i + 1) + ". " + q.text;
+                var wasCovered = state.coveredQuestions && state.coveredQuestions[q.id];
+                return (
+                  "Question " + (i + 1) + (wasCovered ? ", already covered at the office" : "") + ". " + q.text
+                );
               })
-              .join(" ")
+              .join(" ") +
+            (questionCoverCount(questions) > 0
+              ? " " + questionCoverCount(questions) + " of " + questions.length + " covered."
+              : "")
           : "No questions were generated.",
       },
+      // The "What to expect" panel is on the same screen, so it belongs in the
+      // spoken card too. Reading the card aloud and then leaving this panel
+      // silent would mean the ear misses what the eye can see. It is guarded,
+      // because a missing module must never stop the rest of the card being
+      // read.
+      OFFICE && OFFICE.plainText
+        ? {
+            label: OFFICE.heading ? OFFICE.heading() : "What to expect at the office",
+            text:
+              OFFICE.items().map(function (item, i) {
+                return i + 1 + ". " + item;
+              }).join(" ") + " " + OFFICE.closing(),
+          }
+        : null,
       {
         label: "A last word",
         text: ACTIVITIES.confirmationLine + " This card was made by the farmer using a prototype, not by any department.",
       },
-    ];
+      // Drop any section that was turned off, so the reader never sees a gap
+      // where a missing module would have been.
+    ].filter(Boolean);
   }
 
   // The plain-text ear version survives for copying, and any older caller
@@ -3738,7 +3843,21 @@
       // the stop button must not be swept away by the hiding rule. They are
       // outside the visit-mode-hide markers already, so nothing to do here, but
       // the screen is scrolled to the top so the card is the first thing seen.
-      if (on) window.scrollTo({ top: 0, behavior: scrollBehavior() });
+      if (on) {
+        window.scrollTo({ top: 0, behavior: scrollBehavior() });
+        // Moving focus with the keyboard is the one thing the class toggle
+        // cannot do. When the toggle button is about to be hidden, focus would
+        // otherwise fall back to <body> and a keyboard or screen-reader user
+        // would lose their place with no announcement. Focus lands on the card
+        // instead, which is the whole reason the mode exists, so the next key
+        // press acts on the card. When the toggle stays visible, it keeps focus
+        // so the person can turn the mode straight back off.
+        var card = $("#visit-card");
+        if (card && card.querySelector) card.setAttribute("tabindex", "-1");
+        if (card) card.focus({ preventScroll: true });
+      } else if (onBtn) {
+        onBtn.focus({ preventScroll: true });
+      }
     }
 
     function visitModeOn() {
@@ -3772,6 +3891,21 @@
       if (FIT && FIT.prepareForPrint) FIT.prepareForPrint();
       window.print();
     });
+    // The one-page fit must not depend on the Print button being the way in. A
+    // farmer printing from the browser menu or a keyboard shortcut bypasses the
+    // button entirely and should still get one page, not two. The browser's own
+    // beforeprint signal covers those paths, and the fitter's restore signals
+    // already put the card back afterwards. The guard keeps it to the visit
+    // screen: other screens have their own print shapes, and a stray trim there
+    // would hide what the farmer meant to print.
+    if (window.addEventListener && "onbeforeprint" in window) {
+      window.addEventListener("beforeprint", function () {
+        if (!FIT || !FIT.prepareForPrint) return;
+        var visitScreen = $("#screen-visit");
+        if (!visitScreen || !visitScreen.classList.contains("screen-active")) return;
+        FIT.prepareForPrint();
+      });
+    }
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
     $("#btn-visit-mode") &&
       $("#btn-visit-mode").addEventListener("click", function () {
@@ -3788,6 +3922,14 @@
       });
     $("#btn-visit-read-stop") &&
       $("#btn-visit-read-stop").addEventListener("click", stopReading);
+    $("#btn-visit-read-prev") &&
+      $("#btn-visit-read-prev").addEventListener("click", function () {
+        jumpReadSection("btn-visit-read", -1);
+      });
+    $("#btn-visit-read-next") &&
+      $("#btn-visit-read-next").addEventListener("click", function () {
+        jumpReadSection("btn-visit-read", 1);
+      });
 
     $("#btn-read-plan") &&
       $("#btn-read-plan").addEventListener("click", function () {
@@ -3795,6 +3937,14 @@
       });
     $("#btn-read-plan-stop") &&
       $("#btn-read-plan-stop").addEventListener("click", stopReading);
+    $("#btn-read-plan-prev") &&
+      $("#btn-read-plan-prev").addEventListener("click", function () {
+        jumpReadSection("btn-read-plan", -1);
+      });
+    $("#btn-read-plan-next") &&
+      $("#btn-read-plan-next").addEventListener("click", function () {
+        jumpReadSection("btn-read-plan", 1);
+      });
 
     $("#btn-save-named") &&
       $("#btn-save-named").addEventListener("click", function () {

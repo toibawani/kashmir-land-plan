@@ -695,6 +695,63 @@ var noCardDrop = withFakeCard(null, function () {
 });
 check("no card means no trim and no error", noCardDrop.length === 0, "trimmed " + noCardDrop.join(", "));
 
+// prepareForPrint trims before the dialog and restores after it. The restore
+// is driven by the print media query flipping back to false, which is the one
+// signal every browser sends. This stubs that signal so the loop can be
+// checked without a real print dialog.
+(function () {
+  var mediaListeners = [];
+  var windowListeners = {};
+  var prevMatchMedia = sandbox.window.matchMedia;
+  var prevAdd = sandbox.window.addEventListener;
+  var prevRemove = sandbox.window.removeEventListener;
+  sandbox.window.matchMedia = function () {
+    return {
+      matches: true, // pretend the print dialog is open
+      addEventListener: function (type, fn) {
+        mediaListeners.push(fn);
+      },
+      removeEventListener: function (type, fn) {
+        var i = mediaListeners.indexOf(fn);
+        if (i !== -1) mediaListeners.splice(i, 1);
+      },
+    };
+  };
+  sandbox.window.addEventListener = function (type, fn) {
+    (windowListeners[type] = windowListeners[type] || []).push(fn);
+  };
+  sandbox.window.removeEventListener = function (type, fn) {
+    var list = windowListeners[type] || [];
+    var i = list.indexOf(fn);
+    if (i !== -1) list.splice(i, 1);
+  };
+
+  try {
+    var printCard = makeFakeCard(1400, [
+      { name: "notes", height: 100 },
+      { name: "support", height: 150 },
+    ]);
+    withFakeCard(printCard, function () {
+      FIT.prepareForPrint();
+      check("prepareForPrint trims the tall card", printCard.querySelector('data-fit-part="notes"').attrs["data-fit-trim"] === "1", "notes not trimmed");
+      check("a restore listener was wired to the print media query", mediaListeners.length === 1, mediaListeners.length + " listener(s)");
+
+      // The dialog closes: the media query reports matches false. That edge must
+      // put the notes and support list back on screen.
+      mediaListeners.slice().forEach(function (fn) {
+        fn({ matches: false });
+      });
+      check("the media-query close edge restores the card", printCard.querySelector('data-fit-part="notes"').attrs["data-fit-trim"] === "0" && printCard.querySelector('data-fit-part="support"').attrs["data-fit-trim"] === "0", "a part stayed trimmed");
+      check("the restore listener removes itself", mediaListeners.length === 0, mediaListeners.length + " left");
+      check("the afterprint listener also removes itself", (windowListeners.afterprint || []).length === 0, (windowListeners.afterprint || []).length + " left");
+    });
+  } finally {
+    sandbox.window.matchMedia = prevMatchMedia;
+    sandbox.window.addEventListener = prevAdd;
+    sandbox.window.removeEventListener = prevRemove;
+  }
+})();
+
 // ---- What to expect at the office ----
 
 console.log("office expectations");
@@ -735,6 +792,14 @@ check("the closing is on the panel", officeHtml.indexOf(OFFICE.closing()) !== -1
 var officeText = OFFICE.plainText();
 check("the text form carries every item", officeItems.every(function (t) { return officeText.indexOf(t) !== -1; }), "an item is missing from the text");
 check("the text form carries the closing", officeText.indexOf(OFFICE.closing()) !== -1, "closing missing from text");
+// The voice reads the panel straight into the spoken visit card, so the very
+// same honesty checks have to hold for the pieces the reader joins up: each
+// item and the closing, on their own. If a future edit slipped a figure into
+// one item only, this would still catch it before a farmer heard it.
+var officeSpoken = officeItems.join(" ") + " " + OFFICE.closing();
+check("the spoken panel quotes no rupee amount", !/₹|rs\.?\s*\d|inr/i.test(officeSpoken), "a rupee figure in the spoken text");
+check("the spoken panel gives no deadline year", !/\b(19|20)\d{2}\b/.test(officeSpoken), "a year in the spoken text");
+check("the spoken panel names no amount word", !/lakh|crore/i.test(officeSpoken), "an amount word in the spoken text");
 
 /* ---- Report ---- */
 

@@ -244,10 +244,13 @@ main {
 }
 
 /* Headings receive focus only to move the reading position for screen
-   readers. They are not reachable by Tab, so no ring is needed. */
+   readers. They are not reachable by Tab, so no ring is needed. The visit
+   card joins them: visit mode focuses it so a screen reader announces the
+   card as the new position, but nothing reaches it by Tab. */
 .screen-title:focus,
 .hero h1:focus,
-.step-legend:focus {
+.step-legend:focus,
+.visit-card:focus {
   outline: none;
 }
 
@@ -456,6 +459,27 @@ a:focus-visible {
 
 .read-controls .results-actions {
   margin-bottom: var(--space-2);
+}
+
+/* Part-to-part controls. They sit under the play row, kept quiet so they do
+   not compete with the main action, but still large enough to tap on a phone
+   in a moving hand. They only appear while a sectioned read plays. */
+.read-skip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.read-skip .btn-sm {
+  font-size: 0.9rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.btn-sm:disabled,
+.read-skip .btn-sm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .read-status {
@@ -1094,7 +1118,8 @@ select:focus {
   .site-footer,
   .no-print,
   .nav,
-  .results-actions {
+  .results-actions,
+  .read-controls {
     display: none !important;
   }
 
@@ -2545,9 +2570,17 @@ select:focus {
   .visit-answers,
   .visit-options,
   .visit-support,
-  .visit-reference,
   .question-text {
     font-size: 10.5pt;
+  }
+
+  /* The reference is the one line an officer reads aloud or writes down, so on
+     paper it is set larger than the body rather than the same size. It costs a
+     few points of height, which the fitter can take back out of the notes area
+     if the card is near the page limit. */
+  .visit-reference {
+    font-size: 12pt;
+    font-weight: 600;
   }
 
   .visit-answers dt,
