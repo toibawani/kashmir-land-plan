@@ -2667,13 +2667,20 @@
         label: "Options to discuss",
         // When more options were marked than fit, the card and the download
         // say so in words. The voice must say it too, or a listener who marked
-        // five and hears three will assume the app forgot. visitOptionNote
-        // stays the single source of those words everywhere.
+        // five and hears three will assume the app forgot. Marked options are
+        // named as such for the same reason. visitOptionNote stays the single
+        // source of the overflow words everywhere.
         text: options.length
           ? "Options to discuss, not recommendations. " +
             options
               .map(function (o, i) {
-                return "Option " + (i + 1) + ": " + o.activity.title + ".";
+                return (
+                  "Option " +
+                  (i + 1) +
+                  ": " +
+                  o.activity.title +
+                  (state.interested[o.activity.id] ? ", marked to follow up." : ".")
+                );
               })
               .join(" ") +
             (visitOptionNote(options.length, chosenOptions().length)
