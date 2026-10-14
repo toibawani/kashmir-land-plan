@@ -2081,7 +2081,12 @@
 
   function downloadVisitCard() {
     var date = new Date().toISOString().slice(0, 10);
-    var filename = "my-land-my-plan-office-card-" + date + ".txt";
+    // The reference goes into the filename for the same reason it is printed on
+    // the card: two cards downloaded on the same day must not land in the
+    // folder with the same name, and a file is matched back to its card by the
+    // code, not by the date. The reference is already made of letters, digits
+    // and hyphens, so it is safe in a filename on any phone.
+    var filename = "my-land-my-plan-office-card-" + currentPlanReference() + "-" + date + ".txt";
     triggerDownload(buildVisitCardText(), filename, "text/plain;charset=utf-8");
     setStatus("visit-status", "Downloaded " + filename + ". Print the page instead if you want it on paper.");
   }
