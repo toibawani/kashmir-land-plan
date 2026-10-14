@@ -2350,6 +2350,9 @@
       stop: "btn-read-plan-stop",
       status: "read-plan-status",
       fallback: "read-plan-fallback",
+      skip: "read-plan-skip",
+      prev: "btn-read-plan-prev",
+      next: "btn-read-plan-next",
     },
     "btn-visit-read": {
       play: "Read the card aloud",
@@ -2357,6 +2360,9 @@
       stop: "btn-visit-read-stop",
       status: "read-visit-status",
       fallback: "read-visit-fallback",
+      skip: "read-visit-skip",
+      prev: "btn-visit-read-prev",
+      next: "btn-visit-read-next",
     },
   };
   var activeReadId = null;
@@ -2386,6 +2392,12 @@
       // The stop control only exists while its own reading plays, so it can
       // never stop silence or someone else's voice.
       if (stop) stop.hidden = !isActive;
+      // The part-to-part controls appear only while a sectioned read plays.
+      // A single chunk has no parts to skip between, so they stay hidden then.
+      var skip = c.skip ? $("#" + c.skip) : null;
+      if (skip) {
+        skip.hidden = !(isActive && SPEECH.sectionCount && SPEECH.sectionCount() > 1);
+      }
     });
   }
 
@@ -2396,11 +2408,20 @@
 
   // The spoken status names the section being read and the count, because
   // "something is playing" on its own is not enough to follow a long plan.
+  // The part-to-part buttons are greyed at the ends, so it is obvious when
+  // there is nothing further that way.
   function setReadProgress(id, index, total, label) {
     var el = readStatusElement(id);
     if (!el) return;
     el.textContent = "Reading: " + label + " (" + (index + 1) + " of " + total + "). Press Pause to hold it.";
     el.hidden = false;
+    var c = READ_CONTROLS[id];
+    if (c && c.prev) {
+      var prev = $("#" + c.prev);
+      var next = $("#" + c.next);
+      if (prev) prev.disabled = index <= 0;
+      if (next) next.disabled = index >= total - 1;
+    }
   }
 
   function clearReadProgress(id) {
@@ -2408,6 +2429,19 @@
     if (!el) return;
     el.textContent = "";
     el.hidden = true;
+  }
+
+  // Move the active reading to the part before or after the one being spoken.
+  // The buttons are only reachable while a sectioned read plays, so the guard
+  // is belt and braces: a stray tap after it stops does nothing rather than
+  // throwing. A jump returns false when it cannot move, and the status line is
+  // left as it is so the reader does not think the button silently failed.
+  function jumpReadSection(id, delta) {
+    if (!activeReadId || activeReadId !== id) return;
+    if (!SPEECH.speaking() || !SPEECH.jumpToSection) return;
+    var current = SPEECH.currentSection ? SPEECH.currentSection() : -1;
+    if (current < 0) return;
+    SPEECH.jumpToSection(current + delta);
   }
 
   function stopReading() {
@@ -3788,6 +3822,14 @@
       });
     $("#btn-visit-read-stop") &&
       $("#btn-visit-read-stop").addEventListener("click", stopReading);
+    $("#btn-visit-read-prev") &&
+      $("#btn-visit-read-prev").addEventListener("click", function () {
+        jumpReadSection("btn-visit-read", -1);
+      });
+    $("#btn-visit-read-next") &&
+      $("#btn-visit-read-next").addEventListener("click", function () {
+        jumpReadSection("btn-visit-read", 1);
+      });
 
     $("#btn-read-plan") &&
       $("#btn-read-plan").addEventListener("click", function () {
@@ -3795,6 +3837,14 @@
       });
     $("#btn-read-plan-stop") &&
       $("#btn-read-plan-stop").addEventListener("click", stopReading);
+    $("#btn-read-plan-prev") &&
+      $("#btn-read-plan-prev").addEventListener("click", function () {
+        jumpReadSection("btn-read-plan", -1);
+      });
+    $("#btn-read-plan-next") &&
+      $("#btn-read-plan-next").addEventListener("click", function () {
+        jumpReadSection("btn-read-plan", 1);
+      });
 
     $("#btn-save-named") &&
       $("#btn-save-named").addEventListener("click", function () {

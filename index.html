@@ -393,6 +393,10 @@
               <button type="button" class="btn btn-read" id="btn-read-plan" aria-pressed="false">Read the plan aloud</button>
               <button type="button" class="btn btn-secondary" id="btn-read-plan-stop" hidden>Stop reading</button>
             </div>
+            <div class="read-skip" id="read-plan-skip" hidden>
+              <button type="button" class="btn btn-quiet btn-sm" id="btn-read-plan-prev" aria-label="Go back to the previous part">Previous part</button>
+              <button type="button" class="btn btn-quiet btn-sm" id="btn-read-plan-next" aria-label="Skip to the next part">Next part</button>
+            </div>
             <p class="read-status" id="read-plan-status" role="status" hidden></p>
             <p class="read-fallback" id="read-plan-fallback" hidden>This browser has no reading voice. The plan above stays on screen, and it can still be printed.</p>
           </div>
@@ -480,6 +484,10 @@
               <div class="results-actions">
                 <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
                 <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+              </div>
+              <div class="read-skip" id="read-visit-skip" hidden>
+                <button type="button" class="btn btn-quiet btn-sm" id="btn-visit-read-prev" aria-label="Go back to the previous part">Previous part</button>
+                <button type="button" class="btn btn-quiet btn-sm" id="btn-visit-read-next" aria-label="Skip to the next part">Next part</button>
               </div>
               <p class="read-status" id="read-visit-status" role="status" hidden></p>
               <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>

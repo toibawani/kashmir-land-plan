@@ -458,6 +458,27 @@ a:focus-visible {
   margin-bottom: var(--space-2);
 }
 
+/* Part-to-part controls. They sit under the play row, kept quiet so they do
+   not compete with the main action, but still large enough to tap on a phone
+   in a moving hand. They only appear while a sectioned read plays. */
+.read-skip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.read-skip .btn-sm {
+  font-size: 0.9rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.btn-sm:disabled,
+.read-skip .btn-sm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .read-status {
   margin: 0;
   padding: var(--space-2) var(--space-3);
