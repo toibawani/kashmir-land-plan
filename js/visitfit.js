@@ -151,11 +151,31 @@
   function prepareForPrint() {
     var dropped = calculateFit();
     if (!dropped.length) return;
+    // Two signals, because neither is dependable alone. afterprint is missing
+    // or unreliable in older Safari, and the print media query is the one that
+    // works everywhere: it flips to true as the dialog opens and back to false
+    // as it closes. Whichever arrives first puts the card back, and clearFit is
+    // idempotent so the second is free. Both listeners remove themselves so a
+    // farmer who prints several cards does not leave them piling up.
+    var media = window.matchMedia ? window.matchMedia("print") : null;
     function restore() {
       clearFit();
       window.removeEventListener("afterprint", restore);
+      if (media) {
+        if (media.removeEventListener) media.removeEventListener("change", onMedia);
+        else if (media.removeListener) media.removeListener(onMedia);
+      }
+    }
+    function onMedia(m) {
+      // Only the closing edge matters. Entering print keeps the trim in place;
+      // leaving it is what must put the notes and support list back.
+      if (!m.matches) restore();
     }
     window.addEventListener("afterprint", restore);
+    if (media) {
+      if (media.addEventListener) media.addEventListener("change", onMedia);
+      else if (media.addListener) media.addListener(onMedia);
+    }
   }
 
   window.MLMP_FIT = {
