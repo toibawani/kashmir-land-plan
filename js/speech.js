@@ -285,6 +285,47 @@
     return !stopped && supported();
   }
 
+  // --- Jumping between named sections ---
+
+  // A plan can run to seven sections. Listening from the top every time is a
+  // chore, so the interface can skip straight to the next or previous named
+  // part. The jump only makes sense while a sectioned read is playing, and it
+  // resumes from there as though the earlier parts had already been heard.
+  function currentSection() {
+    if (!multiSection || !chunks[index]) return -1;
+    return chunks[index].section;
+  }
+
+  function sectionCount() {
+    return multiSection ? chunks.total : 0;
+  }
+
+  function jumpToSection(target) {
+    if (!multiSection || !speaking() || paused) return false;
+    if (typeof target !== "number" || target < 0 || target >= chunks.total) return false;
+    // Find the first chunk that belongs to the requested section.
+    var start = -1;
+    for (var i = 0; i < chunks.length; i++) {
+      if (chunks[i].section === target) {
+        start = i;
+        break;
+      }
+    }
+    if (start === -1) return false;
+    // Cancel whatever is mid-utterance and set the position to the section's
+    // first chunk. Chrome needs a beat after cancel() before speak() again,
+    // so the restart is deferred the same way a fresh speak() is.
+    try {
+      synth.cancel();
+    } catch (_) {}
+    index = start;
+    window.setTimeout(function () {
+      if (stopped) return;
+      speakNext();
+    }, 120);
+    return true;
+  }
+
   window.MLMP_SPEECH = {
     supported: supported,
     speak: speak,
@@ -293,6 +334,9 @@
     paused: isPaused,
     stop: stop,
     speaking: speaking,
+    currentSection: currentSection,
+    sectionCount: sectionCount,
+    jumpToSection: jumpToSection,
     // Exposed so the test for the chunker does not need to reach inside.
     _split: splitIntoChunks,
   };

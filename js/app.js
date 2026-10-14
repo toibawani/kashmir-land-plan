@@ -22,6 +22,10 @@
   var QUESTIONS = window.MLMP_QUESTIONS;
   var PLANS = window.MLMP_PLANS;
   var SPEECH = window.MLMP_SPEECH;
+  var QR = window.MLMP_QR;
+  var OFFLINE = window.MLMP_OFFLINE;
+  var FIT = window.MLMP_FIT;
+  var OFFICE = window.MLMP_OFFICE;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -2785,6 +2789,15 @@
     return (
       '<div class="visit-head">' +
       "<h2>My Land, My Plan: office visit card</h2>" +
+      // When the card comes from a named saved plan, the name goes at the very
+      // top. A farmer who keeps several plans can end up with a stack of
+      // printed cards that all read "MLMP-PUL-3K-8F2C", and the code is exactly
+      // the thing a farmer cannot tell apart at a glance. The name is the one
+      // line they will recognise, so it leads. It is only shown when there is
+      // a name, because an unnamed card still works and needs no empty line.
+      (state.currentPlanName
+        ? '<p class="visit-plan-name">Plan: ' + escapeHtml(state.currentPlanName) + "</p>"
+        : "") +
       '<p class="visit-date">Prepared ' + escapeHtml(formatVisitDate()) +
       (state.isDemo ? " from the sample journey" : "") +
       ".</p>" +
@@ -2792,6 +2805,14 @@
       // it is the first line of every phone call, letter and file name.
       '<p class="visit-reference">Plan reference: <strong>' + escapeHtml(currentPlanReference()) + "</strong></p>" +
       '<p class="visit-reference-note">Made on this device from your answers. Quote it when you call about this plan.</p>' +
+      // The code beside the letters. An officer can point a phone at it instead
+      // of typing twelve characters, and the caption keeps it honest: the scan
+      // shows the same characters and nothing more. There is no server here
+      // and no plan to fetch, and the app must never pretend otherwise.
+      '<div class="visit-qr">' +
+      '<canvas class="visit-qr-canvas" id="visit-qr-canvas" role="img" aria-label=""></canvas>' +
+      '<p class="visit-qr-note">Scan to see the same reference. It carries nothing else.</p>' +
+      "</div>" +
       reviewBannerHtml(currentReview()) +
       "</div>" +
       '<div class="visit-section">' +
@@ -2821,9 +2842,9 @@
         : "<p>No questions were generated.</p>") +
       "</div>" +
       (supportHtml
-        ? '<div class="visit-section break-avoid"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
+        ? '<div class="visit-section break-avoid" data-fit-part="support"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
         : "") +
-      '<div class="visit-section break-avoid">' +
+      '<div class="visit-section break-avoid" data-fit-part="notes">' +
       "<h3>Notes from the visit</h3>" +
       '<div class="visit-lines">' +
       lines +
@@ -2849,6 +2870,9 @@
     lines.push("");
     lines.push("Prepared " + formatVisitDate() + (state.isDemo ? " from the sample journey" : ""));
     lines.push("Plan reference: " + currentPlanReference());
+    // The named plan goes here too, for the same reason it leads the printed
+    // card: a downloaded file is just as likely to sit in a pile of others.
+    if (state.currentPlanName) lines.push("Plan name: " + state.currentPlanName);
     lines.push(currentReview().text);
     lines.push("");
     lines.push("WHAT I ENTERED");
@@ -2907,12 +2931,55 @@
     lines.push("");
     lines.push(ACTIVITIES.confirmationLine);
     lines.push("Made by the farmer using a prototype. Not an official document.");
+    // The printed and on-screen card also carry a small scannable code beside
+    // the reference. Plain text cannot hold one, so the download says so rather
+    // than leaving the farmer to wonder whether the reference alone is enough.
+    lines.push("The printed card also shows a scannable code beside the reference. It carries only that reference and nothing else.");
     return lines.join("\n");
   }
 
   function renderVisitCard() {
     var host = $("#visit-card");
-    if (host) host.innerHTML = buildVisitCard();
+    if (!host) return;
+    host.innerHTML = buildVisitCard();
+    drawVisitQr();
+    renderOfficePanel();
+  }
+
+  /**
+   * Fill the "what to expect" panel below the card. It is separate from the
+   * card itself because it is guidance for the journey, not part of the
+   * one-page artefact, and it is rendered from the same module the self test
+   * checks for honesty. If the module is missing the screen still works, so a
+   * broken panel can never take the card down with it.
+   */
+  function renderOfficePanel() {
+    var host = $("#office-host");
+    if (!host) return;
+    if (OFFICE && OFFICE.panelHtml) host.innerHTML = OFFICE.panelHtml();
+    else host.innerHTML = "";
+  }
+
+  /**
+   * Draw the code into the canvas the card just built. The reference is drawn
+   * fresh on every render rather than saved, so the letters and the code can
+   * never disagree. It is drawn after the HTML is in place, because the canvas
+   * only exists once it is.
+   *
+   * The code is meant to be scanned off paper, so it is drawn big enough for a
+   * camera and kept in whole pixels to stay crisp when it is printed. If there
+   * is no canvas support the letters alone still carry the reference, which is
+   * why the note beside it never claims the code is the only way.
+   */
+  function drawVisitQr() {
+    var canvas = $("#visit-qr-canvas");
+    if (!canvas || !QR || !QR.draw) return;
+    var reference = currentPlanReference();
+    // Screen: large enough to scan on a phone. The card is narrow, so the
+    // width is capped and the quiet zone is kept by the encoder itself.
+    QR.draw(canvas, reference, { pixelSize: 168 });
+    var label = QR.describe ? QR.describe(reference) : "A QR code holding the plan reference " + reference;
+    canvas.setAttribute("aria-label", label);
   }
 
   // ------------------------------------------------------------- My plans
@@ -2964,6 +3031,36 @@
       state.currentPlanName = saved.name;
     }
     return saved;
+  }
+
+  /**
+   * Write the covered questions back to the saved plan this draft belongs to.
+   *
+   * Ticking a question mid-visit updates the working state and the draft, but
+   * a draft that was opened from a saved plan has to push those ticks into the
+   * plan itself. Otherwise the next time that plan is opened the visit is
+   * silently lost, which is exactly the wrong outcome for the one thing a
+   * farmer is doing while standing at the counter.
+   *
+   * Only the covered questions move. The answers, options and reasons in the
+   * plan stay frozen, so a card already printed cannot change under the farmer.
+   */
+  function saveCoveredToSavedPlan() {
+    if (!plansAvailable() || !state.currentPlanId) return null;
+    var plan = PLANS.get(state.currentPlanId);
+    if (!plan) return null;
+    PLANS.upsert({
+      id: plan.id,
+      name: plan.name,
+      data: plan.data,
+      interested: plan.interested || {},
+      coveredQuestions: state.coveredQuestions || {},
+      options: plan.options || [],
+      zoneId: plan.zoneId || null,
+      isDemo: plan.isDemo,
+      chosen: plan.chosen,
+    });
+    return plan.id;
   }
 
   function planById(id) {
@@ -3351,11 +3448,36 @@
       '<strong>Current catalogue status.</strong> ' + escapeHtml(review.text);
   }
 
+  /**
+   * The strip at the top says the short version. The panel on the home page
+   * says the whole answer, listing what still works beside the one thing that
+   * does not. Both read the same module, so they can never disagree about
+   * which part of the app needs a connection.
+   */
+  function isDeviceOffline() {
+    if (OFFLINE && OFFLINE.isOffline) return OFFLINE.isOffline();
+    if (WEATHER && WEATHER.isOffline) return WEATHER.isOffline();
+    return navigator.onLine === false;
+  }
+
   function updateOfflineBanner() {
     var banner = $("#offline-banner");
-    if (!banner) return;
-    var offline = WEATHER.isOffline ? WEATHER.isOffline() : navigator.onLine === false;
-    banner.hidden = !offline;
+    var offline = isDeviceOffline();
+    if (banner) {
+      if (OFFLINE && OFFLINE.notice) {
+        banner.textContent = OFFLINE.notice(offline);
+      }
+      banner.hidden = !offline;
+    }
+    renderOfflinePanel(offline);
+  }
+
+  function renderOfflinePanel(offline) {
+    var host = $("#offline-panel-host");
+    if (!host) return;
+    if (OFFLINE && OFFLINE.panelHtml) {
+      host.innerHTML = OFFLINE.panelHtml(offline);
+    }
   }
 
   /**
@@ -3585,8 +3707,43 @@
         setStatus("copy-status", "Finish the plot details first, then the card can be made.");
         return;
       }
+      setVisitMode(false);
       renderVisitCard();
       showScreen("visit");
+    }
+
+    /**
+     * Visit mode. Standing in front of an officer, the only things worth having
+     * on the screen are the card, the tickable questions and the reading
+     * controls. Everything else, the intro paragraph, the download button, the
+     * saved-plans buttons, the guidance panel, is chrome for a different moment.
+     *
+     * The toggle only adds a class to the screen and flips a couple of buttons.
+     * The nodes stay in place, so leaving visit mode restores the exact same
+     * screen with no re-render and nothing lost. That matters because a farmer
+     * may switch in and out of it while talking to an officer, and a re-render
+     * would reset a scrolled position or a ticked question at the wrong moment.
+     */
+    function setVisitMode(on) {
+      var screen = $("#screen-visit");
+      if (!screen) return;
+      screen.classList.toggle("is-visit-mode", !!on);
+      var onBtn = $("#btn-visit-mode");
+      if (onBtn) onBtn.setAttribute("aria-pressed", on ? "true" : "false");
+      var exitRow = $("#visit-mode-exit-row");
+      if (exitRow) exitRow.hidden = !on;
+      var hint = $("#visit-mode-hint");
+      if (hint) hint.hidden = !!on;
+      // The reading controls stay usable in visit mode, so the status line and
+      // the stop button must not be swept away by the hiding rule. They are
+      // outside the visit-mode-hide markers already, so nothing to do here, but
+      // the screen is scrolled to the top so the card is the first thing seen.
+      if (on) window.scrollTo({ top: 0, behavior: scrollBehavior() });
+    }
+
+    function visitModeOn() {
+      var screen = $("#screen-visit");
+      return !!screen && screen.classList.contains("is-visit-mode");
     }
 
     function openPlans() {
@@ -3608,8 +3765,22 @@
         if (state.planReady && state.options.length) showScreen("results");
         else showScreen("home");
       });
-    $("#btn-visit-print") && $("#btn-visit-print").addEventListener("click", function () { window.print(); });
+    $("#btn-visit-print") && $("#btn-visit-print").addEventListener("click", function () {
+      // Trim the card to one page if it measured as too tall, then print, then
+      // put everything back. If there is no fitter the card still prints as it
+      // is, so a missing module can never leave a farmer with a dead button.
+      if (FIT && FIT.prepareForPrint) FIT.prepareForPrint();
+      window.print();
+    });
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
+    $("#btn-visit-mode") &&
+      $("#btn-visit-mode").addEventListener("click", function () {
+        setVisitMode(!visitModeOn());
+      });
+    $("#btn-visit-mode-exit") &&
+      $("#btn-visit-mode-exit").addEventListener("click", function () {
+        setVisitMode(false);
+      });
     $("#btn-visit-read") &&
       $("#btn-visit-read").addEventListener("click", function () {
         renderVisitCard();
@@ -3794,6 +3965,13 @@
       if (box.checked) state.coveredQuestions[key] = true;
       else delete state.coveredQuestions[key];
       saveDraft();
+      // If this working draft is a saved plan that was reopened, the tick has
+      // to reach the saved plan too, or a visit recorded on the card would be
+      // wiped the next time that plan is opened. The answers and options stay
+      // frozen in the snapshot; only the covered questions are written back,
+      // so nothing a farmer already printed and showed an officer can shift
+      // underneath them.
+      saveCoveredToSavedPlan();
       // Repaint the counter in place without a full re-render, which would
       // steal the farmer's place on the page mid-visit.
       var list = box.closest(".question-checklist");

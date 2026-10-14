@@ -2243,6 +2243,105 @@ select:focus {
 
 /* -- Office visit card -- */
 
+/* -- Office visit card hero -- */
+
+/* The visit card is the artefact this whole app exists to produce, so its
+   screen is treated as a hero, not as one result among many. The actions sit
+   above the card where a thumb can reach them, and the primary action is
+   large. No gradient, no glass, just clear spacing and one big button. */
+.visit-hero {
+  margin-bottom: var(--space-5);
+}
+
+.visit-hero-eyebrow {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0 0 var(--space-2);
+}
+
+.visit-hero .screen-title {
+  margin-top: 0;
+}
+
+.visit-hero-actions .btn-primary {
+  min-height: 3.25rem;
+  font-size: 1.05rem;
+}
+
+.btn-lg {
+  padding: var(--space-3) var(--space-5);
+  font-size: 1.05rem;
+}
+
+.visit-mode-hint {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* -- Visit mode -- */
+
+/* Standing with an officer, the farmer needs only the card, the questions to
+   tick and the reading controls. Everything else is chrome for a different
+   moment, so visit mode hides it. The class is on the screen and the hiding
+   is done here rather than by removing nodes, so leaving visit mode restores
+   the exact same screen with no re-render and no lost scroll position. */
+#screen-visit.is-visit-mode .visit-mode-hide {
+  display: none !important;
+}
+
+#screen-visit.is-visit-mode #visit-mode-exit-row {
+  display: block;
+}
+
+#screen-visit.is-visit-mode .visit-hero .screen-title {
+  font-size: 1.15rem;
+}
+
+/* In visit mode the reading controls should stay put and be easy to hit, so
+   the stop button keeps its size and the status line is given a little room. */
+#screen-visit.is-visit-mode .read-controls {
+  margin-top: var(--space-3);
+}
+
+/* -- What to expect at the office -- */
+
+.office-panel {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-5);
+  margin: var(--space-5) 0;
+}
+
+.office-panel h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.office-list {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.4em;
+}
+
+.office-list li {
+  margin: 0 0 var(--space-3);
+  line-height: 1.5;
+}
+
+.office-closing {
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
 .visit-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -2273,6 +2372,17 @@ select:focus {
   margin: 0 0 var(--space-2);
   font-size: 0.9rem;
   color: var(--color-text-muted);
+}
+
+/* The plan name leads the card, because it is the one line a farmer holding a
+   handful of printed cards will recognise. It is given a little more weight
+   and size than the date so the eye lands on it first, but it stays in the
+   muted tone: it labels the card, it is not a headline of its own. */
+.visit-plan-name {
+  margin: 0 0 var(--space-2);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .visit-section {
@@ -2365,6 +2475,35 @@ select:focus {
   color: var(--color-text-muted);
 }
 
+/* The code on the card. It sits with the reference so the two are read as one
+   thing, and it is kept in a quiet white box because a dark or patterned
+   background would stop a camera reading it. On screen it is centred in a
+   narrow card; on paper it keeps the same size. */
+.visit-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+}
+
+.visit-qr-canvas {
+  display: block;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  padding: 6px;
+  width: 156px;
+  height: 156px;
+  box-sizing: content-box;
+}
+
+.visit-qr-note {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  max-width: 24rem;
+}
+
 .plan-reference {
   margin: var(--space-1) 0 0;
   font-size: 0.85rem;
@@ -2391,12 +2530,52 @@ select:focus {
     page-break-inside: avoid;
   }
 
+  /* Every section, not just these, must keep its shape, and the whole card is
+     allowed to be a little tighter on paper than on screen. */
+  .visit-section {
+    margin: 0 0 8pt;
+  }
+
+  .visit-section h3 {
+    font-size: 10.5pt;
+    margin: 0 0 3pt;
+    padding-bottom: 1pt;
+  }
+
   .visit-answers,
   .visit-options,
   .visit-support,
   .visit-reference,
   .question-text {
     font-size: 10.5pt;
+  }
+
+  .visit-answers dt,
+  .visit-answers dd {
+    padding: 0 0 1pt;
+  }
+
+  .visit-note {
+    font-size: 9pt;
+    margin: 2pt 0 0;
+  }
+
+  .visit-qr-note {
+    font-size: 9pt;
+  }
+
+  /* On paper the code is kept a fixed, generous size so it stays readable by
+     a phone camera. It is never stretched past the pixels it was drawn in. */
+  .visit-qr-canvas {
+    width: 40mm;
+    height: 40mm;
+    box-sizing: content-box;
+  }
+
+  .visit-qr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 6pt 0;
   }
 
   .visit-head .review-card {
@@ -2413,6 +2592,30 @@ select:focus {
     background: none;
     border: 1px solid #666;
     color: #000;
+  }
+
+  /* A short, ruled area for the office to write in, not the five full lines
+     of the screen card. On a full card the notes are the first thing that
+     would spill onto a second page, and a half-drawn ruled area across a page
+     break is worse than none, so the space for it comes out of the print
+     layout rather than pushing the questions onto a second sheet. */
+  .visit-lines .visit-line:nth-child(n + 4) {
+    display: none;
+  }
+
+  .visit-line {
+    height: 20px;
+  }
+
+  /* The one-page fitter marks a part for trimming by setting data-fit-trim="1"
+     on it, only when it measured the card as too tall for the sheet. A trimmed
+     part is hidden on paper but never on screen, and only the notes area and
+     the support list are ever eligible, so the answers, the options, the
+     questions and the review wording always survive to paper. */
+  @media print {
+    [data-fit-part][data-fit-trim="1"] {
+      display: none;
+    }
   }
 }
 
@@ -2515,6 +2718,71 @@ select:focus {
 .home-offline .hint {
   color: var(--color-text-muted);
   font-size: 0.88rem;
+}
+
+/* -- Offline guidance panel -- */
+
+/* A calm panel, not an error. The point is to answer "what can I still do",
+   so the half that works comes first and the single item that does not is
+   kept small and unalarming. The tint only deepens when the device is
+   genuinely offline, which is the moment it earns the attention. */
+.offline-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  padding: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+.offline-panel.is-offline {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.offline-panel-state {
+  margin: 0 0 var(--space-3);
+  font-weight: 700;
+}
+
+.offline-panel-cols {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 560px) {
+  .offline-panel-cols {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+  }
+}
+
+.offline-panel-col h3 {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.offline-works,
+.offline-needs {
+  margin: 0;
+  padding-left: 1.3em;
+  font-size: 0.92rem;
+}
+
+.offline-works li {
+  margin: 0 0 var(--space-1);
+}
+
+.offline-needs li {
+  margin: 0 0 var(--space-2);
+}
+
+.offline-needs strong {
+  display: block;
 }
 
 @media (max-width: 520px) {

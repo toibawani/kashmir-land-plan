@@ -98,6 +98,7 @@
             Once this page has loaded, the whole plan works with no connection: the form, the options,
             the months ahead, the questions to ask and the office visit card. Only the weather needs the internet.
           </p>
+          <div id="offline-panel-host" aria-live="polite"></div>
           <p class="hint" id="install-hint">
             To keep it on a phone, open your browser menu and choose the option to add this page to your home screen.
           </p>
@@ -463,25 +464,39 @@
     <!-- OFFICE VISIT CARD -->
     <section id="screen-visit" class="screen" aria-labelledby="visit-title" hidden>
       <div class="container narrow">
-        <h1 id="visit-title" class="screen-title no-print">Office visit card</h1>
-        <p class="screen-intro no-print">
-          One page to take with you. It carries what you entered, the options you marked, and the
-          questions to ask. Nothing on it is a recommendation, and none of it is approved by anyone.
-        </p>
-        <div class="visit-card" id="visit-card"></div>
-        <div class="results-actions no-print">
-          <button type="button" class="btn btn-primary" id="btn-visit-print">Print or save as PDF</button>
-          <button type="button" class="btn btn-secondary" id="btn-visit-download">Download as text</button>
-        </div>
-        <div class="read-controls no-print">
-          <div class="results-actions">
-            <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
-            <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+          <div class="visit-hero no-print">
+            <p class="visit-hero-eyebrow visit-mode-hide">Your takeaway</p>
+            <h1 id="visit-title" class="screen-title">Office visit card</h1>
+            <p class="screen-intro visit-mode-hide">
+              This is the one thing worth carrying to the office. It holds what you entered, the options you
+              marked and the questions to ask, all on one page. Nothing on it is a recommendation, and none
+              of it has been approved by anyone.
+            </p>
+            <div class="results-actions visit-hero-actions">
+              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print">Print or save as PDF</button>
+              <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download">Download as text</button>
+            </div>
+            <div class="read-controls">
+              <div class="results-actions">
+                <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
+                <button type="button" class="btn btn-secondary" id="btn-visit-read-stop" hidden>Stop reading</button>
+              </div>
+              <p class="read-status" id="read-visit-status" role="status" hidden></p>
+              <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
+            </div>
+            <div class="results-actions visit-mode-hide">
+              <button type="button" class="btn btn-secondary" id="btn-visit-mode" aria-pressed="false">Visit mode</button>
+            </div>
+            <p class="visit-mode-hint visit-mode-hide" id="visit-mode-hint">
+              Visit mode hides everything except the card, the questions and the reading controls, so it is easy to use while you stand with an officer.
+            </p>
+            <div class="results-actions" id="visit-mode-exit-row" hidden>
+              <button type="button" class="btn btn-secondary" id="btn-visit-mode-exit">Leave visit mode</button>
+            </div>
           </div>
-          <p class="read-status" id="read-visit-status" role="status" hidden></p>
-          <p class="read-fallback" id="read-visit-fallback" hidden>This browser has no reading voice. The card above stays on screen, and it can still be printed.</p>
-        </div>
-        <div class="results-actions no-print">
+        <div class="visit-card" id="visit-card"></div>
+        <div class="office-host no-print visit-mode-hide" id="office-host"></div>
+        <div class="results-actions no-print visit-mode-hide">
           <button type="button" class="btn btn-secondary" id="btn-visit-back">Back to summary</button>
           <button type="button" class="btn btn-secondary" id="btn-visit-plans">My saved plans</button>
         </div>
@@ -524,10 +539,11 @@
             <li>Shows general weather for a nearby town from Open-Meteo, when you are online</li>
             <li>Links to official portals, without inventing amounts, deadlines or eligibility rules</li>
             <li>Turns your answers into questions to put to an officer, and shows which month each option is usually at</li>
-            <li>Makes a one page office visit card you can print and carry</li>
+            <li>Makes a one page office visit card you can print and carry, with a small scannable code beside the reference and an optional visit mode for standing at the counter</li>
             <li>Saves a draft and lets you keep several named plans to compare</li>
             <li>Can read the plan aloud using the voice built into your device</li>
             <li>Saves a draft on this device and can print, copy or download the plan</li>
+            <li>Works offline once the page has loaded, and shows a plain list of what still works without a connection</li>
           </ul>
 
           <h2>What this app does not do</h2>
@@ -547,6 +563,21 @@
             quality vary from phone to phone, and a few browsers offer no voice at all. Nothing depends on
             it: the same words are always on screen, and the plan prints either way. This is only a way to
             take the reading load off, not a translation, and the wording is still English.
+          </p>
+
+          <h2>The scannable code and the office panel</h2>
+          <p>
+            The visit card carries a small code beside the reference. A phone can read it in one
+            motion instead of someone retyping twelve characters. The code holds only the reference
+            and nothing more: it is not a link, it does not carry your plan, and scanning it on any
+            phone shows the same characters and nothing else. There is no server behind it, so
+            nothing about your plan leaves the device.
+          </p>
+          <p>
+            The "what to expect at the office" panel is drawn only from general public knowledge
+            about how a public agriculture counter works. It names no amounts, deadlines, documents
+            or eligibility rules, and it says plainly that the office decides those things. It is
+            here to set expectations for a short counter visit, not to promise any outcome.
           </p>
 
           <h2>Officer review</h2>
@@ -629,6 +660,8 @@
             <li>No conversions between kanal, acre, hectare and marla are exact, and local usage varies.</li>
             <li>The text is in English only. Real use would need Kashmiri, Dogri, Urdu and Hindi, checked by fluent speakers.</li>
             <li>Until an officer fills in the review fields on the catalogue, nothing here has been signed off. Even after a review, confirm locally before acting.</li>
+            <li>The scannable code on the visit card holds only the reference text. It is not a link to anything, and only a device that already has the plan saved can match it back.</li>
+            <li>The "what to expect at the office" panel is general public knowledge about how a counter visit usually works. It is not specific to your district and promises no amount, deadline, document or eligibility outcome.</li>
           </ul>
 
           <h2>Data and privacy</h2>
@@ -665,6 +698,10 @@
   <script src="js/questions.js"></script>
   <script src="js/plans.js"></script>
   <script src="js/speech.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/offline.js"></script>
+  <script src="js/visitfit.js"></script>
+  <script src="js/office.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
