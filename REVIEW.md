@@ -53,3 +53,63 @@ It means you checked the list of suggestions. It does not mean you
 checked any farmer's plot, approved any subsidy, or promised any outcome.
 The app keeps telling every farmer to confirm locally before acting,
 before and after your review. That sentence never goes away.
+
+---
+
+## For the maintainer: recording a review the officer has given
+
+This half is for the person who edits the code, not the officer. Only
+follow it after the officer has actually replied. Never mark anything
+reviewed on the officer's behalf, and never guess a name or a date.
+
+### How it is printed, so you know what your edit changes
+
+Every screen the farmer sees builds its review line from the same review
+record. Right now it is empty, so every screen says this:
+
+> "Not yet reviewed by an agriculture officer. Treat every suggestion
+> as a question to discuss, not as advice to act on. Always confirm
+> locally before acting."
+
+That line appears on the results screen, the comparison, the plan
+summary, the office visit card, its text download, its read-aloud, and
+the About page.
+
+After you record a review, those screens say this instead:
+
+> "Reviewed by [name], [designation] on [date]. Still confirm locally
+> before acting."
+
+The "confirm locally" sentence is built into both wordings. It cannot
+be switched off by recording a review.
+
+If only some entries are reviewed, the app says that plainly too:
+"Some of these suggestions have been reviewed by an agriculture officer
+and some have not." Do not round a partial check up to a full one.
+
+### What to change
+
+Open `js/catalogue.js`. Near the top is `CATALOGUE_REVIEW`.
+
+- The officer checked the whole list: set its `reviewStatus` to
+  `"reviewed"`, and fill in `reviewedBy` (the officer's name),
+  `designation` (their role), and `reviewedOn` (the date of the check
+  as YYYY-MM-DD, for example 2026-11-04).
+- The officer checked one entry only: set that entry's `reviewStatus`,
+  `reviewedBy`, `designation` and `reviewedOn` the same way, and leave
+  the whole-catalogue record alone.
+- If any field is missing, leave `reviewStatus` as `"not-reviewed"`.
+  `npm run build` refuses a half-recorded review (a "reviewed" flag with
+  no name, or a date that is not YYYY-MM-DD), so a mistake fails loudly
+  here instead of shipping as a false promise.
+
+### What never changes
+
+- The confirmation line every option and scheme entry carries stays
+  exactly as it is.
+- No amounts, deadlines, documents, eligibility or crop promises are
+  added as part of a review. If the officer mentioned a scheme, it goes
+  in as a name to ask about, the way the existing entries do, or not at
+  all.
+- The questions the app generates stay the farmer's questions to ask.
+  A review does not turn them into approved advice.
