@@ -3801,7 +3801,21 @@
       // the stop button must not be swept away by the hiding rule. They are
       // outside the visit-mode-hide markers already, so nothing to do here, but
       // the screen is scrolled to the top so the card is the first thing seen.
-      if (on) window.scrollTo({ top: 0, behavior: scrollBehavior() });
+      if (on) {
+        window.scrollTo({ top: 0, behavior: scrollBehavior() });
+        // Moving focus with the keyboard is the one thing the class toggle
+        // cannot do. When the toggle button is about to be hidden, focus would
+        // otherwise fall back to <body> and a keyboard or screen-reader user
+        // would lose their place with no announcement. Focus lands on the card
+        // instead, which is the whole reason the mode exists, so the next key
+        // press acts on the card. When the toggle stays visible, it keeps focus
+        // so the person can turn the mode straight back off.
+        var card = $("#visit-card");
+        if (card && card.querySelector) card.setAttribute("tabindex", "-1");
+        if (card) card.focus({ preventScroll: true });
+      } else if (onBtn) {
+        onBtn.focus({ preventScroll: true });
+      }
     }
 
     function visitModeOn() {
