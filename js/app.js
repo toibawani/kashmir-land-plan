@@ -2640,10 +2640,15 @@
     var d = state.data;
     var options = visitOptions();
     var questions = currentQuestions();
+    // The named plan is spoken first for the same reason it leads the printed
+    // card and the downloaded file: a farmer with several plans cannot tell one
+    // spoken card from another unless the voice says which one this is.
+    var heading = "My Land, My Plan. Your office visit card.";
+    if (state.currentPlanName) heading += " Plan: " + state.currentPlanName + ".";
     return [
       {
         label: "Office visit card",
-        text: "My Land, My Plan. Your office visit card. " + currentReview().text,
+        text: heading + " " + currentReview().text,
       },
       {
         label: "What you entered",
