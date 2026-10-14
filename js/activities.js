@@ -1,8 +1,8 @@
 /**
  * Activity helpers used by the interface.
  *
- * The catalogue itself lives in js/catalogue.js so an officer can review the
- * data without reading the scoring or rendering code.
+ * The catalogue itself lives in js/catalogue.js, kept readable on its own
+ * apart from the scoring or rendering code.
  */
 (function () {
   "use strict";
