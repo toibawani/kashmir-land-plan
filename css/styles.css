@@ -2374,6 +2374,17 @@ select:focus {
   color: var(--color-text-muted);
 }
 
+/* The plan name leads the card, because it is the one line a farmer holding a
+   handful of printed cards will recognise. It is given a little more weight
+   and size than the date so the eye lands on it first, but it stays in the
+   muted tone: it labels the card, it is not a headline of its own. */
+.visit-plan-name {
+  margin: 0 0 var(--space-2);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .visit-section {
   margin: 0 0 var(--space-5);
 }

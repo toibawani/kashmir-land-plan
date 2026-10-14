@@ -2789,6 +2789,15 @@
     return (
       '<div class="visit-head">' +
       "<h2>My Land, My Plan: office visit card</h2>" +
+      // When the card comes from a named saved plan, the name goes at the very
+      // top. A farmer who keeps several plans can end up with a stack of
+      // printed cards that all read "MLMP-PUL-3K-8F2C", and the code is exactly
+      // the thing a farmer cannot tell apart at a glance. The name is the one
+      // line they will recognise, so it leads. It is only shown when there is
+      // a name, because an unnamed card still works and needs no empty line.
+      (state.currentPlanName
+        ? '<p class="visit-plan-name">Plan: ' + escapeHtml(state.currentPlanName) + "</p>"
+        : "") +
       '<p class="visit-date">Prepared ' + escapeHtml(formatVisitDate()) +
       (state.isDemo ? " from the sample journey" : "") +
       ".</p>" +
@@ -2861,6 +2870,9 @@
     lines.push("");
     lines.push("Prepared " + formatVisitDate() + (state.isDemo ? " from the sample journey" : ""));
     lines.push("Plan reference: " + currentPlanReference());
+    // The named plan goes here too, for the same reason it leads the printed
+    // card: a downloaded file is just as likely to sit in a pile of others.
+    if (state.currentPlanName) lines.push("Plan name: " + state.currentPlanName);
     lines.push(currentReview().text);
     lines.push("");
     lines.push("WHAT I ENTERED");
