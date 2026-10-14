@@ -2570,9 +2570,17 @@ select:focus {
   .visit-answers,
   .visit-options,
   .visit-support,
-  .visit-reference,
   .question-text {
     font-size: 10.5pt;
+  }
+
+  /* The reference is the one line an officer reads aloud or writes down, so on
+     paper it is set larger than the body rather than the same size. It costs a
+     few points of height, which the fitter can take back out of the notes area
+     if the card is near the page limit. */
+  .visit-reference {
+    font-size: 12pt;
+    font-weight: 600;
   }
 
   .visit-answers dt,
