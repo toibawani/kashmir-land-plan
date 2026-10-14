@@ -3891,6 +3891,21 @@
       if (FIT && FIT.prepareForPrint) FIT.prepareForPrint();
       window.print();
     });
+    // The one-page fit must not depend on the Print button being the way in. A
+    // farmer printing from the browser menu or a keyboard shortcut bypasses the
+    // button entirely and should still get one page, not two. The browser's own
+    // beforeprint signal covers those paths, and the fitter's restore signals
+    // already put the card back afterwards. The guard keeps it to the visit
+    // screen: other screens have their own print shapes, and a stray trim there
+    // would hide what the farmer meant to print.
+    if (window.addEventListener && "onbeforeprint" in window) {
+      window.addEventListener("beforeprint", function () {
+        if (!FIT || !FIT.prepareForPrint) return;
+        var visitScreen = $("#screen-visit");
+        if (!visitScreen || !visitScreen.classList.contains("screen-active")) return;
+        FIT.prepareForPrint();
+      });
+    }
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
     $("#btn-visit-mode") &&
       $("#btn-visit-mode").addEventListener("click", function () {
