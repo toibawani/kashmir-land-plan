@@ -35,6 +35,11 @@ Use whichever of these is easiest:
 There is no form to log into and no file to open. If you give your name,
 your designation, and the date, your check can be recorded properly.
 
+If you were handed a printed sheet with the activities and a space beside
+each one, that is the `REVIEW_SHEET.md` in this same folder, and writing on
+it is the easiest way to reply. You can also just write your comments on any
+paper.
+
 ## What happens after
 
 You never have to touch the app's files. The person maintaining the app
@@ -87,12 +92,14 @@ If only some entries are reviewed, the app says that plainly too:
 "Some of these suggestions have been reviewed by an agriculture officer
 and some have not." Do not round a partial check up to a full one.
 
-### What to change
+### What you change
 
-Open `js/catalogue.js`. Near the top is `CATALOGUE_REVIEW`.
+Open `js/catalogue.js`. Near the top is `CATALOGUE_REVIEW`. You are the one
+who edits it. The officer never opens this file and never touches these
+fields.
 
-- The officer checked the whole list: set its `reviewStatus` to
-  `"reviewed"`, and fill in `reviewedBy` (the officer's name),
+- The officer checked the whole list: set `CATALOGUE_REVIEW.reviewStatus`
+  to `"reviewed"`, and fill in `reviewedBy` (the officer's name),
   `designation` (their role), and `reviewedOn` (the date of the check
   as YYYY-MM-DD, for example 2026-11-04).
 - The officer checked one entry only: set that entry's `reviewStatus`,
