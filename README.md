@@ -6,27 +6,67 @@ My Land, My Plan helps a farmer turn basic details about an underused plot into 
 
 > This is a **hackathon prototype**, not an official government service.
 
-## What it does
+## How this ships (architecture, honestly)
 
-- Collects only the basic plot details needed (district, village, size, water, terrain, main constraint)
-- Shows 2 to 3 illustrative activity options, each with the reasons it was suggested
-- Puts each option in context for the district, using published background on J&K farming
-- Shows a typical year for each option, month by month, and the month ahead for the options you shortlist
-- Turns your answers and chosen options into 5 to 7 specific questions to ask an officer, not a generic checklist
-- Lets you compare options side by side, tick the questions you ask, and mark the ones you want to follow up
-- Gives a practical next-step checklist, and lists the official portals to check
-- Makes a one page office visit card: your answers, the options you marked, the questions to ask and the confirmation note, ready to print and carry
-- Puts a small scannable code beside the reference on the visit card, so a phone can read the code in one motion instead of someone retyping twelve characters
-- Trims the visit card to one clean page when it is printed, by removing only the notes area and, if needed, the support list, never the answers, the options, the questions or the review note
-- Has a visit mode on the card screen that hides everything except the card, the tickable questions and the reading controls, so it is easy to use while standing with an officer
-- Sets expectations for the office with a short, honest panel drawn only from general public knowledge, naming no amounts, deadlines or eligibility rules
-- Saves several named plans on the device, compares them side by side, and lets you pick which one goes to the office
-- Shows gentle, honest timing notes when the forecast is available (for example that rain is likely), pointing you to ask about timing rather than telling you what to do
-- Can read the plan, the visit card and the questions aloud using the voice built into your device
-- Shows general weather for a nearby town, from Open-Meteo
-- Saves a draft on the device and lets you print, save as PDF, download or copy the plan
-- Keeps working with no connection once it has been opened, and can be added to a home screen, with a calm offline indicator and a panel that lists plainly what still works offline and what needs a connection
-- States plainly whether the suggestions have been checked by an agriculture officer, on results, comparison, summary and the visit card
+This is a **no-build, dependency-free static PWA**. `npm start` only
+serves the folder; `npm run build` only checks that the scripts parse,
+references resolve and the offline cache is consistent. There is no
+framework, no bundler, no server, no database and no authenticated
+account. A visitor opens a single folder (`index.html`, `css`,
+`js`, `sw.js`) and gets a working app.
+
+**Nothing on this page is a secret and nothing is hidden.** It has no
+keys, no tokens, no API routes and no real-user IDs. Two things a
+visitor's browser touches do reach the internet, and both are public:
+
+1. The two typefaces load from Google Fonts (browser-provided).
+2. The weather screen asks Open-Meteo for the current conditions of a
+   town the farmer names. Nothing about the field, the plot or the plan
+   ever leaves the device.
+
+Because there is no server, this app has no login, no tenant, no shell
+and no service that can return a 403 or respond to an unauthenticated
+user. The honest risks here are the ones a front-end app owns:
+
+- **The weather is live and is never stored.** An old value is never
+  shown as if it were current, and the app explicitly says so rather
+  than inventing an offline reading.
+- **Everything else is local and stays local** once the page has loaded,
+  including the plans, the questions, the ticked boxes and the review
+  status. This is a privacy feature, and it is the reason there is no
+  backend.
+- **The service worker only ever caches the app itself.** It never
+  caches a weather response, and it will not be told to.
+
+If this prototype is ever moved onto a server that holds real farmer
+data, the following must be added before any live data is served:
+per-user data separation (Row Level Security on every table), a
+real session and a tenant boundary, strict CORS, a Content Security
+Policy, security headers, and an explicit authentication check before
+every database read or write. None of that will live in a static folder,
+and none of it should be invented here.
+
+## Tech stack
+
+| Piece | What it is |
+| --- | --- |
+| UI | Plain HTML + CSS + vanilla JavaScript (no framework, no bundler) |
+| Build / test | `node tools/verify.js` (npm run build), `node tools/selftest.js` (npm test) |
+| Assets | Icons as inline SVG + PNG, fonts from Google Fonts (System Family fallback) |
+| Deployment | Static folder served on 127.0.0.1:8080; installable as a PWA |
+
+## Quick start
+
+```sh
+npm install   # no dependencies, but the command is retained for a clean slate
+npm start     # serves the folder at http://127.0.0.1:8080
+npm run build # pre-flight check: scripts parse, references resolve, offline cache consistent
+npm test      # build check plus 140 behavioural checks
+```
+
+Open `index.html` directly from disk — it works, and the weather screen
+shows its not-available message because it is the only part that needs a
+connection.
 
 No account is required. No personal, financial, or land-identification data is sent to any server. Two honest caveats: the typefaces load from Google Fonts, and the weather screen sends the district you select to Open-Meteo. Everything else stays on the device.
 
@@ -47,7 +87,7 @@ They are labelled in the interface, and the same labels are used in the plan you
 
 **Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary, the office visit card and the About page, in these words: "Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting." The visit card carries it too, because that is the page that leaves the phone and reaches the office.
 
-The catalogue lives in `js/catalogue.js`, kept apart from the scoring and rendering code so an officer can read the data without reading any JavaScript logic. To record a review, either fill in `CATALOGUE_REVIEW` at the top of that file for the whole list, or fill in `reviewStatus`, `reviewedBy`, `designation` and `reviewedOn` on a single entry if only that one has been checked. Leave the fields empty rather than guessing a name or a date.
+The suggestion data lives in `js/catalogue.js`, kept apart from the scoring and rendering code so it stays readable on its own. Officers never edit it. The review process for them is written up in `REVIEW.md` at the repo root: they check the list and reply by message, on paper, in person or by email, and the maintainer records the review afterwards by updating the review fields (`reviewStatus`, `reviewedBy`, `designation`, `reviewedOn`, following the steps in that file). Never mark anything reviewed on an officer's behalf, and never guess a name or a date.
 
 Once a review is recorded, every screen changes to say "Reviewed by [name], [designation] on [date]. Still confirm locally before acting." A partly reviewed list says so too. The confirmation line that every option and every scheme entry already carries does not go away when a review is added: a reviewed catalogue still has to be checked locally, because the officer reviewed the catalogue, not your plot.
 
@@ -138,7 +178,7 @@ tools/make-icons.py   draws the PNG icons, with no image library involved
 The JavaScript is plain browser scripts in one namespace, no framework and no bundler, so the page still works when opened straight from disk. The parts worth knowing:
 
 - `js/regions.js` groups the 20 districts into three coarse zones and records the source for each statement.
-- `js/catalogue.js` holds the activity data. Each entry carries a zone note, a twelve month calendar, five approximate ratings, a short water note, and the review fields an officer fills in. `js/activities.js` only reads it and works out the review wording, which keeps the data readable on its own.
+- `js/catalogue.js` holds the activity data. Each entry carries a zone note, a twelve month calendar, five approximate ratings, a short water note, and the review record the maintainer updates after an officer has replied (see `REVIEW.md`). `js/activities.js` only reads it and works out the review wording.
 - `sw.js` precaches the plan for offline use. It serves the app's own files network first, so an edited file appears on the next load rather than one load later, and it deliberately never caches a weather response.
 - `computeOptions()` in `js/app.js` scores the catalogue against the answers, and records a plain language reason for every point it awards. Activities that do not belong in a zone are excluded outright rather than ranked low.
 - `COMPARE_ROWS` defines the comparison. Under 700px it renders as stacked blocks instead of a table, because a seven column table on a phone is unreadable.

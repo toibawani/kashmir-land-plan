@@ -1,19 +1,22 @@
 /**
- * Activity catalogue for officer review.
- *
- * This file is the data an agriculture or horticulture officer would check.
+ * Activity catalogue. The data behind the suggestions is kept here, apart
+ * from the scoring and rendering code, so it stays readable on its own.
  * It is not a suitability model and it does not approve anything.
  *
- * How to record a review
- * - Fill in CATALOGUE_REVIEW below when the whole list has been checked.
- * - Or fill reviewStatus, reviewedBy, designation and reviewedOn on a single
- *   activity if only that entry has been checked.
+ * Recording an officer review (maintainer only)
+ * Officers never edit this file. The review process for them is in
+ * REVIEW.md at the repo root: they reply by message, on paper, in person
+ * or by email, and the maintainer records it here afterwards.
+ * - Whole list checked: fill in CATALOGUE_REVIEW below.
+ * - One entry checked: fill reviewStatus, reviewedBy, designation and
+ *   reviewedOn on that activity, and leave the whole-list record alone.
  * - reviewStatus must be "not-reviewed" or "reviewed".
  * - When reviewStatus is "reviewed", reviewedBy (the officer's name) and
  *   reviewedOn (the date of the check, as YYYY-MM-DD) are both required.
  *   `npm run build` fails loudly if either is missing, so a half-recorded
  *   review can never slip through looking finished.
- * - Leave fields empty rather than guessing a name or a date.
+ * - Only record a review the officer actually gave. Leave fields empty
+ *   rather than guessing a name or a date.
  * - A review never changes the confirmation line. Everything stays a
  *   question to confirm locally, reviewed or not.
  *
@@ -25,8 +28,9 @@
   "use strict";
 
   /**
-   * Whole-catalogue review. An officer fills this in after checking the list.
-   * Until then it stays not-reviewed, which the interface will say plainly.
+   * Whole-catalogue review. The maintainer records it here after an officer
+   * has checked the list (see REVIEW.md). Until then it stays not-reviewed,
+   * which the interface says plainly.
    */
   var CATALOGUE_REVIEW = {
     reviewStatus: "not-reviewed",
