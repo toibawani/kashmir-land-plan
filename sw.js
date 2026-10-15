@@ -31,6 +31,8 @@ var CORE_ASSETS = [
   "./js/offline.js",
   "./js/visitfit.js",
   "./js/office.js",
+  "./js/share.js",
+  "./js/messages.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",

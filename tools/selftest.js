@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js", "share.js", "messages.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
@@ -82,6 +82,8 @@ var QR = sandbox.window.MLMP_QR;
 var OFFLINE = sandbox.window.MLMP_OFFLINE;
 var FIT = sandbox.window.MLMP_FIT;
 var OFFICE = sandbox.window.MLMP_OFFICE;
+var SHARE = sandbox.window.MLMP_SHARE;
+var MSG = sandbox.window.MLMP_MESSAGES;
 
 console.log("review wording");
 
@@ -800,6 +802,85 @@ var officeSpoken = officeItems.join(" ") + " " + OFFICE.closing();
 check("the spoken panel quotes no rupee amount", !/₹|rs\.?\s*\d|inr/i.test(officeSpoken), "a rupee figure in the spoken text");
 check("the spoken panel gives no deadline year", !/\b(19|20)\d{2}\b/.test(officeSpoken), "a year in the spoken text");
 check("the spoken panel names no amount word", !/lakh|crore/i.test(officeSpoken), "an amount word in the spoken text");
+
+/* ---- WhatsApp share text ---- */
+
+// The share message is the one piece of the app that leaves the device, so it
+// is checked as hard as the screen: same review wording, same confirm-locally
+// line, no invented figures, and short enough to paste and read on a phone.
+console.log("share text");
+var shareInput = {
+  reference: "MLMP-PUL-3K-8F2C",
+  planName: "Upper field",
+  dateLabel: "14 October 2026",
+  isDemo: false,
+  answers: { district: "Pulwama", size: "3", unit: "kanal", water: "seasonal", terrain: "sloped or hilly", constraint: "labour" },
+  options: [
+    { title: "Walnut orchard", marked: true },
+    { title: "Willow for wicker", marked: false },
+  ],
+  questions: [
+    { text: "Which walnut variety suits a plot like mine?", ticked: false },
+    { text: "Where is the nearest soil testing done?", ticked: true },
+  ],
+  reviewText: ACTIVITIES.formatReview({ reviewStatus: "not-reviewed" }).text,
+  confirmLine: ACTIVITIES.confirmationLine,
+};
+var shareText = SHARE.build(shareInput);
+check("the share message names the reference", shareText.indexOf("MLMP-PUL-3K-8F2C") !== -1, "reference missing");
+check("the share message names the district", shareText.indexOf("Pulwama") !== -1, "district missing");
+check("the share message lists a marked option", /Walnut orchard.*\(marked\)/.test(shareText), "marked option missing");
+check("the share message lists the questions", shareText.indexOf("Which walnut variety") !== -1, "question missing");
+check("the share message marks a covered question", /\[done\]/.test(shareText), "ticked question not shown");
+check("the share message carries the review wording", shareText.indexOf(shareInput.reviewText) !== -1, "review line missing");
+check("the share message keeps the confirm-locally line", /confirm/i.test(shareText) && shareText.indexOf(ACTIVITIES.confirmationLine) !== -1, "confirm-locally line missing");
+check("the share message says it is not an official document", /not an official document/i.test(shareText), "prototype disclaimer missing");
+check("the share message names no rupee amount", !/₹|rs\.?\s*\d|inr/i.test(shareText), "a rupee figure in the share text");
+// The prepared date legitimately carries a year, so it is removed before the
+// deadline check. What this is guarding against is an invented scheme deadline
+// hiding in the options or questions, not the date the farmer made the plan.
+var shareNoDate = shareText.split(shareInput.dateLabel).join("");
+check("the share message gives no deadline year", !/\b(19|20)\d{2}\b/.test(shareNoDate), "a year in the share text");
+check("the share message names no amount word", !/lakh|crore/i.test(shareText), "an amount word in the share text");
+check("the share message uses no em dash", !/\u2014/.test(shareText), "an em dash in the share text");
+
+// A long question list is trimmed to a readable length, with a plain note that
+// more are on the card, so the message never turns into a wall of text.
+var manyQuestions = [];
+for (var qi = 0; qi < 9; qi++) manyQuestions.push({ text: "Question number " + (qi + 1) + "?", ticked: false });
+var trimmed = SHARE.build({ reference: "R", options: [], questions: manyQuestions, confirmLine: "" });
+check("the share message trims a long question list", trimmed.indexOf("Question number 6") === -1, "a sixth question slipped through");
+check("the share message says more are on the card", /more on the printed card/.test(trimmed), "the trim note is missing");
+
+// The wa.me link carries the text, encoded, with no backend or short-link
+// service anywhere in the path.
+var waLink = SHARE.waUrl(shareText);
+check("the WhatsApp link is a wa.me link", waLink.indexOf("https://wa.me/?text=") === 0, "not a wa.me link");
+check("the WhatsApp link carries the reference", decodeURIComponent(waLink).indexOf("MLMP-PUL-3K-8F2C") !== -1, "reference not in the link");
+
+/* ---- Language foundation ---- */
+
+// The foundation ships English only. The switcher must stay hidden (available()
+// returns one language) until a translator registers and marks a second one
+// ready, and nothing machine-made is ever marked ready by the module itself.
+console.log("language foundation");
+check("the messages module loads", !!MSG, "no MLMP_MESSAGES");
+check("English is the only ready language at ship time", MSG.available().length === 1 && MSG.available()[0].code === "en", "more than English is offered");
+check("t() returns the English string", MSG.t("home.start") === "Start a land plan", MSG.t("home.start"));
+check("t() falls back to the key for an unknown string", MSG.t("no.such.key") === "no.such.key", "unknown key did not fall back");
+check("every critical-path key resolves in English", ["nav.home", "nav.plan", "home.title", "home.lead", "home.start", "home.demo", "home.note", "home.points.enterTitle", "common.confirmLocally", "common.notOfficial"].every(function (k) { return MSG.t(k) !== k; }), "a critical key is missing its English value");
+
+// A translator's path: register a full set, mark it ready, and the switcher
+// offers it. This is the mechanism a real translator uses, exercised here so
+// the plumbing is proven without shipping an unfinished language.
+MSG.register("ur", { "home.start": "زمینی منصوبہ شروع کریں", "nav.home": "ہوم" });
+check("a registered but unready language is not offered", MSG.available().length === 1, "an unready language appeared in the switcher");
+MSG.markReady("ur", true);
+check("a ready language is offered in the switcher", MSG.available().length === 2, "a ready language did not appear");
+MSG.set("ur");
+check("t() returns the translated string", MSG.t("home.start") === "زمینی منصوبہ شروع کریں", MSG.t("home.start"));
+check("t() falls back to English for an untranslated key", MSG.t("home.lead") === "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and a one-page card to take to the office.", "an untranslated key did not fall back to English");
+MSG.set("en");
 
 /* ---- Report ---- */
 
