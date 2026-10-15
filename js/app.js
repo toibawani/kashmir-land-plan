@@ -1004,7 +1004,7 @@
           "</div>" +
           renderCalendar(a) +
           '<div class="option-actions">' +
-          '<button type="button" class="btn btn-toggle" data-interest="' +
+          '<button type="button" class="btn btn-secondary btn-toggle" data-interest="' +
           a.id +
           '" aria-pressed="' +
           (isInterested ? "true" : "false") +

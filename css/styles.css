@@ -13,7 +13,9 @@
   --color-border: #d4d0c4;
   --color-accent: #3d5a3d;
   --color-accent-hover: #2f4630;
+  --color-accent-pressed: #263c26;
   --color-accent-soft: #e8efe6;
+  --color-accent-soft-hover: #d6dfd3;
   --color-surface-alt: #f2f4ef;
   --color-error: #8b3a2a;
   /* Calendar phase tints. Each is a light ground with dark text on it, so a
@@ -41,7 +43,6 @@
   --space-8: 64px;
   --font-sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
   --font-serif: "Source Serif 4", Georgia, serif;
-  --shadow: 0 1px 3px rgba(26, 31, 26, 0.08);
   --max-width: 720px;
   --max-wide: 960px;
 }
@@ -132,12 +133,29 @@ body {
   font-size: 1.05rem;
 }
 
+/* The header mark is a plot tile, not a squircle. Square corners with a single
+   rounded radius make it read as a piece of ground at a glance, and the pale
+   furrow across the lower third is the one detail that ties it to the subject
+   without adding decoration. Flat fill only, and the line is a pseudo-element
+   so it is never a gradient. */
 .logo-mark {
   width: 28px;
   height: 28px;
   background: var(--color-accent);
-  border-radius: 50% 50% 40% 60%;
+  border-radius: 6px;
   flex-shrink: 0;
+  position: relative;
+}
+
+.logo-mark::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 7px;
+  height: 2px;
+  background: var(--color-accent-soft);
+  border-radius: 1px;
 }
 
 .logo-text {
@@ -321,9 +339,23 @@ main {
   padding: var(--space-4);
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
+  position: relative;
 }
 
-.point h2 {
+/* A pale step number sits above the heading. It is the same detail the form
+   itself uses, so the home page reads as the start of a sequence rather than
+   as two floating facts. The number is decorative: the heading carries the
+   meaning, and the copy below it never depends on the count. */
+.point-num {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.point h3 {
   font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 600;
@@ -359,7 +391,14 @@ main {
   max-width: 62ch;
 }
 
-/* Buttons */
+/* Buttons
+   The face, the hover and the press are three separate states, and all three
+   are named here. A hover alone is a rumour that something is possible; a
+   press is the thing actually happening, and on a phone that is the moment a
+   farmer's thumb is committed. So each variant darkens a shade on hover and
+   darkens again on active, and every one lifts a hair. The accent colour is
+   declared once, on .btn-primary, and the size-only variants below inherit it
+   rather than repeating it, so there is one place to change the green. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -373,7 +412,15 @@ main {
   border: 2px solid transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.12s ease, border-color 0.12s ease,
+    color 0.12s ease, transform 0.08s ease;
+}
+
+/* The only transform in the app, and only by a pixel. It is what a pressed
+   surface does, and it keeps the press state from looking like a hover that
+   went wrong. Transforms do not trigger reflow, so nothing on the page moves. */
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn:focus-visible {
@@ -401,6 +448,20 @@ a:focus-visible {
   border-color: var(--color-accent-hover);
 }
 
+.btn-primary:active {
+  background: var(--color-accent-pressed);
+  border-color: var(--color-accent-pressed);
+}
+
+/* A primary button that is a toggle, such as the read-aloud control, shows its
+   running state by pressing in rather than by disappearing into the hover
+   shade. The same rule covers every primary toggle, so a new one needs no
+   extra colour. */
+.btn-primary[aria-pressed="true"] {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
 .btn-secondary {
   background: var(--color-surface);
   color: var(--color-accent);
@@ -412,7 +473,14 @@ a:focus-visible {
   border-color: var(--color-accent);
 }
 
-/* Low-emphasis action for save, reset, and other secondary utilities. */
+.btn-secondary:active {
+  background: var(--color-accent-soft-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* Low-emphasis action for save, reset, and other secondary utilities. It keeps
+   its underline until the finger is on it, then fills like the others, because
+   a pressed quiet button should not look like a link that changed its mind. */
 .btn-quiet {
   min-height: 44px;
   padding: 0 var(--space-3);
@@ -430,27 +498,21 @@ a:focus-visible {
   text-decoration: none;
 }
 
+.btn-quiet:active {
+  background: var(--color-accent-soft-hover);
+  border-color: var(--color-accent-hover);
+  color: var(--color-accent-hover);
+}
+
 /* The read-aloud controls are the biggest buttons in the app on purpose: the
    farmer reaching for them is often listening, not looking, and may be doing
    both poorly in bright sun. Big tap target, short calm label, and a spoken
    status line that names the section being read. No icons, no emoji, the words
-   say what happens. */
+   say what happens. The size is the only thing that sets them apart; the
+   colour comes from .btn-primary, above. */
 .btn-read {
   min-height: 56px;
   font-size: 1.1rem;
-  background: var(--color-accent);
-  color: #fff;
-  border-color: var(--color-accent);
-}
-
-.btn-read:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-}
-
-.btn-read[aria-pressed="true"] {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
 }
 
 .read-controls {
@@ -1299,29 +1361,14 @@ select:focus {
   border-top: 1px solid var(--color-border);
 }
 
-/* Considered hover states rather than an opacity fade. */
+/* The "follow this up" toggle on each option card. It is a secondary button
+   with a tighter border and a bolder label, so it reads as a choice rather than
+   a navigation step. Its colours come from .btn-secondary and its running
+   state from .btn-primary[aria-pressed="true"], so this block only says what
+   is different. Hover and press are inherited and stay consistent. */
 .btn-toggle {
-  background: var(--color-surface);
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
+  border-width: 1px;
   font-weight: 600;
-}
-
-.btn-toggle:hover {
-  background: var(--color-accent-soft);
-  color: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-}
-
-.btn-toggle[aria-pressed="true"] {
-  background: var(--color-accent);
-  color: #fff;
-  border-color: var(--color-accent);
-}
-
-.btn-toggle[aria-pressed="true"]:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
 }
 
 /* Typical year. Twelve cells that tint by phase, so the shape of the year
@@ -2291,12 +2338,12 @@ select:focus {
   margin-top: 0;
 }
 
-.visit-hero-actions .btn-primary {
-  min-height: 3.25rem;
-  font-size: 1.05rem;
-}
-
+/* The single large primary action on a screen. It is taller than the standard
+   48px floor and a touch wider, because it is the one a farmer commits to with
+   a whole hand rather than a thumb. Size only: the green comes from
+   .btn-primary, so this and the press state stay in step. */
 .btn-lg {
+  min-height: 3.25rem;
   padding: var(--space-3) var(--space-5);
   font-size: 1.05rem;
 }
