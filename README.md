@@ -93,6 +93,27 @@ Once a review is recorded, every screen changes to say "Reviewed by [name], [des
 
 If only some of the suggestions on screen have been checked, the app says that instead of rounding up.
 
+## What to do next
+
+The code is ready. The remaining work is human, and it starts with one
+conversation:
+
+1. Take `REVIEW_SHEET.md` (or the activity list) to a local agriculture
+   or horticulture officer, or to a Kisan Khidmat Ghar.
+2. Ask them to mark anything wrong for the district, and to add their
+   name, role and the date beside their comments.
+3. Bring the comments back. The maintainer then updates the review
+   fields in `js/catalogue.js` (`reviewStatus`, `reviewedBy`,
+   `designation`, `reviewedOn`), following `REVIEW.md`.
+
+Until an officer has actually replied, the catalogue stays marked "not
+yet reviewed" and every screen keeps saying so. Do not mark it reviewed
+before then.
+
+The open items are tracked as GitHub issues: #1 officer catalogue
+review, #2 agronomist check of the generated questions and timing notes,
+and #3 translation.
+
 ## Important disclaimer
 
 This app does **not**:
@@ -241,7 +262,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 - Any crop or variety suitability claim needs local advice. The app cannot tell whether a particular piece of ground suits saffron or anything else.
 - The scheme list needs the current official position for each district, checked at the time it is shown.
 - The unit conversions used for the size bands (kanal, acre, hectare, marla) are approximate, and local usage varies.
-- The text is English only. Real use would need Kashmiri, Dogri, Urdu and Hindi, checked by fluent speakers.
+- The text is English only. Real use would need Kashmiri, Dogri, Urdu and Hindi, checked by fluent speakers. None of it has been machine-translated, and none should be presented as final. Before that work starts, the UI strings would need pulling out of `index.html` and the `js` files into one place (a small key/value map per language), so a translator works on a list rather than on the markup. That extraction is deliberately not done yet: it is a separate piece of work, and doing it half-way would be worse than not starting.
 - Any use with real farmer data would need a privacy review first.
 - An installed copy holds its own cached files. The service worker deletes caches from earlier versions when it updates, but a release habit of bumping `CACHE_VERSION` in `sw.js` is what keeps that honest.
 
