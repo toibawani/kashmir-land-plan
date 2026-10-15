@@ -162,6 +162,38 @@ body {
   letter-spacing: -0.01em;
 }
 
+/* The language switcher sits in the header, before the menu button. It is
+   hidden until a translator has registered a second language, so on the
+   shipped English-only app it takes no space and draws no attention. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+}
+
+.lang-switch[hidden] {
+  display: none;
+}
+
+#lang-select {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.5rem;
+  min-height: 36px;
+}
+
+#lang-select:hover {
+  border-color: var(--color-accent);
+}
+
+#lang-select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
 .nav-toggle {
   display: none;
   background: none;
@@ -316,9 +348,12 @@ main {
 }
 
 .hero-note {
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  margin: 0;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  max-width: 36em;
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
 .home-points {
@@ -2377,6 +2412,44 @@ select:focus {
    the stop button keeps its size and the status line is given a little room. */
 #screen-visit.is-visit-mode .read-controls {
   margin-top: var(--space-3);
+}
+
+/* The exit control is the one thing a farmer needs while standing at the
+   counter, so in visit mode it becomes a fixed bar at the bottom of the
+   screen. It never scrolls away, it is a large tap target, and it is the
+   only fixed element in the app, used only for this moment. */
+#screen-visit.is-visit-mode .visit-mode-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  margin: 0;
+  padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+#screen-visit.is-visit-mode .visit-mode-bar .btn {
+  width: 100%;
+}
+
+/* Room at the foot of the card so the fixed bar never covers the last line
+   of the notes section. */
+#screen-visit.is-visit-mode .visit-card {
+  margin-bottom: calc(64px + var(--space-5));
+}
+
+/* In visit mode the read-aloud button is the primary way to use the card
+   hands-free, so it is given the large primary treatment and full width. */
+#screen-visit.is-visit-mode #btn-visit-read {
+  width: 100%;
+  min-height: 56px;
+  font-size: 1.05rem;
+}
+
+#screen-visit.is-visit-mode .read-controls .results-actions {
+  margin-bottom: var(--space-2);
 }
 
 /* -- What to expect at the office -- */

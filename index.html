@@ -30,16 +30,20 @@
         <span class="logo-text">My Land, My Plan</span>
       </a>
       <nav class="nav" aria-label="Main">
+        <div class="lang-switch" id="lang-switch" hidden>
+          <label class="sr-only" for="lang-select">Language</label>
+          <select id="lang-select"></select>
+        </div>
         <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
           <span class="nav-toggle-bar"></span>
           <span class="sr-only">Menu</span>
         </button>
         <ul class="nav-menu" id="nav-menu">
-          <li><a href="#home" data-nav="home">Home</a></li>
-          <li><a href="#plan" data-nav="plan">Start plan</a></li>
-          <li><a href="#weather" data-nav="weather">Weather</a></li>
-          <li><a href="#plans" data-nav="plans">My plans</a></li>
-          <li><a href="#about" data-nav="about">About</a></li>
+          <li><a href="#home" data-nav="home" data-i18n="nav.home">Home</a></li>
+          <li><a href="#plan" data-nav="plan" data-i18n="nav.plan">Start plan</a></li>
+          <li><a href="#weather" data-nav="weather" data-i18n="nav.weather">Weather</a></li>
+          <li><a href="#plans" data-nav="plans" data-i18n="nav.plans">My plans</a></li>
+          <li><a href="#about" data-nav="about" data-i18n="nav.about">About</a></li>
         </ul>
       </nav>
     </div>
@@ -50,28 +54,32 @@
     <section id="screen-home" class="screen screen-active" aria-labelledby="home-title">
       <div class="container">
         <div class="hero">
-          <p class="eyebrow">For farmers in Jammu and Kashmir</p>
-          <h1 id="home-title">My Land, My Plan</h1>
-          <p class="hero-lead">
-            My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.
+          <p class="eyebrow" data-i18n="home.eyebrow">For farmers in Jammu and Kashmir</p>
+          <h1 id="home-title" data-i18n="home.title">My Land, My Plan</h1>
+          <p class="hero-lead" data-i18n="home.lead">
+            Answer a few questions about a plot you are not using, and get activity options to explore,
+            a month-by-month guide, questions to ask, and a one-page card to take to the office.
           </p>
           <div class="hero-actions">
-            <button type="button" class="btn btn-primary" id="btn-start">Start a land plan</button>
-            <button type="button" class="btn btn-secondary" id="btn-demo">Try sample journey</button>
+            <button type="button" class="btn btn-primary btn-lg" id="btn-start" data-i18n="home.start">Start a land plan</button>
+            <button type="button" class="btn btn-secondary" id="btn-demo" data-i18n="home.demo">Try sample journey</button>
           </div>
-          <p class="hero-note">No account needed. Your details stay on this device only.</p>
+          <p class="hero-note" data-i18n="home.note">
+            A working prototype, not a government service. It does not approve schemes or judge your
+            land. Everything it suggests is a question to raise with your local agriculture office.
+          </p>
         </div>
 
         <div class="home-points">
           <div class="point">
             <span class="point-num" aria-hidden="true">1</span>
-            <h3>What you enter</h3>
-            <p>District, village, plot size, water access, terrain, and the main constraint you face. Soil test is optional.</p>
+            <h3 data-i18n="home.points.enterTitle">What you enter</h3>
+            <p data-i18n="home.points.enterBody">District, village, plot size, water access, terrain, and the main constraint you face. Soil test is optional.</p>
           </div>
           <div class="point">
             <span class="point-num" aria-hidden="true">2</span>
-            <h3>What you get</h3>
-            <p>Two or three activity options to explore, a typical year for each, a comparison, a next-step checklist, and the official portals to check.</p>
+            <h3 data-i18n="home.points.getTitle">What you get</h3>
+            <p data-i18n="home.points.getBody">Two or three activity options to explore, a typical year for each, a comparison, a next-step checklist, and the official portals to check.</p>
           </div>
         </div>
 
@@ -404,6 +412,7 @@
           </div>
           <div class="results-actions">
             <button type="button" class="btn btn-secondary" id="btn-print">Print or save as PDF</button>
+            <button type="button" class="btn btn-secondary" id="btn-share-summary">Share on WhatsApp</button>
             <button type="button" class="btn btn-secondary" id="btn-download-text">Download as text</button>
             <button type="button" class="btn btn-secondary" id="btn-download-html">Download for a browser</button>
             <button type="button" class="btn btn-secondary" id="btn-copy">Copy text</button>
@@ -480,6 +489,7 @@
             </p>
             <div class="results-actions visit-hero-actions">
               <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print">Print or save as PDF</button>
+              <button type="button" class="btn btn-secondary" id="btn-visit-share">Share on WhatsApp</button>
               <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download">Download as text</button>
             </div>
             <div class="read-controls">
@@ -498,10 +508,10 @@
               <button type="button" class="btn btn-secondary" id="btn-visit-mode" aria-pressed="false">Visit mode</button>
             </div>
             <p class="visit-mode-hint visit-mode-hide" id="visit-mode-hint">
-              Visit mode hides everything except the card, the questions and the reading controls, so it is easy to use while you stand with an officer.
+              Visit mode keeps only the card, the questions to tick, the reading controls, and the buttons to print, share or finish. Everything else is hidden, so the phone is easy to use while you stand with an officer.
             </p>
-            <div class="results-actions" id="visit-mode-exit-row" hidden>
-              <button type="button" class="btn btn-secondary" id="btn-visit-mode-exit">Leave visit mode</button>
+            <div class="results-actions visit-mode-bar" id="visit-mode-exit-row" hidden>
+              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-mode-exit">Done, leave visit mode</button>
             </div>
           </div>
         <div class="visit-card" id="visit-card" role="region" aria-label="Office visit card"></div>
@@ -713,6 +723,8 @@
   <script src="js/offline.js"></script>
   <script src="js/visitfit.js"></script>
   <script src="js/office.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/messages.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

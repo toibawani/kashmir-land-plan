@@ -26,6 +26,8 @@
   var OFFLINE = window.MLMP_OFFLINE;
   var FIT = window.MLMP_FIT;
   var OFFICE = window.MLMP_OFFICE;
+  var SHARE = window.MLMP_SHARE;
+  var MSG = window.MLMP_MESSAGES;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -2091,6 +2093,108 @@
     setStatus("visit-status", "Downloaded " + filename + ". Print the page instead if you want it on paper.");
   }
 
+  // ------------------------------------------------------------ Sharing out
+
+  /**
+   * The plain object the share module turns into a WhatsApp-sized message.
+   * Built from state, the same source as the visit card, so what is shared
+   * and what is on screen describe the same plan. The review text and the
+   * confirmation line are passed through unchanged: the message must not
+   * soften or drop them, because a message is exactly where a farmer is most
+   * likely to forward something that looks official.
+   */
+  function buildShareInput() {
+    var d = state.data;
+    var questions = currentQuestions().map(function (q) {
+      return {
+        text: q.text,
+        ticked: !!(state.coveredQuestions && state.coveredQuestions[q.id]),
+      };
+    });
+    return {
+      reference: currentPlanReference(),
+      planName: state.currentPlanName || "",
+      dateLabel: formatVisitDate(),
+      isDemo: state.isDemo,
+      answers: {
+        district: d.district || "",
+        village: d.village || "",
+        size: d.size || "",
+        unit: d.unit || "",
+        water: labelWater(d.water),
+        terrain: labelTerrain(d.terrain),
+        constraint: labelConstraint(d.constraint),
+      },
+      options: visitOptions().map(function (o) {
+        return { title: o.activity.title, marked: !!state.interested[o.activity.id] };
+      }),
+      questions: questions,
+      reviewText: currentReview().text,
+      confirmLine: ACTIVITIES.confirmationLine,
+    };
+  }
+
+  function buildShareText() {
+    return SHARE && SHARE.build ? SHARE.build(buildShareInput()) : "";
+  }
+
+  /**
+   * Share the visit card. Two paths, in order of what a farmer's phone
+   * actually offers:
+   *   1. navigator.share, which opens the system share sheet. On a phone
+   *      that is WhatsApp, Messages, email, anything, with no copy step.
+   *   2. The clipboard, so the farmer can open WhatsApp and paste. Older
+   *      phones and desktop browsers land here.
+   * A share sheet can be dismissed as easily as opened, so that is not an
+   * error and is not reported as one. Only a real failure is, and it points
+   * at the fallbacks that always work: print, or download as text.
+   */
+  function shareVisitCard() {
+    sharePlan("visit-status");
+  }
+
+  function sharePlan(statusId) {
+    statusId = statusId || "copy-status";
+    if (!state.planReady || !state.options.length) {
+      setStatus(statusId, "Finish the plot details first, then the plan can be shared.");
+      return;
+    }
+    var text = buildShareText();
+    if (!text) {
+      setStatus(statusId, "The plan could not be prepared for sharing. Print it or download it as text instead.");
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({ title: "My land plan", text: text }).then(
+        function () {
+          /* dismissed or sent: nothing to say */
+        },
+        function () {
+          // A cancel arrives here too, so fall back quietly to the clipboard
+          // rather than shouting about something the farmer meant to do.
+          copyShareText(text, statusId);
+        }
+      );
+    } else {
+      copyShareText(text, statusId);
+    }
+  }
+
+  function copyShareText(text, statusId) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () {
+          setStatus(statusId, "Copied. Open WhatsApp, paste it into a chat, and send.");
+        },
+        function () {
+          setStatus(statusId, "Could not copy automatically. Use Download as text, then paste that file.");
+        }
+      );
+    } else {
+      setStatus(statusId, "This browser will not copy automatically. Use Download as text instead.");
+    }
+  }
+
   // ------------------------------------------------------------ Reading out
 
   /**
@@ -3554,6 +3658,44 @@
   }
 
   /**
+   * The language switcher. It appears only when more than one language is
+   * marked ready by a translator. With English alone, as it ships, the
+   * control stays hidden: a switcher that offers one choice is noise, and
+   * the honest state of the app today is English only. The strings painted
+   * here are the same English already in the markup, so turning a language
+   * on later changes the words and nothing else.
+   */
+  function initLanguage() {
+    if (!MSG) return;
+    var wrap = $("#lang-switch");
+    var select = $("#lang-select");
+    var langs = MSG.available();
+    if (wrap && select && langs.length > 1) {
+      wrap.hidden = false;
+      select.innerHTML = langs
+        .map(function (l) {
+          var sel = l.code === MSG.get() ? " selected" : "";
+          return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(l.label) + "</option>";
+        })
+        .join("");
+      select.addEventListener("change", function () {
+        MSG.set(select.value);
+        MSG.apply();
+        if (MSG.dir(select.value) === "rtl") {
+          document.documentElement.setAttribute("dir", "rtl");
+        } else {
+          document.documentElement.removeAttribute("dir");
+        }
+        document.documentElement.setAttribute("lang", select.value);
+      });
+    }
+    // Paint the critical-path strings. In English this is a no-op on screen
+    // (the markup already holds the same words), but it keeps the markup and
+    // the module in step, so a translator's work shows up with no code change.
+    MSG.apply();
+  }
+
+  /**
    * The strip at the top says the short version. The panel on the home page
    * says the whole answer, listing what still works beside the one thing that
    * does not. Both read the same module, so they can never disagree about
@@ -3796,6 +3938,10 @@
           done("This browser will not copy automatically. Use Download instead.");
         }
       });
+    $("#btn-share-summary") &&
+      $("#btn-share-summary").addEventListener("click", function () {
+        sharePlan("copy-status");
+      });
 
     $("#btn-done") && $("#btn-done").addEventListener("click", goHome);
     $("#btn-summary-back") &&
@@ -3907,6 +4053,7 @@
       });
     }
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
+    $("#btn-visit-share") && $("#btn-visit-share").addEventListener("click", shareVisitCard);
     $("#btn-visit-mode") &&
       $("#btn-visit-mode").addEventListener("click", function () {
         setVisitMode(!visitModeOn());
@@ -4245,6 +4392,7 @@
 
     bind();
     setAboutReviewStatus();
+    initLanguage();
     updateOfflineBanner();
     initInstall();
     initReadButtons();
