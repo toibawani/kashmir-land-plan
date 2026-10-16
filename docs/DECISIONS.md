@@ -17,3 +17,23 @@ The decisions are:
 4. [Officer review is a conversation, not a code change](#4-officer-review-is-a-conversation-not-a-code-change)
 5. [The visit card is the artefact](#5-the-visit-card-is-the-artefact)
 6. [What has deliberately not been decided yet](#6-what-has-deliberately-not-been-decided-yet)
+
+## 1. There is no backend
+
+**Decided:** the app is a static folder. `index.html`, `css/`, `js/` and a
+service worker, served by anything. No server, no database, no accounts.
+
+**Why:** the only data worth protecting here is a farmer's plot details, and a
+server holding them properly needs per-user separation,a real session, a checked tenant boundary, a content security policy and an
+authentication check before every read and write. A prototype cannot ship those credibly, and
+half-built access control is worse than none. Keeping every answer on the
+device removes the risk instead of managing it.
+
+**What it costs:** no accounts, so a plan cannot follow a farmer to another
+phone, and clearing the browser loses it. Saved plans live in `localStorage`
+(`mlmp_plans_v1`) and the draft in `mlmp_draft_v3`. The honest answer is that
+this is a device, not a locker — which is why the plan can be printed,
+downloaded and shared instead (see [5](#5-the-visit-card-is-the-artefact)).
+
+**What would change it:** a real need to serve many farmers centrally, with the
+security work above budgeted as part of the same job, not after it.
