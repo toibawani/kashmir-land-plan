@@ -20,6 +20,12 @@ npm run build # pre-flight check: scripts parse, references resolve, offline cac
 npm test      # the build check plus 165 behavioural checks
 ```
 
+The README screenshots are regenerated from the running app, not pasted in by
+hand: `npm run screenshots` drives a headless Chrome at a phone viewport. It
+needs `npm start` and a Chrome started with `--remote-debugging-port=9333`
+running first, and it says so if either is missing. The build check fails if the
+README points at an image that is not on disk.
+
 Open `index.html` directly from disk, or serve the folder with any static server:
 
 ```bash
