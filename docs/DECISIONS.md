@@ -80,3 +80,28 @@ itself rather than leaving the reader to work it out.
 **What would change it:** nothing about caching. A stored reading could be shown
 in the future only if it were labelled with the time it was taken, in the same
 size as the reading itself.
+
+## 4. Officer review is a conversation, not a code change
+
+**Decided:** an agriculture officer never edits the app. They read the activity
+list (`REVIEW_SHEET.md`) and reply by message, on paper, in person or by email.
+The maintainer then records the review afterwards by filling in four fields on
+the activity in `js/catalogue.js`: `reviewStatus`, `reviewedBy`, `designation`
+and `reviewedOn`. `REVIEW.md` describes that step.
+
+**Why:** the officer's time is the scarce thing here, and it should not be spent
+in an editor, on a device, with a syntax error waiting to happen. Asking a
+district officer to open a pull request would end the review before it started.
+The catalogue is kept apart from the scoring and rendering code for the same
+reason: it has to be readable on its own.
+
+**What it costs:** a review is recorded one maintainer step after the
+conversation, so there is a window where the reply exists and the app does not
+show it yet. That is the honest direction to be late in: the failure mode is
+"says not reviewed when it was", which the app states on screen, rather than
+claiming a review nobody gave.
+
+**Consequences in the build:** the pre-flight check refuses a half-recorded
+review. A `reviewed` flag with no name or no date fails `npm run build`, so a
+sign-off cannot exist with no officer behind it, and nothing may be marked
+reviewed on someone's behalf.
