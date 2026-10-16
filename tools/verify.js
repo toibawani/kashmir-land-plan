@@ -402,6 +402,119 @@ if (!readmeImages.length) {
   notes.push("README.md shows no images; run `npm run screenshots` to capture the four field screens");
 }
 
+/* ---- 8. The honesty wording must survive ---- */
+
+// These sentences are the product, not decoration. Everything else here is
+// checked, could be rewritten without harm; these are the lines that stop a
+// suggestion being read as an instruction, and they are pinned literally so
+// that weakening one is a build failure rather than a quiet edit. The expected
+// text lives here, in the checker, and not read out of the app, because a test
+// that asks the app what it says will always agree with it.
+var REQUIRED_WORDING = {
+  confirm: "Always confirm locally before acting.",
+  stillConfirm: "Still confirm locally before acting.",
+  notReviewedBy: "Not yet reviewed by an agriculture officer.",
+  notReviewedRefusal: "Treat every suggestion as a question to discuss, not as advice to act on.",
+  confirmationLine:
+    "Confirm suitability, costs and current scheme rules with your local agriculture office or Kisan Khidmat Ghar before acting.",
+};
+
+function sentenceCount(text, sentence) {
+  return String(text).split(sentence).length - 1;
+}
+
+if (catalogue && activities) {
+  // 1. The catalogue's shared line, which every option and every scheme entry
+  //    carries. A vague "check locally" is not the same promise as this one.
+  if (catalogue.confirmationLine !== REQUIRED_WORDING.confirmationLine) {
+    failures.push(
+      "js/catalogue.js: the shared confirmation line no longer matches the pinned wording.\n" +
+        "      expected: " + REQUIRED_WORDING.confirmationLine + "\n" +
+        "      found:    " + catalogue.confirmationLine
+    );
+  }
+
+  // 2. Each review state must keep its own instruction. "not-reviewed" and
+  //    "mixed" keep the standing sentence; a recorded review keeps the shorter
+  //    one, which is the whole point of recording a review: the officer checked
+  //    the list, never the farmer's plot.
+  var notReviewedText = activities.formatReview({ reviewStatus: "not-reviewed" }).text;
+  var reviewedText = activities.formatReview({
+    reviewStatus: "reviewed",
+    reviewedBy: "Test Officer",
+    designation: "Test Designation",
+    reviewedOn: "2026-01-01",
+  }).text;
+  var mixedText = activities.reviewFor([
+    { reviewStatus: "reviewed", reviewedBy: "Test Officer", reviewedOn: "2026-01-01" },
+    {},
+  ]).text;
+
+  [
+    ["not-reviewed", notReviewedText, REQUIRED_WORDING.confirm],
+    ["mixed", mixedText, REQUIRED_WORDING.confirm],
+    ["reviewed", reviewedText, REQUIRED_WORDING.stillConfirm],
+  ].forEach(function (row) {
+    var state = row[0];
+    var text = row[1];
+    var sentence = row[2];
+    if (text.indexOf(sentence) === -1) {
+      failures.push(
+        'The "' + state + '" review wording dropped "' + sentence + '", so it no longer tells the farmer to confirm locally. A review must never remove that instruction'
+      );
+    }
+  });
+
+  if (notReviewedText.indexOf(REQUIRED_WORDING.notReviewedBy) === -1) {
+    failures.push(
+      'The unreviewed wording no longer says "' + REQUIRED_WORDING.notReviewedBy + '", so an unreviewed catalogue is not stated as unreviewed'
+    );
+  }
+  if (notReviewedText.indexOf(REQUIRED_WORDING.notReviewedRefusal) === -1) {
+    failures.push(
+      'The unreviewed wording no longer says "' + REQUIRED_WORDING.notReviewedRefusal + '", which is what stops a suggestion reading as advice'
+    );
+  }
+
+  // 3. The wording has to reach the surfaces, not merely exist. A perfect
+  //    sentence that no screen paints is the failure this checks for.
+  var appCode = fs.readFileSync(path.join(root, "js", "app.js"), "utf8");
+  ["review-banner", "compare-review", "summary-review"].forEach(function (surfaceId) {
+    if (pageIds.indexOf(surfaceId) === -1) {
+      failures.push(
+        "index.html no longer contains #" + surfaceId + ", so that screen would show no review status at all"
+      );
+    }
+    if (appCode.indexOf('fillReviewSlot("' + surfaceId + '"') === -1) {
+      failures.push(
+        'js/app.js no longer fills #' + surfaceId + ' with the review wording, so that screen would drop the honesty line it is supposed to carry'
+      );
+    }
+  });
+
+  if (pageIds.indexOf("about-review-status") === -1) {
+    failures.push("index.html no longer contains #about-review-status, so the About page would state no review status");
+  }
+  if (appCode.indexOf("#about-review-status") === -1 || appCode.indexOf("setAboutReviewStatus") === -1) {
+    failures.push("js/app.js no longer writes the catalogue review status into #about-review-status");
+  }
+
+  // The visit card is the page that reaches the office, so the review line has
+  // to be in the card itself, not only in the screen it was made from.
+  if (appCode.indexOf("reviewBannerHtml(currentReview())") === -1) {
+    failures.push(
+      "js/app.js no longer builds the visit card with the review wording, and the visit card is the page that leaves the phone"
+    );
+  }
+
+  // A review that has been recorded must never be able to silence the line. If
+  // anyone ever makes the confirm sentence conditional, this catches the shape
+  // of that mistake: both wordings must contain it unconditionally.
+  if (sentenceCount(reviewedText, REQUIRED_WORDING.stillConfirm) !== 1) {
+    failures.push('The "reviewed" wording must contain "' + REQUIRED_WORDING.stillConfirm + '" exactly once');
+  }
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
