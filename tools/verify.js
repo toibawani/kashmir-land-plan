@@ -22,10 +22,15 @@
 var fs = require("fs");
 var path = require("path");
 var vm = require("vm");
+var claims = require("./claims.js");
 
 var root = path.resolve(__dirname, "..");
 var failures = [];
 var notes = [];
+
+// Read once: the wording and copy checks both ask what the interface actually
+// does with the text, not only whether the text exists.
+var appCode = fs.readFileSync(path.join(root, "js", "app.js"), "utf8");
 
 function rel(p) {
   return path.relative(root, p) || p;
@@ -137,7 +142,10 @@ try {
   // The order is load order, not luck: activities.js refuses to load without
   // the catalogue already on `window`, so the files are named in the same
   // sequence index.html loads them in.
-  ["regions.js", "catalogue.js", "activities.js"]
+  // Order is load order: activities.js refuses to load without the catalogue
+  // already on `window`. schemes.js is standalone, and is loaded because the
+  // support copy is scanned further down.
+  ["regions.js", "catalogue.js", "activities.js", "schemes.js"]
     .map(function (name) {
       return path.join(root, "js", name);
     })
@@ -557,7 +565,6 @@ if (catalogue && activities) {
 
   // 3. The wording has to reach the surfaces, not merely exist. A perfect
   //    sentence that no screen paints is the failure this checks for.
-  var appCode = fs.readFileSync(path.join(root, "js", "app.js"), "utf8");
   ["review-banner", "compare-review", "summary-review"].forEach(function (surfaceId) {
     if (pageIds.indexOf(surfaceId) === -1) {
       failures.push(
@@ -592,6 +599,102 @@ if (catalogue && activities) {
   if (sentenceCount(reviewedText, REQUIRED_WORDING.stillConfirm) !== 1) {
     failures.push('The "reviewed" wording must contain "' + REQUIRED_WORDING.stillConfirm + '" exactly once');
   }
+}
+
+/* ---- 9. The support copy must make no claim this app cannot back ---- */
+
+// The catalogue and the scheme list are the two places a well-meaning edit
+// would add a figure that reads like an authority: a subsidised rate, an
+// application window, a list of papers to carry. The rule is that none of them
+// may appear at all, so the copy is scanned rather than trusted. The patterns
+// live in tools/claims.js, shared with the behavioural suite so the two cannot
+// disagree about what a claim is.
+//
+// This covers the copy an editor writes. The text the app generates at run
+// time - the questions, the share message, the office panel - is checked in
+// tools/selftest.js, where a sample plan exists to generate it with.
+var SCHEME_CONFIRM_LINE =
+  "Confirm current details, eligibility and documents with the official portal or local agriculture office, or at your Kisan Khidmat Ghar.";
+
+// Fields that are not prose: a URL is an address, not a sentence, and an id is
+// a key. Everything else in these two files is read by a farmer.
+var NOT_PROSE = ["url", "extraUrls", "linkLabel", "id", "appliesTo", "value"];
+
+function proseStrings(node, trail, out) {
+  if (typeof node === "string") {
+    out.push({ where: trail, text: node });
+    return out;
+  }
+  if (Array.isArray(node)) {
+    node.forEach(function (child, i) {
+      proseStrings(child, trail + "[" + i + "]", out);
+    });
+    return out;
+  }
+  if (node && typeof node === "object") {
+    Object.keys(node).forEach(function (key) {
+      if (NOT_PROSE.indexOf(key) !== -1) return;
+      proseStrings(node[key], trail + "." + key, out);
+    });
+  }
+  return out;
+}
+
+if (sandbox.window.MLMP_SCHEMES) {
+  var schemeModule = sandbox.window.MLMP_SCHEMES;
+
+  // The instruction every scheme entry is rendered with. Weakening it is the
+  // quiet way to turn a list of places to ask into a list of promises.
+  if (schemeModule.CONFIRM_LINE !== SCHEME_CONFIRM_LINE) {
+    failures.push(
+      "js/schemes.js: the scheme confirmation line no longer matches the pinned wording.\n" +
+        "      expected: " + SCHEME_CONFIRM_LINE + "\n" +
+        "      found:    " + schemeModule.CONFIRM_LINE
+    );
+  }
+  if (appCode.indexOf("SCHEMES.CONFIRM_LINE") === -1) {
+    failures.push("js/app.js no longer renders the scheme confirmation line, so the entries would read as statements of fact");
+  }
+
+  var schemeCopy = proseStrings(schemeModule.ALL, "js/schemes.js", []);
+  schemeCopy.forEach(function (item) {
+    claims.findClaims(item.text).forEach(function (hit) {
+      failures.push(
+        item.where + " makes a claim this app cannot back: " + claims.describeClaim(hit) + "\n" +
+          "      text: " + item.text.slice(0, 120) + (item.text.length > 120 ? "..." : "")
+      );
+    });
+
+    // Eligibility may be mentioned, but only while refusing to settle it:
+    // either with an instruction to confirm it, or by saying plainly that
+    // working it out is not what this page is for. A bare mention is what turns
+    // into a rule.
+    //
+    // The check is per string, not per entry, because a scheme entry usually
+    // carries an unrelated "Ask the local office..." action, and that word
+    // elsewhere in the same entry must not be allowed to cover for a sentence
+    // that states eligibility on its own.
+    if (
+      /eligib/i.test(item.text) &&
+      !/confirm|ask|rather than|instead of|cannot|never\b/i.test(item.text)
+    ) {
+      failures.push(
+        item.where +
+          " mentions eligibility without telling the farmer to confirm it or saying it is not decided here; eligibility must never read as a rule this app has settled"
+      );
+    }
+  });
+}
+
+if (catalogue) {
+  proseStrings(catalogue, "js/catalogue.js", []).forEach(function (item) {
+    claims.findClaims(item.text).forEach(function (hit) {
+      failures.push(
+        item.where + " makes a claim this app cannot back: " + claims.describeClaim(hit) + "\n" +
+          "      text: " + item.text.slice(0, 120) + (item.text.length > 120 ? "..." : "")
+      );
+    });
+  });
 }
 
 /* ---- Report ---- */
