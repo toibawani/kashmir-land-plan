@@ -284,4 +284,10 @@ None. No new crop, scheme, eligibility, amount or suitability claim was added, s
 
 ## Licence
 
-Prototype code, free to use and modify for the My Land, My Plan concept and related educational work. Do not present it as an official service.
+MIT, in full in [`LICENSE`](LICENSE) and declared in `package.json`. Use it,
+change it, teach with it.
+
+One request that is not a licence term, because a licence cannot carry it:
+this app is not a government service, and it should not be presented as one. If
+you fork it, keep the disclaimer on screen. Every suggestion in it is
+illustrative and unverified until a local agriculture officer says otherwise.
