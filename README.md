@@ -60,55 +60,6 @@ The whole plan works offline after the first visit. Weather is the one part that
 9. Weather near your district
 10. About, sources and limitations
 
-## How this ships (architecture, honestly)
-
-This is a **no-build, dependency-free static PWA**. `npm start` only
-serves the folder; `npm run build` only checks that the scripts parse,
-references resolve and the offline cache is consistent. There is no
-framework, no bundler, no server, no database and no authenticated
-account. A visitor opens a single folder (`index.html`, `css`,
-`js`, `sw.js`) and gets a working app.
-
-**Nothing on this page is a secret and nothing is hidden.** It has no
-keys, no tokens, no API routes and no real-user IDs. Two things a
-visitor's browser touches do reach the internet, and both are public:
-
-1. The two typefaces load from Google Fonts (browser-provided).
-2. The weather screen asks Open-Meteo for the current conditions of a
-   town the farmer names. Nothing about the field, the plot or the plan
-   ever leaves the device.
-
-Because there is no server, this app has no login, no tenant, no shell
-and no service that can return a 403 or respond to an unauthenticated
-user. The honest risks here are the ones a front-end app owns:
-
-- **The weather is live and is never stored.** An old value is never
-  shown as if it were current, and the app explicitly says so rather
-  than inventing an offline reading.
-- **Everything else is local and stays local** once the page has loaded,
-  including the plans, the questions, the ticked boxes and the review
-  status. This is a privacy feature, and it is the reason there is no
-  backend.
-- **The service worker only ever caches the app itself.** It never
-  caches a weather response, and it will not be told to.
-
-If this prototype is ever moved onto a server that holds real farmer
-data, the following must be added before any live data is served:
-per-user data separation (Row Level Security on every table), a
-real session and a tenant boundary, strict CORS, a Content Security
-Policy, security headers, and an explicit authentication check before
-every database read or write. None of that will live in a static folder,
-and none of it should be invented here.
-
-## Tech stack
-
-| Piece | What it is |
-| --- | --- |
-| UI | Plain HTML + CSS + vanilla JavaScript (no framework, no bundler) |
-| Build / test | `node tools/verify.js` (npm run build), `node tools/selftest.js` (npm test) |
-| Assets | Icons as inline SVG + PNG, fonts from Google Fonts (System Family fallback) |
-| Deployment | Static folder served on 127.0.0.1:8080; installable as a PWA |
-
 ## The four kinds of information in this app
 
 They are labelled in the interface, and the same labels are used in the plan you print or download.
@@ -163,6 +114,55 @@ This app does **not**:
 - Provide a field-level forecast, a frost warning or an irrigation schedule
 
 Every option, rating and calendar is labelled as illustrative. The scheme section lists official portals only, and every entry carries the same instruction: confirm current details, eligibility and documents with the official portal or your local agriculture office, or at your Kisan Khidmat Ghar.
+
+## How this ships (architecture, honestly)
+
+This is a **no-build, dependency-free static PWA**. `npm start` only
+serves the folder; `npm run build` only checks that the scripts parse,
+references resolve and the offline cache is consistent. There is no
+framework, no bundler, no server, no database and no authenticated
+account. A visitor opens a single folder (`index.html`, `css`,
+`js`, `sw.js`) and gets a working app.
+
+**Nothing on this page is a secret and nothing is hidden.** It has no
+keys, no tokens, no API routes and no real-user IDs. Two things a
+visitor's browser touches do reach the internet, and both are public:
+
+1. The two typefaces load from Google Fonts (browser-provided).
+2. The weather screen asks Open-Meteo for the current conditions of a
+   town the farmer names. Nothing about the field, the plot or the plan
+   ever leaves the device.
+
+Because there is no server, this app has no login, no tenant, no shell
+and no service that can return a 403 or respond to an unauthenticated
+user. The honest risks here are the ones a front-end app owns:
+
+- **The weather is live and is never stored.** An old value is never
+  shown as if it were current, and the app explicitly says so rather
+  than inventing an offline reading.
+- **Everything else is local and stays local** once the page has loaded,
+  including the plans, the questions, the ticked boxes and the review
+  status. This is a privacy feature, and it is the reason there is no
+  backend.
+- **The service worker only ever caches the app itself.** It never
+  caches a weather response, and it will not be told to.
+
+If this prototype is ever moved onto a server that holds real farmer
+data, the following must be added before any live data is served:
+per-user data separation (Row Level Security on every table), a
+real session and a tenant boundary, strict CORS, a Content Security
+Policy, security headers, and an explicit authentication check before
+every database read or write. None of that will live in a static folder,
+and none of it should be invented here.
+
+## Tech stack
+
+| Piece | What it is |
+| --- | --- |
+| UI | Plain HTML + CSS + vanilla JavaScript (no framework, no bundler) |
+| Build / test | `node tools/verify.js` (npm run build), `node tools/selftest.js` (npm test) |
+| Assets | Icons as inline SVG + PNG, fonts from Google Fonts (System Family fallback) |
+| Deployment | Static folder served on 127.0.0.1:8080; installable as a PWA |
 
 ## Code structure
 
