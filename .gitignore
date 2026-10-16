@@ -1,9 +1,41 @@
+# Editor and OS clutter
+
 .DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+
+# Node
+
 node_modules/
 dist/
 *.log
+
+# Python, for the two helper scripts (tools/make-icons.py, and the
+# one-off review sheet generator at the root)
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Environment files. A real .env is never committed, and neither is any
+# local override, but .env.example stays tracked on purpose so the shape of
+# the expected variables is visible.
+
 .env
-.idea/
-.vscode/
-.freebuff/
+.env.local
+.env.*.local
+
+# Scratch and archives
+
 *.zip
+*.tmp
+*.bak
+*.orig
+
+# Freebuff workspace state
+
+.freebuff/
