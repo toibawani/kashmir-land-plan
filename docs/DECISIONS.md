@@ -37,3 +37,25 @@ downloaded and shared instead (see [5](#5-the-visit-card-is-the-artefact)).
 
 **What would change it:** a real need to serve many farmers centrally, with the
 security work above budgeted as part of the same job, not after it.
+
+## 2. Suggestions stay illustrative
+
+**Decided:** no amounts, no deadlines, no eligibility rules and no document
+lists, anywhere in the app or in anything it prints. Options are framed as
+things to discuss, and every option and every scheme entry carries the same
+instruction: confirm current details, eligibility and documents with the
+official portal or the local agriculture office.
+
+**Why:** those are exactly the facts that change, and this prototype cannot
+verify them. Wrong advice here is not a rendering bug — it is a household
+planting the wrong crop on a budget that cannot absorb it. A page that says
+"about ₹40,000 per kanal" reads like an authority even with a caveat underneath
+it, so the fix is to print no figure rather than to print a warning next to one.
+
+**What it costs:** the app is less impressive than one that answers. It returns
+five options and a list of questions where a competitor returns a number. That
+is deliberate: the questions are what the farmer carries to the office.
+
+**What would change it:** figures confirmed by an officer for a specific
+district, dated, and re-checked on a schedule someone actually owns. Until that
+schedule exists, no figure is safe to print.
