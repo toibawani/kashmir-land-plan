@@ -61,20 +61,40 @@ and none of it should be invented here.
 
 ## Quick start
 
+There is nothing to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
+
 ```sh
-npm install   # no dependencies, but the command is retained for a clean slate
 npm start     # serves the folder at http://127.0.0.1:8080
 npm run build # pre-flight check: scripts parse, references resolve, offline cache consistent
-npm test      # build check plus 165 behavioural checks
+npm test      # the build check plus 165 behavioural checks
 ```
 
-Open `index.html` directly from disk — it works, and the weather screen
-shows its not-available message because it is the only part that needs a
-connection.
+Open `index.html` directly from disk, or serve the folder with any static server:
+
+```bash
+npx serve .
+# or
+python3 -m http.server 8080
+```
+
+Opened from disk (`file://`) the app skips installing its service worker, because browsers only allow one over `http`, and the weather screen shows its "not available right now" message because it is the one part that needs a connection. Served from a local server or a real host, it precaches the plan on the first visit and works offline from then on. To see that, load it once, stop the server, and reload.
 
 No account is required. No personal, financial, or land-identification data is sent to any server. Two honest caveats: the typefaces load from Google Fonts, and the weather screen sends the district you select to Open-Meteo. Everything else stays on the device.
 
 The whole plan works offline after the first visit. Weather is the one part that needs a connection, and the app says so instead of showing an old reading as if it were current.
+
+### What `npm run build` and `npm test` actually check
+
+`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the checks that actually matter here, and it exits non-zero on any problem. It uses only Node built-ins. In order:
+
+- It syntax-checks every JavaScript file the way `node --check` does.
+- It confirms every local reference in `index.html` is on disk.
+- It reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first.
+- It refuses a half-recorded officer review: a "reviewed" flag with no name or no date would look signed off with no officer behind it.
+- It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
+- It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
+
+`npm test` adds `tools/selftest.js`, 165 behavioural checks with no browser and no network, over the parts a farmer never sees fail loudly: the review wording, the catalogue shape, the scheme wording, the generated questions, the saved-plan store, the speech chunker, the QR encoder, the offline guidance, the print fitter and the office panel.
 
 ## The four kinds of information in this app
 
@@ -130,36 +150,6 @@ This app does **not**:
 - Provide a field-level forecast, a frost warning or an irrigation schedule
 
 Every option, rating and calendar is labelled as illustrative. The scheme section lists official portals only, and every entry carries the same instruction: confirm current details, eligibility and documents with the official portal or your local agriculture office, or at your Kisan Khidmat Ghar.
-
-## How to run
-
-There is nothing to install and nothing to compile.
-
-1. Open `index.html` in any modern browser, **or**
-2. Serve the folder locally:
-
-```bash
-npm start
-# or
-npx serve .
-# or
-python3 -m http.server 8080
-```
-
-There are no dependencies to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
-
-`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the checks that actually matter here, and it exits non-zero on any problem. It uses only Node built-ins. In order:
-
-- It syntax-checks every JavaScript file the way `node --check` does.
-- It confirms every local reference in `index.html` is on disk.
-- It reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first.
-- It refuses a half-recorded officer review: a "reviewed" flag with no name or no date would look signed off with no officer behind it.
-- It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
-- It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
-
-Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
-
-Opened from disk (`file://`) the app also skips installing its service worker, because browsers only allow one over `http`. Served from a local server or a real host, it precaches the plan on the first visit and works offline from then on. To see that, load it once, stop the server, and reload.
 
 ## Screens
 
