@@ -1,10 +1,14 @@
 # My Land, My Plan
 
-**A mobile-friendly prototype for farmers in Jammu and Kashmir.**
+**What it is:** a no-build, offline-first web app that turns five answers about a plot into a short, realistic list of options, a month by month view of the year ahead, and the questions worth asking at the local agriculture office.
 
-My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.
+**Who it is for:** farmers and households in Jammu and Kashmir with land that is sitting unused, and the extension staff who answer their questions.
 
-> This is a **hackathon prototype**, not an official government service.
+**Why it exists:** the advice a farmer finds online is usually written for large farms, in English, with amounts and deadlines that change faster than a page can be kept up to date. A household here can be left with a plot, a budget that cannot absorb a wrong crop, and no obvious first question. This app does not answer for the farmer. It prepares the farmer to ask, with their own plot details already in hand.
+
+**Run it:** `npm start`, then open <http://127.0.0.1:8080>. Nothing to install, nothing to compile. Full instructions under [Quick start](#quick-start).
+
+> This is a **hackathon prototype**, not an official government service. Every suggestion is illustrative and still has to be confirmed locally.
 
 ## How this ships (architecture, honestly)
 
