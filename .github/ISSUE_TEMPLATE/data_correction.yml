@@ -1,0 +1,67 @@
+name: A suggestion or region note is wrong
+description: The catalogue, a monthly calendar, a zone note or a scheme link does not match local practice
+title: "[data] "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful kind of issue for this project. The options in
+        `js/catalogue.js` were written from published regional background and judgement,
+        and none of them has been checked by an agriculture or horticulture officer yet (#1).
+
+        Where the knowledge comes from matters as much as the correction, so please say who
+        or what is behind it.
+
+  - type: input
+    id: where
+    attributes:
+      label: Which district or zone, and which activity
+      description: The district or the coarse zone, and the activity name as it appears in the app.
+      placeholder: Pulwama, "Temperate fruit and nut trees"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: part
+    attributes:
+      label: What is wrong
+      options:
+        - The activity should not be offered for this area
+        - The activity is missing and should be offered
+        - The month calendar is wrong
+        - The zone note or elevation band is wrong
+        - A rating is not defensible
+        - A scheme link is wrong or points somewhere unhelpful
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: What it should say
+      description: The correction in your own words. Plain language is fine; it does not have to be written as app copy.
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Who or what this is based on
+      description: An officer's role and district, a Kisan Khidmat Ghar, a published source, or your own experience farming there.
+      placeholder: Horticulture officer, Pulwama; or "the department's package of practices, 2024"
+    validations:
+      required: true
+
+  - type: textarea
+    id: amounts
+    attributes:
+      label: If this involves a figure, a deadline or an eligibility rule
+      description: >
+        Please share it here rather than expecting it in the app. This project deliberately
+        prints no amounts, deadlines, eligibility rules or document lists, because they change
+        faster than a static page can follow and the app cannot verify them. A dated, sourced
+        figure is still useful for the review conversation.
+    validations:
+      required: false
