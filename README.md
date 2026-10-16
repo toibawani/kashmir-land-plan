@@ -1,10 +1,148 @@
 # My Land, My Plan
 
-**A mobile-friendly prototype for farmers in Jammu and Kashmir.**
+[![CI](https://github.com/toibawani/kashmir-land-plan/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/toibawani/kashmir-land-plan/actions/workflows/ci.yml)
 
-My Land, My Plan helps a farmer turn basic details about an underused plot into practical options and clear next steps for checking local support.
+**What it is:** a no-build, offline-first web app that turns five answers about a plot into a short, realistic list of options, a month by month view of the year ahead, and the questions worth asking at the local agriculture office.
 
-> This is a **hackathon prototype**, not an official government service.
+**Who it is for:** farmers and households in Jammu and Kashmir with land that is sitting unused, and the extension staff who answer their questions.
+
+**Why it exists:** the advice a farmer finds online is usually written for large farms, in English, with amounts and deadlines that change faster than a page can be kept up to date. A household here can be left with a plot, a budget that cannot absorb a wrong crop, and no obvious first question. This app does not answer for the farmer. It prepares the farmer to ask, with their own plot details already in hand.
+
+**Run it:** `npm start`, then open <http://127.0.0.1:8080>. Nothing to install, nothing to compile. Full instructions under [Quick start](#quick-start).
+
+> This is a **hackathon prototype**, not an official government service. Every suggestion is illustrative and still has to be confirmed locally.
+
+## Quick start
+
+There is nothing to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
+
+```sh
+npm start     # serves the folder at http://127.0.0.1:8080
+npm run build # pre-flight check: scripts parse, references resolve, offline cache consistent
+npm test      # the build check plus 165 behavioural checks
+```
+
+The README screenshots are regenerated from the running app, not pasted in by
+hand: `npm run screenshots` drives a headless Chrome at a phone viewport. It
+needs `npm start` and a Chrome started with `--remote-debugging-port=9333`
+running first, and it says so if either is missing. The build check fails if the
+README points at an image that is not on disk.
+
+Open `index.html` directly from disk, or serve the folder with any static server:
+
+```bash
+npx serve .
+# or
+python3 -m http.server 8080
+```
+
+Opened from disk (`file://`) the app skips installing its service worker, because browsers only allow one over `http`, and the weather screen shows its "not available right now" message because it is the one part that needs a connection. Served from a local server or a real host, it precaches the plan on the first visit and works offline from then on. To see that, load it once, stop the server, and reload.
+
+No account is required. No personal, financial, or land-identification data is sent to any server. Two honest caveats: the typefaces load from Google Fonts, and the weather screen sends the district you select to Open-Meteo. Everything else stays on the device.
+
+The whole plan works offline after the first visit. Weather is the one part that needs a connection, and the app says so instead of showing an old reading as if it were current.
+
+### What `npm run build` and `npm test` actually check
+
+`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the checks that actually matter here, and it exits non-zero on any problem. It uses only Node built-ins. In order:
+
+- It syntax-checks every JavaScript file the way `node --check` does.
+- It confirms every local reference in `index.html` is on disk.
+- It reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first.
+- It refuses a half-recorded officer review: a "reviewed" flag with no name or no date would look signed off with no officer behind it.
+- It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
+- It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
+
+`npm test` adds `tools/selftest.js`, 165 behavioural checks with no browser and no network, over the parts a farmer never sees fail loudly: the review wording, the catalogue shape, the scheme wording, the generated questions, the saved-plan store, the speech chunker, the QR encoder, the offline guidance, the print fitter and the office panel.
+
+## Screens
+
+Four of the ten screens, captured from the running app at a 390x844 phone
+viewport, which is where this app is used. The answers you can see are the
+sample journey, so the whole path is visible without running anything.
+
+| Home | Possible activities to explore |
+| --- | --- |
+| ![Home: what the app is, who it is for, and two ways in](docs/screenshots/01-home.png) | ![A list of illustrative options with the review status across the top](docs/screenshots/02-options.png) |
+| What it is, who it is for, and two ways in: your own answers, or the sample journey. | Illustrative options, each with the reason it appears, and the review status stated above them. |
+
+| Plan summary | Office visit card |
+| --- | --- |
+| ![A printable summary of what to do, when to do it, and what to ask](docs/screenshots/03-summary.png) | ![The one page office visit card with questions to ask and a small code](docs/screenshots/04-visit-card.png) |
+| Everything you entered, in a form you can print or save as a PDF. | The one page that leaves the phone: what you entered, the options you marked, the questions to ask, and a small scannable code. |
+
+The other screens: plot details (a five step form with a progress bar), compare
+options, next steps and local support (the month ahead for your shortlist, the
+generated questions, the checklist and the official portals), my saved plans,
+weather near your district, and about with sources and limitations.
+
+## The four kinds of information in this app
+
+They are labelled in the interface, and the same labels are used in the plan you print or download.
+
+| Label | What it covers | Where it comes from |
+| --- | --- | --- |
+| **Your answers** | District, size, water, terrain, main constraint | What you type |
+| **Illustrative** | The options, the five ratings, the reasons for each suggestion, the calendars, the checklist | Hand-written rules in this repo |
+| **Regional background** | District grouping, elevation bands, crop patterns | The published sources listed below |
+| **Live weather** | Current conditions and a short forecast | Open-Meteo, fetched when you ask. Never stored |
+
+## Officer review: what is checked and what is not
+
+**Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary, the office visit card and the About page, in these words: "Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting." The visit card carries it too, because that is the page that leaves the phone and reaches the office.
+
+The suggestion data lives in `js/catalogue.js`, kept apart from the scoring and rendering code so it stays readable on its own. Officers never edit it. The review process for them is written up in `REVIEW.md` at the repo root: they check the list and reply by message, on paper, in person or by email, and the maintainer records the review afterwards by updating the review fields (`reviewStatus`, `reviewedBy`, `designation`, `reviewedOn`, following the steps in that file). Never mark anything reviewed on an officer's behalf, and never guess a name or a date.
+
+Once a review is recorded, every screen changes to say "Reviewed by [name], [designation] on [date]. Still confirm locally before acting." A partly reviewed list says so too. The confirmation line that every option and every scheme entry already carries does not go away when a review is added: a reviewed catalogue still has to be checked locally, because the officer reviewed the catalogue, not your plot.
+
+If only some of the suggestions on screen have been checked, the app says that instead of rounding up.
+
+## What to do next
+
+The code is ready. The remaining work is human, and it starts with one
+conversation:
+
+1. Take `REVIEW_SHEET.md` (or the activity list) to a local agriculture
+   or horticulture officer, or to a Kisan Khidmat Ghar.
+2. Ask them to mark anything wrong for the district, and to add their
+   name, role and the date beside their comments.
+3. Bring the comments back. The maintainer then updates the review
+   fields in `js/catalogue.js` (`reviewStatus`, `reviewedBy`,
+   `designation`, `reviewedOn`), following `REVIEW.md`.
+
+Until an officer has actually replied, the catalogue stays marked "not
+yet reviewed" and every screen keeps saying so. Do not mark it reviewed
+before then.
+
+The open items are tracked as GitHub issues.
+
+**Human review, which no test can replace:** #1 officer catalogue review,
+#2 agronomist check of the generated questions and timing notes, #3 translation.
+
+**Verification that has only happened on a desktop**:
+
+| Issue | What is unverified |
+| --- | --- |
+| [#15](https://github.com/toibawani/kashmir-land-plan/issues/15) | A real low-end Android phone: home screen install, airplane-mode offline, the reading voice, the code scanned from paper, daylight readability |
+| [#16](https://github.com/toibawani/kashmir-land-plan/issues/16) | Real paper: whether the one-page rule survives a printer, a PDF export and greyscale |
+| [#17](https://github.com/toibawani/kashmir-land-plan/issues/17) | A real screen reader moving through the form, the results and the visit card |
+| [#18](https://github.com/toibawani/kashmir-land-plan/issues/18) | Enforcing the CI check on `main`, so a red build cannot land |
+
+Those four are stated here rather than left to be discovered, because "it works" on a
+desktop viewport is not the same claim as "it works on the phone this is for".
+
+## Important disclaimer
+
+This app does **not**:
+
+- Verify land ownership
+- Assess a particular plot, or guarantee that a crop will suit it
+- Guarantee yield, cost or income
+- Approve subsidies or determine scheme eligibility
+- List scheme amounts, deadlines, eligibility rules or required documents
+- Provide a field-level forecast, a frost warning or an irrigation schedule
+
+Every option, rating and calendar is labelled as illustrative. The scheme section lists official portals only, and every entry carries the same instruction: confirm current details, eligibility and documents with the official portal or your local agriculture office, or at your Kisan Khidmat Ghar.
 
 ## How this ships (architecture, honestly)
 
@@ -13,7 +151,8 @@ serves the folder; `npm run build` only checks that the scripts parse,
 references resolve and the offline cache is consistent. There is no
 framework, no bundler, no server, no database and no authenticated
 account. A visitor opens a single folder (`index.html`, `css`,
-`js`, `sw.js`) and gets a working app.
+`js`, `sw.js`) and gets a working app. The reasoning behind this shape, and the
+trade-off it accepted, is recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 **Nothing on this page is a secret and nothing is hidden.** It has no
 keys, no tokens, no API routes and no real-user IDs. Two things a
@@ -54,121 +193,6 @@ and none of it should be invented here.
 | Build / test | `node tools/verify.js` (npm run build), `node tools/selftest.js` (npm test) |
 | Assets | Icons as inline SVG + PNG, fonts from Google Fonts (System Family fallback) |
 | Deployment | Static folder served on 127.0.0.1:8080; installable as a PWA |
-
-## Quick start
-
-```sh
-npm install   # no dependencies, but the command is retained for a clean slate
-npm start     # serves the folder at http://127.0.0.1:8080
-npm run build # pre-flight check: scripts parse, references resolve, offline cache consistent
-npm test      # build check plus 165 behavioural checks
-```
-
-Open `index.html` directly from disk — it works, and the weather screen
-shows its not-available message because it is the only part that needs a
-connection.
-
-No account is required. No personal, financial, or land-identification data is sent to any server. Two honest caveats: the typefaces load from Google Fonts, and the weather screen sends the district you select to Open-Meteo. Everything else stays on the device.
-
-The whole plan works offline after the first visit. Weather is the one part that needs a connection, and the app says so instead of showing an old reading as if it were current.
-
-## The four kinds of information in this app
-
-They are labelled in the interface, and the same labels are used in the plan you print or download.
-
-| Label | What it covers | Where it comes from |
-| --- | --- | --- |
-| **Your answers** | District, size, water, terrain, main constraint | What you type |
-| **Illustrative** | The options, the five ratings, the reasons for each suggestion, the calendars, the checklist | Hand-written rules in this repo |
-| **Regional background** | District grouping, elevation bands, crop patterns | The published sources listed below |
-| **Live weather** | Current conditions and a short forecast | Open-Meteo, fetched when you ask. Never stored |
-
-## Officer review: what is checked and what is not
-
-**Right now, none of the suggestions have been reviewed.** The interface says so on the results screen, the comparison, the summary, the office visit card and the About page, in these words: "Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting." The visit card carries it too, because that is the page that leaves the phone and reaches the office.
-
-The suggestion data lives in `js/catalogue.js`, kept apart from the scoring and rendering code so it stays readable on its own. Officers never edit it. The review process for them is written up in `REVIEW.md` at the repo root: they check the list and reply by message, on paper, in person or by email, and the maintainer records the review afterwards by updating the review fields (`reviewStatus`, `reviewedBy`, `designation`, `reviewedOn`, following the steps in that file). Never mark anything reviewed on an officer's behalf, and never guess a name or a date.
-
-Once a review is recorded, every screen changes to say "Reviewed by [name], [designation] on [date]. Still confirm locally before acting." A partly reviewed list says so too. The confirmation line that every option and every scheme entry already carries does not go away when a review is added: a reviewed catalogue still has to be checked locally, because the officer reviewed the catalogue, not your plot.
-
-If only some of the suggestions on screen have been checked, the app says that instead of rounding up.
-
-## What to do next
-
-The code is ready. The remaining work is human, and it starts with one
-conversation:
-
-1. Take `REVIEW_SHEET.md` (or the activity list) to a local agriculture
-   or horticulture officer, or to a Kisan Khidmat Ghar.
-2. Ask them to mark anything wrong for the district, and to add their
-   name, role and the date beside their comments.
-3. Bring the comments back. The maintainer then updates the review
-   fields in `js/catalogue.js` (`reviewStatus`, `reviewedBy`,
-   `designation`, `reviewedOn`), following `REVIEW.md`.
-
-Until an officer has actually replied, the catalogue stays marked "not
-yet reviewed" and every screen keeps saying so. Do not mark it reviewed
-before then.
-
-The open items are tracked as GitHub issues: #1 officer catalogue
-review, #2 agronomist check of the generated questions and timing notes,
-and #3 translation.
-
-## Important disclaimer
-
-This app does **not**:
-
-- Verify land ownership
-- Assess a particular plot, or guarantee that a crop will suit it
-- Guarantee yield, cost or income
-- Approve subsidies or determine scheme eligibility
-- List scheme amounts, deadlines, eligibility rules or required documents
-- Provide a field-level forecast, a frost warning or an irrigation schedule
-
-Every option, rating and calendar is labelled as illustrative. The scheme section lists official portals only, and every entry carries the same instruction: confirm current details, eligibility and documents with the official portal or your local agriculture office, or at your Kisan Khidmat Ghar.
-
-## How to run
-
-There is nothing to install and nothing to compile.
-
-1. Open `index.html` in any modern browser, **or**
-2. Serve the folder locally:
-
-```bash
-npm start
-# or
-npx serve .
-# or
-python3 -m http.server 8080
-```
-
-There are no dependencies to install and nothing to compile. The `package.json` exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; it pulls in no packages and adds no toolchain. Any static file server will do the same job.
-
-`npm run build` runs `tools/verify.js`. There is nothing to bundle in a static site, so "build" does the checks that actually matter here, and it exits non-zero on any problem. It uses only Node built-ins. In order:
-
-- It syntax-checks every JavaScript file the way `node --check` does.
-- It confirms every local reference in `index.html` is on disk.
-- It reconciles the service worker's precache list against what the page loads, so a file cannot go missing and break the app offline without the build failing first.
-- It refuses a half-recorded officer review: a "reviewed" flag with no name or no date would look signed off with no officer behind it.
-- It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
-- It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
-
-Opening the file directly from disk works. The weather screen will show its "not available right now" message in that case, because it is the only part that needs a connection.
-
-Opened from disk (`file://`) the app also skips installing its service worker, because browsers only allow one over `http`. Served from a local server or a real host, it precaches the plan on the first visit and works offline from then on. To see that, load it once, stop the server, and reload.
-
-## Screens
-
-1. Home
-2. Plot details, a five step form with a progress bar
-3. Possible activities to explore, with regional background and the sample logic made visible
-4. Compare options
-5. Next steps and local support: the month ahead for your shortlist, the generated questions, the checklist and the official portals
-6. Plan summary (print, save as PDF, share on WhatsApp, download, copy, read aloud, or save as a named plan)
-7. Office visit card: a one page summary to print, share or carry, with the reference and a small scannable code, a visit mode that keeps only the card, the questions, the reading controls and the print, share and done buttons, and a short "what to expect" panel
-8. My saved plans: several named plans, side by side, with one chosen for the office
-9. Weather near your district
-10. About, sources and limitations
 
 ## Code structure
 
@@ -273,4 +297,10 @@ None. No new crop, scheme, eligibility, amount or suitability claim was added, s
 
 ## Licence
 
-Prototype code, free to use and modify for the My Land, My Plan concept and related educational work. Do not present it as an official service.
+MIT, in full in [`LICENSE`](LICENSE) and declared in `package.json`. Use it,
+change it, teach with it.
+
+One request that is not a licence term, because a licence cannot carry it:
+this app is not a government service, and it should not be presented as one. If
+you fork it, keep the disclaimer on screen. Every suggestion in it is
+illustrative and unverified until a local agriculture officer says otherwise.

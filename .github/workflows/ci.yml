@@ -1,0 +1,45 @@
+name: CI
+
+# This repository has no dependencies, no lockfile and no bundler, so the
+# workflow stays small on purpose: it runs the same two commands a contributor
+# runs locally. If it is green here, the static folder is intact.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Build check and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # The project targets current Node; the tools use only built-ins, so no
+      # install step is needed. The version is pinned here so a green build
+      # means the same thing over time.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Report the environment
+        run: node --version
+
+      # `npm test` runs `npm run build` (tools/verify.js) first and then the
+      # behavioural suite (tools/selftest.js). Keeping both behind one command
+      # means CI cannot drift from what a contributor runs by hand.
+      - name: Pre-flight check and tests
+        run: npm test

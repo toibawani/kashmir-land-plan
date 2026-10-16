@@ -374,6 +374,34 @@ while ((idMatch = idRe.exec(html)) !== null) {
   }
 });
 
+/* ---- 7. Every image the README shows must be on disk ---- */
+
+// The README is the shop window, and a broken image there is the first thing a
+// visitor sees. It has happened the easy way already: screenshots were
+// regenerated into a different folder and the old paths stopped resolving.
+var readmePath = path.join(root, "README.md");
+var readmeImages = [];
+if (exists(readmePath)) {
+  var readme = fs.readFileSync(readmePath, "utf8");
+  var imgRe = /!\[[^\]]*\]\(([^)\s]+)/g;
+  var imgMatch;
+  while ((imgMatch = imgRe.exec(readme)) !== null) {
+    var imgTarget = imgMatch[1];
+    if (/^(https?:)?\/\//.test(imgTarget)) continue;
+    readmeImages.push(imgTarget);
+  }
+}
+
+readmeImages.forEach(function (img) {
+  if (!exists(path.join(root, img))) {
+    failures.push("README.md shows " + img + " but it is not on disk");
+  }
+});
+
+if (!readmeImages.length) {
+  notes.push("README.md shows no images; run `npm run screenshots` to capture the four field screens");
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
@@ -395,5 +423,7 @@ console.log(
     refs.length +
     " local references resolve, " +
     precache.length +
-    " assets precached for offline."
+    " assets precached for offline, " +
+    readmeImages.length +
+    " README images present."
 );
