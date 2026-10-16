@@ -1,0 +1,76 @@
+name: Something is broken
+description: A screen that does not work, or a plan that comes out wrong
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The detail that helps most is the
+        device and browser, because almost everything here has only been tested on a
+        desktop viewport so far (see issue #15).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what the app did instead.
+      placeholder: I pressed Try sample journey and the options screen showed nothing.
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: The phone or computer, the browser, and its version. Say if it was an installed home screen app.
+      placeholder: Redmi 9A, Chrome 120, installed to the home screen
+    validations:
+      required: true
+
+  - type: dropdown
+    id: connection
+    attributes:
+      label: Connection at the time
+      description: The offline behaviour is a separate path through the app, so it is worth knowing.
+      options:
+        - Online
+        - Offline, or a very slow connection
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: screen
+    attributes:
+      label: Which screen
+      options:
+        - Home
+        - Plot details (the five step form)
+        - Possible activities to explore
+        - Compare options
+        - Next steps and local support
+        - Plan summary
+        - Office visit card, or visit mode
+        - My saved plans
+        - Weather near your district
+        - About, sources and limitations
+        - Not one screen in particular
+    validations:
+      required: true
+
+  - type: textarea
+    id: printed
+    attributes:
+      label: Anything printed, shared or read aloud
+      description: Optional. Whether it was the print, PDF, WhatsApp share, text download or read-aloud path, and what came out wrong.
+    validations:
+      required: false
+
+  - type: textarea
+    id: honesty
+    attributes:
+      label: Did it claim more than it should?
+      description: Optional but important. Any amount, deadline, eligibility rule, document list or review status the app showed that is wrong or unverified.
+    validations:
+      required: false
