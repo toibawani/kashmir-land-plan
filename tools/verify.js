@@ -152,11 +152,56 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   var catalogue = sandbox.window.MLMP_CATALOGUE;
   var activities = sandbox.window.MLMP_ACTIVITIES;
 
-  // Dates are checked by shape (YYYY-MM-DD) rather than by calendar, because
-  // rejecting an unlikely-but-real date would be a worse mistake than
-  // accepting one nobody can vouch for. The officer's name carries the trust.
-  function dateLooksRight(value) {
-    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+  // A recorded review is a claim that a named person checked this list on a
+  // particular day, so the date has to be a day that exists. This was a shape
+  // check (YYYY-MM-DD) for a while; it is now a real calendar check, because
+  // 2026-02-30 and month 13 can only ever be typos, never a review, and a
+  // plausible-looking wrong date is exactly the mistake nobody notices.
+  //
+  // Two bounds come with it. A review cannot have happened in the future, and
+  // one day of slack absorbs the difference between the officer's calendar and
+  // this build's clock. Nor can it have happened before this project existed.
+  function parseReviewDate(value) {
+    var text = String(value || "").trim();
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+    if (!m) return { ok: false, why: "is not a date in YYYY-MM-DD form" };
+
+    var year = Number(m[1]);
+    var month = Number(m[2]);
+    var day = Number(m[3]);
+    if (month < 1 || month > 12) return { ok: false, why: "names month " + m[2] + ", which does not exist" };
+    if (day < 1) return { ok: false, why: "names day " + m[3] + ", which does not exist" };
+
+    var leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    var lengths = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (day > lengths[month - 1]) {
+      return {
+        ok: false,
+        why: "names day " + day + " of a month that has " + lengths[month - 1] + " days in " + year,
+      };
+    }
+
+    if (year < 2020) return { ok: false, why: "is before this project existed (" + text + ")" };
+
+    var today = new Date();
+    var todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    var tomorrowUtc = todayUtc + 24 * 60 * 60 * 1000;
+    if (Date.UTC(year, month - 1, day) > tomorrowUtc) {
+      return { ok: false, why: "is in the future (" + text + "), so it cannot be a review that happened" };
+    }
+    return { ok: true, why: "" };
+  }
+
+  // A review recorded from the example text is the most likely way a half-done
+  // edit reaches main: the docs and the About page both show
+  // "Reviewed by [name], [designation] on [date]", and that string is one
+  // copy and paste away from looking like a signed-off catalogue.
+  function looksLikeAPlaceholder(value) {
+    var text = String(value || "").trim();
+    if (!text) return false;
+    if (/[\[\]<>]/.test(text)) return true;
+    if (/^(name|your name|designation|role|tbd|tba|test|officer|x+)$/i.test(text)) return true;
+    return text.length < 3;
   }
 
   function checkReviewRecord(where, record) {
@@ -171,9 +216,21 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
     if (record.reviewStatus === "reviewed") {
       if (!String(record.reviewedBy || "").trim()) {
         failures.push(where + ' is marked "reviewed" but names no reviewer; leave it "not-reviewed" rather than guessing');
+      } else if (looksLikeAPlaceholder(record.reviewedBy)) {
+        failures.push(
+          where + ' is marked "reviewed" but the reviewer name is a placeholder ("' + record.reviewedBy + '"), so no officer is actually behind this review'
+        );
       }
-      if (!dateLooksRight(record.reviewedOn)) {
-        failures.push(where + ' is marked "reviewed" but the date is missing or not YYYY-MM-DD; leave it "not-reviewed" rather than guessing');
+      if (record.designation && looksLikeAPlaceholder(record.designation)) {
+        failures.push(
+          where + ' is marked "reviewed" but the designation is a placeholder ("' + record.designation + '")'
+        );
+      }
+      var date = parseReviewDate(record.reviewedOn);
+      if (!date.ok) {
+        failures.push(
+          where + ' is marked "reviewed" but the review date ' + date.why + '; leave it "not-reviewed" rather than guessing'
+        );
       }
     }
   }
@@ -217,6 +274,28 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   }
   if (!/confirm locally/i.test(mixed.text)) {
     failures.push('The "mixed" review wording lost its confirm-locally sentence; a review must never remove it');
+  }
+
+  // The unreviewed state has to stay expressible as well as the reviewed one.
+  // This app's honest position today is that nothing has been checked, and a
+  // guard that only knows how to complain about a bad review would be happy to
+  // let somebody delete the unreviewed path altogether.
+  var emptyReview = activities.formatReview({});
+  if (emptyReview.status !== "not-reviewed") {
+    failures.push(
+      'An empty review record no longer reads as "not-reviewed", it read as "' + emptyReview.status + '"'
+    );
+  }
+
+  // And a record cannot render as reviewed on the strength of its flag alone:
+  // a "reviewed" status with nobody named behind it is not a review.
+  if (activities.isReviewed({ reviewStatus: "reviewed" }) !== false) {
+    failures.push(
+      'A record marked "reviewed" with no reviewer name still counts as reviewed, so the app could show a sign-off with no officer behind it'
+    );
+  }
+  if (activities.isReviewed({ reviewStatus: "reviewed", reviewedBy: "A Test Officer" }) !== true) {
+    failures.push("A complete review record no longer counts as reviewed, so a real review would be hidden from the farmer");
   }
 }
 
