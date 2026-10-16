@@ -21,9 +21,10 @@ __pycache__/
 venv/
 .pytest_cache/
 
-# Environment files. A real .env is never committed, and neither is any
-# local override, but .env.example stays tracked on purpose so the shape of
-# the expected variables is visible.
+# Environment files. This project reads no environment variables at all: it is
+# a static folder with no server, no keys and no API routes. These rules are a
+# guard so that a file someone reaches for out of habit cannot be committed,
+# rather than a description of how the app is configured.
 
 .env
 .env.local
