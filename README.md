@@ -138,7 +138,8 @@ serves the folder; `npm run build` only checks that the scripts parse,
 references resolve and the offline cache is consistent. There is no
 framework, no bundler, no server, no database and no authenticated
 account. A visitor opens a single folder (`index.html`, `css`,
-`js`, `sw.js`) and gets a working app.
+`js`, `sw.js`) and gets a working app. The reasoning behind this shape, and the
+trade-off it accepted, is recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 **Nothing on this page is a secret and nothing is hidden.** It has no
 keys, no tokens, no API routes and no real-user IDs. Two things a
