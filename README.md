@@ -1,5 +1,7 @@
 # My Land, My Plan
 
+[![CI](https://github.com/toibawani/kashmir-land-plan/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/toibawani/kashmir-land-plan/actions/workflows/ci.yml)
+
 **What it is:** a no-build, offline-first web app that turns five answers about a plot into a short, realistic list of options, a month by month view of the year ahead, and the questions worth asking at the local agriculture office.
 
 **Who it is for:** farmers and households in Jammu and Kashmir with land that is sitting unused, and the extension staff who answer their questions.
