@@ -59,3 +59,24 @@ is deliberate: the questions are what the farmer carries to the office.
 **What would change it:** figures confirmed by an officer for a specific
 district, dated, and re-checked on a schedule someone actually owns. Until that
 schedule exists, no figure is safe to print.
+
+## 3. The weather is live or it is nothing
+
+**Decided:** the two Open-Meteo hosts are excluded from every cache list in
+`sw.js` (`WEATHER_HOSTS`, `isWeatherRequest`), and a weather request is never
+served from cache. When the connection is gone the weather screen says it cannot
+reach the service instead of showing the last reading.
+
+**Why:** the rest of the app is built to work offline, so caching the weather
+would be easy and consistent. It is also the one way this app could quietly lie:
+a temperature from three days ago looks identical to a temperature from three
+minutes ago, and a farmer deciding whether to irrigate today has no way to tell
+the difference from the screen.
+
+**What it costs:** the weather screen is the only part that fails offline, which
+looks like an inconsistency against everything around it. The app states the rule
+itself rather than leaving the reader to work it out.
+
+**What would change it:** nothing about caching. A stored reading could be shown
+in the future only if it were labelled with the time it was taken, in the same
+size as the reading itself.
