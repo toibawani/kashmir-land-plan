@@ -127,3 +127,23 @@ only purpose is to get the card out of the phone.
 
 **What would change it:** a written answer from an officer that the card is the
 wrong shape, which is exactly what the review conversation is for.
+
+## 6. What has deliberately not been decided yet
+
+These are not oversights and not backlog items. They are things this project has
+no honest basis for deciding right now, and it is better to say so than to invent
+an answer:
+
+- **Whether it should be deployed.** Nothing here needs a live host, and a
+  public URL would imply a service the app does not provide. The app runs from
+  the folder.
+- **Whether the catalogue is correct for any district.** Only an officer can
+  answer that. Until one has replied, the app says on every screen that nothing
+  has been reviewed.
+- **Which language comes after English.** `js/messages.js` exists so the strings
+  are in one place, but choosing a language means choosing whoever will review
+  the agricultural wording in it, and that turns into a promise that has to be
+  kept. Tracked in the issues rather than guessed here.
+- **How success is measured.** No analytics, no accounts and no telemetry, so no
+  usage figure can be reported from this repo. Anyone asking for one is asking
+  for a decision that has not been made.
