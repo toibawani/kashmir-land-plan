@@ -49,16 +49,24 @@ The whole plan works offline after the first visit. Weather is the one part that
 
 ## Screens
 
-1. Home
-2. Plot details, a five step form with a progress bar
-3. Possible activities to explore, with regional background and the sample logic made visible
-4. Compare options
-5. Next steps and local support: the month ahead for your shortlist, the generated questions, the checklist and the official portals
-6. Plan summary (print, save as PDF, share on WhatsApp, download, copy, read aloud, or save as a named plan)
-7. Office visit card: a one page summary to print, share or carry, with the reference and a small scannable code, a visit mode that keeps only the card, the questions, the reading controls and the print, share and done buttons, and a short "what to expect" panel
-8. My saved plans: several named plans, side by side, with one chosen for the office
-9. Weather near your district
-10. About, sources and limitations
+Four of the ten screens, captured from the running app at a 390x844 phone
+viewport, which is where this app is used. The answers you can see are the
+sample journey, so the whole path is visible without running anything.
+
+| Home | Possible activities to explore |
+| --- | --- |
+| ![Home: what the app is, who it is for, and two ways in](docs/screenshots/01-home.png) | ![A list of illustrative options with the review status across the top](docs/screenshots/02-options.png) |
+| What it is, who it is for, and two ways in: your own answers, or the sample journey. | Illustrative options, each with the reason it appears, and the review status stated above them. |
+
+| Plan summary | Office visit card |
+| --- | --- |
+| ![A printable summary of what to do, when to do it, and what to ask](docs/screenshots/03-summary.png) | ![The one page office visit card with questions to ask and a small code](docs/screenshots/04-visit-card.png) |
+| Everything you entered, in a form you can print or save as a PDF. | The one page that leaves the phone: what you entered, the options you marked, the questions to ask, and a small scannable code. |
+
+The other screens: plot details (a five step form with a progress bar), compare
+options, next steps and local support (the month ahead for your shortlist, the
+generated questions, the checklist and the official portals), my saved plans,
+weather near your district, and about with sources and limitations.
 
 ## The four kinds of information in this app
 
