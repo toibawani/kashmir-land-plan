@@ -2,6 +2,7 @@
   "name": "my-land-my-plan",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "My Land, My Plan: a no-build, offline-capable prototype for farmers in Jammu and Kashmir. This file exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; there are no dependencies and no build step.",
   "scripts": {
     "start": "python3 -m http.server 8080 --bind 127.0.0.1",
