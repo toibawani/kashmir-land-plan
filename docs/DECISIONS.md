@@ -105,3 +105,25 @@ claiming a review nobody gave.
 review. A `reviewed` flag with no name or no date fails `npm run build`, so a
 sign-off cannot exist with no officer behind it, and nothing may be marked
 reviewed on someone's behalf.
+
+## 5. The visit card is the artefact
+
+**Decided:** the thing the app is measured by is the office visit card: one
+printed page holding what the farmer entered, the options they marked, the
+questions to ask and a small scannable code. It gets a print stylesheet of its
+own, a fitter (`js/visitfit.js`) and a visit mode that hides everything else on
+the screen.
+
+**Why:** the plan only changes anything if it reaches the office, and a phone
+screen does not survive that trip. Screens are cheap to add and this one is the
+only screen with a job outside the app. Making it printable also forces the
+other decisions to stay honest: a page that a farmer hands an officer cannot
+contain a figure nobody has confirmed.
+
+**What it costs:** print layout is real work and easy to break silently, so the
+fitter and the one-page rule have to be kept under test rather than eyeballed.
+The app also carries export paths (print, PDF, text, WhatsApp, read aloud) whose
+only purpose is to get the card out of the phone.
+
+**What would change it:** a written answer from an officer that the card is the
+wrong shape, which is exactly what the review conversation is for.
