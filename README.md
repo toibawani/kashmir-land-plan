@@ -114,9 +114,22 @@ Until an officer has actually replied, the catalogue stays marked "not
 yet reviewed" and every screen keeps saying so. Do not mark it reviewed
 before then.
 
-The open items are tracked as GitHub issues: #1 officer catalogue
-review, #2 agronomist check of the generated questions and timing notes,
-and #3 translation.
+The open items are tracked as GitHub issues.
+
+**Human review, which no test can replace:** #1 officer catalogue review,
+#2 agronomist check of the generated questions and timing notes, #3 translation.
+
+**Verification that has only happened on a desktop**:
+
+| Issue | What is unverified |
+| --- | --- |
+| [#15](https://github.com/toibawani/kashmir-land-plan/issues/15) | A real low-end Android phone: home screen install, airplane-mode offline, the reading voice, the code scanned from paper, daylight readability |
+| [#16](https://github.com/toibawani/kashmir-land-plan/issues/16) | Real paper: whether the one-page rule survives a printer, a PDF export and greyscale |
+| [#17](https://github.com/toibawani/kashmir-land-plan/issues/17) | A real screen reader moving through the form, the results and the visit card |
+| [#18](https://github.com/toibawani/kashmir-land-plan/issues/18) | Enforcing the CI check on `main`, so a red build cannot land |
+
+Those four are stated here rather than left to be discovered, because "it works" on a
+desktop viewport is not the same claim as "it works on the phone this is for".
 
 ## Important disclaimer
 
