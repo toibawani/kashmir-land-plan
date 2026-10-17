@@ -22,10 +22,15 @@
 var fs = require("fs");
 var path = require("path");
 var vm = require("vm");
+var claims = require("./claims.js");
 
 var root = path.resolve(__dirname, "..");
 var failures = [];
 var notes = [];
+
+// Read once: the wording and copy checks both ask what the interface actually
+// does with the text, not only whether the text exists.
+var appCode = fs.readFileSync(path.join(root, "js", "app.js"), "utf8");
 
 function rel(p) {
   return path.relative(root, p) || p;
@@ -124,6 +129,42 @@ precache.forEach(function (r) {
   }
 });
 
+/* ---- 3b. A changed cached file must come with a version bump ---- */
+
+// This one exists because it actually happened: the app was edited, the files
+// on the server were correct, and a browser kept showing the old page from the
+// service worker cache, so a fix looked like it had not worked. The rule is
+// that if anything in CORE_ASSETS changes, CACHE_VERSION has to change with
+// it, because the version is what makes the browser drop the old copies.
+//
+// Checking "was the version bumped" needs history, which a build does not
+// have. So instead the file list and its contents are fingerprinted, and the
+// fingerprint is stored in sw.js next to the version. Change a cached file and
+// the build fails, printing the new line to paste in along with the reminder
+// to bump CACHE_VERSION. Updating the fingerprint without reading that
+// reminder is possible, but it is now a deliberate act rather than an
+// oversight.
+var fingerprint = require("crypto").createHash("sha256");
+precache.forEach(function (r) {
+  var full = path.join(root, r);
+  fingerprint.update(r);
+  fingerprint.update("\u0000");
+  fingerprint.update(fs.existsSync(full) ? fs.readFileSync(full) : "missing");
+  fingerprint.update("\u0000");
+});
+var actualFingerprint = fingerprint.digest("hex").slice(0, 16);
+var declared = sw.match(/var\s+CACHE_FINGERPRINT\s*=\s*"([^"]*)"/);
+if (!declared) {
+  failures.push("sw.js has no CACHE_FINGERPRINT, so nothing catches a cached file changing without a version bump");
+} else if (declared[1] !== actualFingerprint) {
+  failures.push(
+    "a cached file changed but sw.js was not updated. Raise CACHE_VERSION and set " +
+      'var CACHE_FINGERPRINT = "' +
+      actualFingerprint +
+      '"; in sw.js'
+  );
+}
+
 /* ---- 4. A recorded officer review must be complete ---- */
 
 // A half-filled review is worse than none at all: a bare "reviewed" flag
@@ -137,7 +178,10 @@ try {
   // The order is load order, not luck: activities.js refuses to load without
   // the catalogue already on `window`, so the files are named in the same
   // sequence index.html loads them in.
-  ["regions.js", "catalogue.js", "activities.js"]
+  // Order is load order: activities.js refuses to load without the catalogue
+  // already on `window`. schemes.js is standalone, and is loaded because the
+  // support copy is scanned further down.
+  ["regions.js", "catalogue.js", "activities.js", "schemes.js"]
     .map(function (name) {
       return path.join(root, "js", name);
     })
@@ -152,11 +196,56 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   var catalogue = sandbox.window.MLMP_CATALOGUE;
   var activities = sandbox.window.MLMP_ACTIVITIES;
 
-  // Dates are checked by shape (YYYY-MM-DD) rather than by calendar, because
-  // rejecting an unlikely-but-real date would be a worse mistake than
-  // accepting one nobody can vouch for. The officer's name carries the trust.
-  function dateLooksRight(value) {
-    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
+  // A recorded review is a claim that a named person checked this list on a
+  // particular day, so the date has to be a day that exists. This was a shape
+  // check (YYYY-MM-DD) for a while; it is now a real calendar check, because
+  // 2026-02-30 and month 13 can only ever be typos, never a review, and a
+  // plausible-looking wrong date is exactly the mistake nobody notices.
+  //
+  // Two bounds come with it. A review cannot have happened in the future, and
+  // one day of slack absorbs the difference between the officer's calendar and
+  // this build's clock. Nor can it have happened before this project existed.
+  function parseReviewDate(value) {
+    var text = String(value || "").trim();
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+    if (!m) return { ok: false, why: "is not a date in YYYY-MM-DD form" };
+
+    var year = Number(m[1]);
+    var month = Number(m[2]);
+    var day = Number(m[3]);
+    if (month < 1 || month > 12) return { ok: false, why: "names month " + m[2] + ", which does not exist" };
+    if (day < 1) return { ok: false, why: "names day " + m[3] + ", which does not exist" };
+
+    var leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    var lengths = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (day > lengths[month - 1]) {
+      return {
+        ok: false,
+        why: "names day " + day + " of a month that has " + lengths[month - 1] + " days in " + year,
+      };
+    }
+
+    if (year < 2020) return { ok: false, why: "is before this project existed (" + text + ")" };
+
+    var today = new Date();
+    var todayUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+    var tomorrowUtc = todayUtc + 24 * 60 * 60 * 1000;
+    if (Date.UTC(year, month - 1, day) > tomorrowUtc) {
+      return { ok: false, why: "is in the future (" + text + "), so it cannot be a review that happened" };
+    }
+    return { ok: true, why: "" };
+  }
+
+  // A review recorded from the example text is the most likely way a half-done
+  // edit reaches main: the docs and the About page both show
+  // "Reviewed by [name], [designation] on [date]", and that string is one
+  // copy and paste away from looking like a signed-off catalogue.
+  function looksLikeAPlaceholder(value) {
+    var text = String(value || "").trim();
+    if (!text) return false;
+    if (/[\[\]<>]/.test(text)) return true;
+    if (/^(name|your name|designation|role|tbd|tba|test|officer|x+)$/i.test(text)) return true;
+    return text.length < 3;
   }
 
   function checkReviewRecord(where, record) {
@@ -171,9 +260,21 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
     if (record.reviewStatus === "reviewed") {
       if (!String(record.reviewedBy || "").trim()) {
         failures.push(where + ' is marked "reviewed" but names no reviewer; leave it "not-reviewed" rather than guessing');
+      } else if (looksLikeAPlaceholder(record.reviewedBy)) {
+        failures.push(
+          where + ' is marked "reviewed" but the reviewer name is a placeholder ("' + record.reviewedBy + '"), so no officer is actually behind this review'
+        );
       }
-      if (!dateLooksRight(record.reviewedOn)) {
-        failures.push(where + ' is marked "reviewed" but the date is missing or not YYYY-MM-DD; leave it "not-reviewed" rather than guessing');
+      if (record.designation && looksLikeAPlaceholder(record.designation)) {
+        failures.push(
+          where + ' is marked "reviewed" but the designation is a placeholder ("' + record.designation + '")'
+        );
+      }
+      var date = parseReviewDate(record.reviewedOn);
+      if (!date.ok) {
+        failures.push(
+          where + ' is marked "reviewed" but the review date ' + date.why + '; leave it "not-reviewed" rather than guessing'
+        );
       }
     }
   }
@@ -217,6 +318,28 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   }
   if (!/confirm locally/i.test(mixed.text)) {
     failures.push('The "mixed" review wording lost its confirm-locally sentence; a review must never remove it');
+  }
+
+  // The unreviewed state has to stay expressible as well as the reviewed one.
+  // This app's honest position today is that nothing has been checked, and a
+  // guard that only knows how to complain about a bad review would be happy to
+  // let somebody delete the unreviewed path altogether.
+  var emptyReview = activities.formatReview({});
+  if (emptyReview.status !== "not-reviewed") {
+    failures.push(
+      'An empty review record no longer reads as "not-reviewed", it read as "' + emptyReview.status + '"'
+    );
+  }
+
+  // And a record cannot render as reviewed on the strength of its flag alone:
+  // a "reviewed" status with nobody named behind it is not a review.
+  if (activities.isReviewed({ reviewStatus: "reviewed" }) !== false) {
+    failures.push(
+      'A record marked "reviewed" with no reviewer name still counts as reviewed, so the app could show a sign-off with no officer behind it'
+    );
+  }
+  if (activities.isReviewed({ reviewStatus: "reviewed", reviewedBy: "A Test Officer" }) !== true) {
+    failures.push("A complete review record no longer counts as reviewed, so a real review would be hidden from the farmer");
   }
 }
 
@@ -374,7 +497,41 @@ while ((idMatch = idRe.exec(html)) !== null) {
   }
 });
 
-/* ---- 7. Every image the README shows must be on disk ---- */
+/* ---- 7. The office pack must stay wired and stay out of visit mode ---- */
+
+// The office pack is read from `window` when app.js loads, exactly like the
+// other modules, so the script tag has to come before app.js. If it is moved
+// after, nothing throws: the pack button simply does nothing, which is the
+// kind of break that reaches a farmer. Order is checked here instead.
+var packTag = html.indexOf("js/officepack.js");
+var appTag = html.indexOf("js/app.js");
+if (packTag === -1) {
+  failures.push("index.html no longer loads js/officepack.js, so the office pack button has no builder behind it");
+} else if (appTag !== -1 && packTag > appTag) {
+  failures.push("index.html loads js/officepack.js after js/app.js, so the pack would silently never build");
+}
+
+// Visit mode exists so that standing at a counter the screen holds the card,
+// the questions, the reading controls and nothing else. Anything new added to
+// the visit screen has to be either wanted there or marked to hide, and the
+// pack panel is deliberately wanted on the card screen but not in visit mode.
+var packPanel = /<section[^>]*id="office-pack-panel"[^>]*>/.exec(html);
+if (!packPanel) {
+  failures.push("index.html no longer contains the office pack panel (#office-pack-panel)");
+} else if (!/class="[^"]*visit-mode-hide/.test(packPanel[0])) {
+  failures.push('the office pack panel is not marked visit-mode-hide, so it would clutter the one-handed visit screen');
+}
+
+// And the rule that does the hiding must still exist. The class alone hides
+// nothing, and a stylesheet edit that drops the selector would leave visit
+// mode looking exactly like the full page.
+var cssPath = path.join(root, "css", "styles.css");
+var css = fs.existsSync(cssPath) ? fs.readFileSync(cssPath, "utf8") : "";
+if (css.indexOf("#screen-visit.is-visit-mode .visit-mode-hide") === -1) {
+  failures.push("css/styles.css no longer hides .visit-mode-hide inside visit mode, so visit mode shows the full page chrome");
+}
+
+/* ---- 8. Every image the README shows must be on disk ---- */
 
 // The README is the shop window, and a broken image there is the first thing a
 // visitor sees. It has happened the easy way already: screenshots were
@@ -400,6 +557,214 @@ readmeImages.forEach(function (img) {
 
 if (!readmeImages.length) {
   notes.push("README.md shows no images; run `npm run screenshots` to capture the four field screens");
+}
+
+/* ---- 8. The honesty wording must survive ---- */
+
+// These sentences are the product, not decoration. Everything else here is
+// checked, could be rewritten without harm; these are the lines that stop a
+// suggestion being read as an instruction, and they are pinned literally so
+// that weakening one is a build failure rather than a quiet edit. The expected
+// text lives here, in the checker, and not read out of the app, because a test
+// that asks the app what it says will always agree with it.
+var REQUIRED_WORDING = {
+  confirm: "Always confirm locally before acting.",
+  stillConfirm: "Still confirm locally before acting.",
+  notReviewedBy: "Not yet reviewed by an agriculture officer.",
+  notReviewedRefusal: "Treat every suggestion as a question to discuss, not as advice to act on.",
+  confirmationLine:
+    "Confirm suitability, costs and current scheme rules with your local agriculture office or Kisan Khidmat Ghar before acting.",
+};
+
+function sentenceCount(text, sentence) {
+  return String(text).split(sentence).length - 1;
+}
+
+if (catalogue && activities) {
+  // 1. The catalogue's shared line, which every option and every scheme entry
+  //    carries. A vague "check locally" is not the same promise as this one.
+  if (catalogue.confirmationLine !== REQUIRED_WORDING.confirmationLine) {
+    failures.push(
+      "js/catalogue.js: the shared confirmation line no longer matches the pinned wording.\n" +
+        "      expected: " + REQUIRED_WORDING.confirmationLine + "\n" +
+        "      found:    " + catalogue.confirmationLine
+    );
+  }
+
+  // 2. Each review state must keep its own instruction. "not-reviewed" and
+  //    "mixed" keep the standing sentence; a recorded review keeps the shorter
+  //    one, which is the whole point of recording a review: the officer checked
+  //    the list, never the farmer's plot.
+  var notReviewedText = activities.formatReview({ reviewStatus: "not-reviewed" }).text;
+  var reviewedText = activities.formatReview({
+    reviewStatus: "reviewed",
+    reviewedBy: "Test Officer",
+    designation: "Test Designation",
+    reviewedOn: "2026-01-01",
+  }).text;
+  var mixedText = activities.reviewFor([
+    { reviewStatus: "reviewed", reviewedBy: "Test Officer", reviewedOn: "2026-01-01" },
+    {},
+  ]).text;
+
+  [
+    ["not-reviewed", notReviewedText, REQUIRED_WORDING.confirm],
+    ["mixed", mixedText, REQUIRED_WORDING.confirm],
+    ["reviewed", reviewedText, REQUIRED_WORDING.stillConfirm],
+  ].forEach(function (row) {
+    var state = row[0];
+    var text = row[1];
+    var sentence = row[2];
+    if (text.indexOf(sentence) === -1) {
+      failures.push(
+        'The "' + state + '" review wording dropped "' + sentence + '", so it no longer tells the farmer to confirm locally. A review must never remove that instruction'
+      );
+    }
+  });
+
+  if (notReviewedText.indexOf(REQUIRED_WORDING.notReviewedBy) === -1) {
+    failures.push(
+      'The unreviewed wording no longer says "' + REQUIRED_WORDING.notReviewedBy + '", so an unreviewed catalogue is not stated as unreviewed'
+    );
+  }
+  if (notReviewedText.indexOf(REQUIRED_WORDING.notReviewedRefusal) === -1) {
+    failures.push(
+      'The unreviewed wording no longer says "' + REQUIRED_WORDING.notReviewedRefusal + '", which is what stops a suggestion reading as advice'
+    );
+  }
+
+  // 3. The wording has to reach the surfaces, not merely exist. A perfect
+  //    sentence that no screen paints is the failure this checks for.
+  ["review-banner", "compare-review", "summary-review"].forEach(function (surfaceId) {
+    if (pageIds.indexOf(surfaceId) === -1) {
+      failures.push(
+        "index.html no longer contains #" + surfaceId + ", so that screen would show no review status at all"
+      );
+    }
+    if (appCode.indexOf('fillReviewSlot("' + surfaceId + '"') === -1) {
+      failures.push(
+        'js/app.js no longer fills #' + surfaceId + ' with the review wording, so that screen would drop the honesty line it is supposed to carry'
+      );
+    }
+  });
+
+  if (pageIds.indexOf("about-review-status") === -1) {
+    failures.push("index.html no longer contains #about-review-status, so the About page would state no review status");
+  }
+  if (appCode.indexOf("#about-review-status") === -1 || appCode.indexOf("setAboutReviewStatus") === -1) {
+    failures.push("js/app.js no longer writes the catalogue review status into #about-review-status");
+  }
+
+  // The visit card is the page that reaches the office, so the review line has
+  // to be in the card itself, not only in the screen it was made from.
+  if (appCode.indexOf("reviewBannerHtml(currentReview())") === -1) {
+    failures.push(
+      "js/app.js no longer builds the visit card with the review wording, and the visit card is the page that leaves the phone"
+    );
+  }
+
+  // A review that has been recorded must never be able to silence the line. If
+  // anyone ever makes the confirm sentence conditional, this catches the shape
+  // of that mistake: both wordings must contain it unconditionally.
+  if (sentenceCount(reviewedText, REQUIRED_WORDING.stillConfirm) !== 1) {
+    failures.push('The "reviewed" wording must contain "' + REQUIRED_WORDING.stillConfirm + '" exactly once');
+  }
+}
+
+/* ---- 9. The support copy must make no claim this app cannot back ---- */
+
+// The catalogue and the scheme list are the two places a well-meaning edit
+// would add a figure that reads like an authority: a subsidised rate, an
+// application window, a list of papers to carry. The rule is that none of them
+// may appear at all, so the copy is scanned rather than trusted. The patterns
+// live in tools/claims.js, shared with the behavioural suite so the two cannot
+// disagree about what a claim is.
+//
+// This covers the copy an editor writes. The text the app generates at run
+// time - the questions, the share message, the office panel - is checked in
+// tools/selftest.js, where a sample plan exists to generate it with.
+var SCHEME_CONFIRM_LINE =
+  "Confirm current details, eligibility and documents with the official portal or local agriculture office, or at your Kisan Khidmat Ghar.";
+
+// Fields that are not prose: a URL is an address, not a sentence, and an id is
+// a key. Everything else in these two files is read by a farmer.
+var NOT_PROSE = ["url", "extraUrls", "linkLabel", "id", "appliesTo", "value"];
+
+function proseStrings(node, trail, out) {
+  if (typeof node === "string") {
+    out.push({ where: trail, text: node });
+    return out;
+  }
+  if (Array.isArray(node)) {
+    node.forEach(function (child, i) {
+      proseStrings(child, trail + "[" + i + "]", out);
+    });
+    return out;
+  }
+  if (node && typeof node === "object") {
+    Object.keys(node).forEach(function (key) {
+      if (NOT_PROSE.indexOf(key) !== -1) return;
+      proseStrings(node[key], trail + "." + key, out);
+    });
+  }
+  return out;
+}
+
+if (sandbox.window.MLMP_SCHEMES) {
+  var schemeModule = sandbox.window.MLMP_SCHEMES;
+
+  // The instruction every scheme entry is rendered with. Weakening it is the
+  // quiet way to turn a list of places to ask into a list of promises.
+  if (schemeModule.CONFIRM_LINE !== SCHEME_CONFIRM_LINE) {
+    failures.push(
+      "js/schemes.js: the scheme confirmation line no longer matches the pinned wording.\n" +
+        "      expected: " + SCHEME_CONFIRM_LINE + "\n" +
+        "      found:    " + schemeModule.CONFIRM_LINE
+    );
+  }
+  if (appCode.indexOf("SCHEMES.CONFIRM_LINE") === -1) {
+    failures.push("js/app.js no longer renders the scheme confirmation line, so the entries would read as statements of fact");
+  }
+
+  var schemeCopy = proseStrings(schemeModule.ALL, "js/schemes.js", []);
+  schemeCopy.forEach(function (item) {
+    claims.findClaims(item.text).forEach(function (hit) {
+      failures.push(
+        item.where + " makes a claim this app cannot back: " + claims.describeClaim(hit) + "\n" +
+          "      text: " + item.text.slice(0, 120) + (item.text.length > 120 ? "..." : "")
+      );
+    });
+
+    // Eligibility may be mentioned, but only while refusing to settle it:
+    // either with an instruction to confirm it, or by saying plainly that
+    // working it out is not what this page is for. A bare mention is what turns
+    // into a rule.
+    //
+    // The check is per string, not per entry, because a scheme entry usually
+    // carries an unrelated "Ask the local office..." action, and that word
+    // elsewhere in the same entry must not be allowed to cover for a sentence
+    // that states eligibility on its own.
+    if (
+      /eligib/i.test(item.text) &&
+      !/confirm|ask|rather than|instead of|cannot|never\b/i.test(item.text)
+    ) {
+      failures.push(
+        item.where +
+          " mentions eligibility without telling the farmer to confirm it or saying it is not decided here; eligibility must never read as a rule this app has settled"
+      );
+    }
+  });
+}
+
+if (catalogue) {
+  proseStrings(catalogue, "js/catalogue.js", []).forEach(function (item) {
+    claims.findClaims(item.text).forEach(function (hit) {
+      failures.push(
+        item.where + " makes a claim this app cannot back: " + claims.describeClaim(hit) + "\n" +
+          "      text: " + item.text.slice(0, 120) + (item.text.length > 120 ? "..." : "")
+      );
+    });
+  });
 }
 
 /* ---- Report ---- */

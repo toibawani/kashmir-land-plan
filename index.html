@@ -58,7 +58,7 @@
           <h1 id="home-title" data-i18n="home.title">My Land, My Plan</h1>
           <p class="hero-lead" data-i18n="home.lead">
             Answer a few questions about a plot you are not using, and get activity options to explore,
-            a month-by-month guide, questions to ask, and a one-page card to take to the office.
+            a month-by-month guide, questions to ask, and one page you can print or send as a message to take to the office.
           </p>
           <div class="hero-actions">
             <button type="button" class="btn btn-primary btn-lg" id="btn-start" data-i18n="home.start">Start a land plan</button>
@@ -304,8 +304,9 @@
         <div id="questions-block" class="questions-block" hidden></div>
 
         <div class="results-actions no-print">
+          <button type="button" class="btn btn-primary" id="btn-results-visit">Office visit card</button>
+          <button type="button" class="btn btn-secondary" id="btn-compare">Compare options</button>
           <button type="button" class="btn btn-secondary" id="btn-edit">Edit details</button>
-          <button type="button" class="btn btn-primary" id="btn-compare">Compare options</button>
         </div>
         <button type="button" class="btn btn-secondary no-print" id="btn-results-plans">My saved plans</button>
         <button type="button" class="btn btn-quiet no-print" id="btn-reset-results">Start over with new details</button>
@@ -488,10 +489,28 @@
               of it has been approved by anyone.
             </p>
             <div class="results-actions visit-hero-actions">
-              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print">Print or save as PDF</button>
+              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-office-pack">Open office pack</button>
+              <button type="button" class="btn btn-secondary" id="btn-visit-print">Print or save as PDF</button>
               <button type="button" class="btn btn-secondary" id="btn-visit-share">Share on WhatsApp</button>
               <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download">Download as text</button>
             </div>
+            <section class="office-pack no-print visit-mode-hide" id="office-pack-panel" aria-labelledby="office-pack-title" hidden>
+              <h2 id="office-pack-title">Office pack</h2>
+              <p>
+                Everything worth carrying, in one message: the plot, the options you marked, the questions
+                to ask, the review state and the reference code. Share it, copy it, or print the card.
+              </p>
+              <div class="results-actions">
+                <button type="button" class="btn btn-primary" id="btn-pack-share">Share the pack</button>
+                <button type="button" class="btn btn-secondary" id="btn-pack-copy">Copy the text</button>
+                <button type="button" class="btn btn-secondary" id="btn-pack-print">Print the card</button>
+              </div>
+              <pre class="office-pack-text" id="office-pack-text" tabindex="0"></pre>
+              <p class="office-pack-note">
+                This is the same plan as the card below, written for a message instead of a page. It names
+                no amounts, deadlines or eligibility rules.
+              </p>
+            </section>
             <div class="read-controls">
               <div class="results-actions">
                 <button type="button" class="btn btn-read" id="btn-visit-read" aria-pressed="false">Read the card aloud</button>
@@ -724,6 +743,7 @@
   <script src="js/visitfit.js"></script>
   <script src="js/office.js"></script>
   <script src="js/share.js"></script>
+  <script src="js/officepack.js"></script>
   <script src="js/messages.js"></script>
   <script src="js/app.js"></script>
 </body>

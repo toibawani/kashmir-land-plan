@@ -19,7 +19,7 @@ There is nothing to install and nothing to compile. The `package.json` exists on
 ```sh
 npm start     # serves the folder at http://127.0.0.1:8080
 npm run build # pre-flight check: scripts parse, references resolve, offline cache consistent
-npm test      # the build check plus 165 behavioural checks
+npm test      # the build check plus 193 behavioural checks
 ```
 
 The README screenshots are regenerated from the running app, not pasted in by
@@ -53,7 +53,7 @@ The whole plan works offline after the first visit. Weather is the one part that
 - It reads the shipped colour palette out of the stylesheet and checks every foreground/background pair that renders against the WCAG AA contrast floors (4.5:1 for body text, 3:1 for large text and control boundaries). A future colour tweak that made the page unreadable outdoors fails here, not in a field.
 - It checks that every element `app.js` wires an event listener to actually exists in `index.html`, so a typo in an id cannot leave a button that is drawn on screen but wired to nothing.
 
-`npm test` adds `tools/selftest.js`, 165 behavioural checks with no browser and no network, over the parts a farmer never sees fail loudly: the review wording, the catalogue shape, the scheme wording, the generated questions, the saved-plan store, the speech chunker, the QR encoder, the offline guidance, the print fitter and the office panel.
+`npm test` adds `tools/selftest.js`, 193 behavioural checks with no browser and no network, over the parts a farmer never sees fail loudly: the review wording, the catalogue shape, the scheme wording, the generated questions, the saved-plan store, the speech chunker, the QR encoder, the offline guidance, the print fitter, the office panel and the office pack.
 
 ## Screens
 
@@ -75,6 +75,33 @@ The other screens: plot details (a five step form with a progress bar), compare
 options, next steps and local support (the month ahead for your shortlist, the
 generated questions, the checklist and the official portals), my saved plans,
 weather near your district, and about with sources and limitations.
+
+## Two-minute demo
+
+The whole value of the app is one path. On a phone, or in a narrow window:
+
+1. **Try sample journey** on the home screen. It fills a sample plot (Pulwama, 3
+   kanal, seasonal water, water as the main constraint) and goes straight to the
+   options. Nothing is asked of you yet.
+2. Read the options. Each one carries the reason it came up, the ratings, what is
+   missing, and the review state across the top: not yet reviewed by an
+   agriculture officer.
+3. **Office visit card** at the bottom of the options. This is the artefact.
+4. **Open office pack**. One message now holds the plot, the marked options, the
+   questions to ask, what to expect at the office, the review state and the
+   reference code.
+5. **Share the pack** to hand it to the phone's share sheet, or **Copy the text**
+   to paste it into WhatsApp by hand. Both send the same words.
+6. Tick a question in the card as asked. The ticks ride along into the pack and
+   the download, so what was already covered is not asked twice at the counter.
+7. **Read the card aloud**, or turn on **Visit mode** first: the screen keeps the
+   card, the tickable questions, the reading controls and a single large way out.
+   Everything else is hidden.
+
+What to say while doing it: "This is a prototype, not a government service. It
+knows your plot details and the questions worth asking, and it never names an
+amount, a deadline or a rule, because those change and the office decides them.
+The farmer leaves with a WhatsApp message or a printed page."
 
 ## The four kinds of information in this app
 
@@ -248,6 +275,7 @@ I checked contrast, horizontal overflow and target size on every screen at 320px
 - The generated questions. They are written from your own answers (district, size in your own unit, water, terrain, constraint) and from the options you marked, so they name your plot instead of speaking in generalities. A weather question is added only when a forecast is actually loaded, and the list always closes on the scheme question.
 - The month ahead, for the options on your shortlist. It reads the same calendars the summary already uses, filtered to what you marked.
 - The office visit card. It carries your answers, up to three marked options, the questions, the relevant official portals, the review status and the confirmation line. It prints as one page: before printing, the card trims only its note lines and support list if it measured as too tall, and never the answers, options or questions. Beside the printed reference it carries a scannable code drawn on the device, which holds only the reference and nothing else. A calm "what to expect at the office" panel sets expectations from general public knowledge, naming no amounts, deadlines, documents or eligibility, and says plainly that the office decides.
+- The office pack. One button on the visit card opens the whole plan as plain text: the plot, up to three marked options, the questions with any already answered ticked, what to expect at the office, the review state, the reference code and the confirm-locally line. Share hands it to the phone's share sheet, copy puts it on the clipboard with a fallback for browsers that block the clipboard API, and print gives the card. It is built by one module from the same state as the card, so the message and the page cannot drift apart, and it is checked to make no claim the app cannot back.
 - Visit mode. From the visit card, one button keeps only the card, the questions to tick, the read-aloud controls (given the large primary treatment so they are easy to hit hands-free), and the buttons to print, share or finish. Everything else is hidden, and a fixed bar at the bottom holds a single large "Done, leave visit mode" control that never scrolls away, so the phone stays usable while standing at the counter with one obvious way back.
 - Share on WhatsApp. On the summary and the visit card, a share button builds a short plain-text message (plot basics, the marked options, up to five questions with any already covered, the review status, the confirm-locally line and the plan reference) and hands it to the phone's own share sheet. Where there is no share sheet it copies the text to the clipboard so it can be pasted into WhatsApp. There is no backend, no short-link service and no account: the message is built on the device from the same data as the card, and it carries the exact review wording and confirm-locally line the screen shows, so a forwarded message can never claim more than the app does.
 - Several saved plans. They are stored on the device only, can be renamed, deleted, opened for editing, and compared side by side, and one can be marked as the one going to the office.
@@ -293,7 +321,7 @@ Nothing about crops, zones or programmes was invented. The background in `js/reg
 
 ## New sources used for this round
 
-None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. This round added a WhatsApp share message, a firmer visit mode, a clearer home screen and a language foundation, all built only from data already in the app and from the copy already on screen. The share message reuses the app's own review wording and confirm-locally line, and it is checked to carry no rupee figure, no deadline year and no amount word, so a forwarded message cannot claim more than the screen. The self-test harness is now at 165 checks: it grew to cover the share message (its honesty lines, its trimming of a long question list, and its wa.me link) and the language foundation (that English is the only ready language at ship time, that `t()` falls back to English for any untranslated key, and that a translator's registered-but-unready language stays out of the switcher until marked ready). If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
+None. No new crop, scheme, eligibility, amount or suitability claim was added, so no new source was needed. This round added a WhatsApp share message, a firmer visit mode, a clearer home screen and a language foundation, all built only from data already in the app and from the copy already on screen. The share message reuses the app's own review wording and confirm-locally line, and it is checked to carry no rupee figure, no deadline year and no amount word, so a forwarded message cannot claim more than the screen. The self-test harness is now at 193 checks. It grew to cover the share message (its honesty lines, its trimming of a long question list, and its wa.me link), the language foundation (that English is the only ready language at ship time, that `t()` falls back to English for any untranslated key, and that a translator's registered-but-unready language stays out of the switcher until marked ready), and the office pack (that it names the plot and the marked options, keeps the review wording and the confirm-locally line, makes no claim the app cannot back, and still builds something honest when a field is missing). The build check also fails now if the pack script is loaded after app.js, where the button would sit doing nothing, or if the pack panel stops being hidden in visit mode. If a real advisory ever fed the question wording or the timing judgement, that wording would need an agronomist to check it.
 
 ## Licence
 
