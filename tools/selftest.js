@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js", "share.js", "messages.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js", "share.js", "officepack.js", "messages.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
@@ -83,6 +83,7 @@ var OFFLINE = sandbox.window.MLMP_OFFLINE;
 var FIT = sandbox.window.MLMP_FIT;
 var OFFICE = sandbox.window.MLMP_OFFICE;
 var SHARE = sandbox.window.MLMP_SHARE;
+var OFFICEPACK = sandbox.window.MLMP_OFFICEPACK;
 var MSG = sandbox.window.MLMP_MESSAGES;
 
 console.log("review wording");
@@ -858,6 +859,89 @@ var waLink = SHARE.waUrl(shareText);
 check("the WhatsApp link is a wa.me link", waLink.indexOf("https://wa.me/?text=") === 0, "not a wa.me link");
 check("the WhatsApp link carries the reference", decodeURIComponent(waLink).indexOf("MLMP-PUL-3K-8F2C") !== -1, "reference not in the link");
 
+/* ---- Office pack ---- */
+
+// The pack is the message a farmer forwards or reads at a counter, so it is
+// checked on its own terms: every part of the visit is present, and nothing
+// in it reads as an amount, a deadline, an eligibility rule or a promise.
+console.log("office pack");
+var packInput = {
+  reference: "MLMP-PUL-3K-8F2C",
+  planName: "Upper field",
+  dateLabel: "14 October 2026",
+  isDemo: false,
+  reviewText: ACTIVITIES.formatReview({ reviewStatus: "not-reviewed" }).text,
+  answers: {
+    district: "Pulwama",
+    village: "Tral",
+    size: "3",
+    unit: "kanal",
+    landUse: "underused",
+    water: "seasonal",
+    terrain: "sloped or hilly",
+    soil: "none",
+    constraint: "labour",
+  },
+  options: [
+    { title: "Walnut orchard", marked: true },
+    { title: "Willow for wicker", marked: false },
+  ],
+  questions: [
+    { text: "Which walnut variety suits a plot like mine?", ticked: false },
+    { text: "Where is the nearest soil testing done?", ticked: true },
+  ],
+  expectations: OFFICE.items(),
+  expectationsClosing: OFFICE.closing(),
+  confirmLine: ACTIVITIES.confirmationLine,
+};
+var packText = OFFICEPACK.build(packInput);
+check("the pack names the reference", packText.indexOf("MLMP-PUL-3K-8F2C") !== -1, "reference missing");
+check("the pack names the plot", packText.indexOf("Pulwama") !== -1 && packText.indexOf("Tral") !== -1, "plot answers missing");
+check("the pack lists a marked option", /Walnut orchard.*\[marked to follow up\]/.test(packText), "marked option missing or unmarked");
+check("the pack calls every option a discussion, not a recommendation", (packText.match(/not a recommendation/g) || []).length === 2, "option disclaimer missing");
+check("the pack lists the questions", packText.indexOf("Which walnut variety") !== -1, "question missing");
+check("the pack marks a covered question", /\[x\] Where is the nearest soil testing done\?/.test(packText), "ticked question not shown");
+check("the pack counts what was covered", /1 of 2 covered so far/.test(packText), "cover count missing");
+check("the pack carries the review wording", packText.indexOf(packInput.reviewText) !== -1, "review line missing");
+check("the pack describes what to expect", packText.indexOf("WHAT TO EXPECT AT THE OFFICE") !== -1 && packText.indexOf(OFFICE.items()[0]) !== -1, "office expectations missing");
+check("the pack keeps the confirm-locally line", /confirm/i.test(packText) && packText.indexOf(ACTIVITIES.confirmationLine) !== -1, "confirm-locally line missing");
+check("the pack says it is not an official document", /not an official document/i.test(packText), "prototype disclaimer missing");
+check("the pack says the reference opens nothing", /opens nothing and looks up nothing/i.test(packText), "reference note missing");
+check("the pack uses no em dash", !/\u2014/.test(packText), "an em dash in the pack");
+
+// The claims scan for the pack lives with the other generated-text scans at
+// the end of the file, where the claim rules have been loaded.
+
+// The same plan must read the same way in the pack and the share message. If
+// these two ever drift, a farmer can send one thing and hand over another.
+check("the pack and the share message agree on the review line", packText.indexOf(packInput.reviewText) !== -1 && shareText.indexOf(packInput.reviewText) !== -1, "review wording differs");
+check("the pack and the share message agree on confirm-locally", packText.indexOf(ACTIVITIES.confirmationLine) !== -1 && shareText.indexOf(ACTIVITIES.confirmationLine) !== -1, "confirm line differs");
+
+// Building must never throw, because the button must always produce something
+// honest rather than a dead end. A missing field is not an error, and a null
+// input still states the prototype line and the confirmation line.
+var emptyPack = OFFICEPACK.build({});
+check("the pack builds from an empty object", typeof emptyPack === "string" && emptyPack.length > 0, "no text");
+check("an empty pack still asks for local confirmation", emptyPack.indexOf(OFFICEPACK.CONFIRM_FALLBACK) !== -1, "confirmation line missing");
+check("an empty pack still says it is a prototype", /not an official document/i.test(emptyPack), "prototype line missing");
+check("the pack builds from null", typeof OFFICEPACK.build(null) === "string", "threw on null");
+check("the pack builds from nonsense options", typeof OFFICEPACK.build({ options: [{}, null], questions: [{}] }) === "string" && OFFICEPACK.build({ options: [{}] }).indexOf("An option to discuss") !== -1, "empty option broke the text");
+
+// The fallback line exists only for callers that pass no confirm line, so it
+// must stay word-for-word identical to the catalogue's line, or a future edit
+// could make the pack quietly weaker than the screen.
+check("the pack fallback matches the catalogue confirmation line", OFFICEPACK.CONFIRM_FALLBACK === ACTIVITIES.confirmationLine, "the fallback has drifted from the catalogue");
+
+// The pack is trimmed to the same shortlist as the card, so a message never
+// becomes a wall of text on a phone.
+var manyPackOptions = [];
+for (var po = 0; po < 6; po++) manyPackOptions.push({ title: "Option " + (po + 1), marked: false });
+var manyPackQuestions = [];
+for (var pq = 0; pq < 10; pq++) manyPackQuestions.push({ text: "Question " + (pq + 1) + "?", ticked: false });
+var trimmedPack = OFFICEPACK.build({ options: manyPackOptions, questions: manyPackQuestions });
+check("the pack keeps at most three options", trimmedPack.indexOf("Option 3") !== -1 && trimmedPack.indexOf("Option 4") === -1, "option trimming wrong");
+check("the pack keeps at most seven questions", trimmedPack.indexOf("Question 7?") !== -1 && trimmedPack.indexOf("Question 8?") === -1, "question trimming wrong");
+
 /* ---- Language foundation ---- */
 
 // The foundation ships English only. The switcher must stay hidden (available()
@@ -946,6 +1030,13 @@ reportClaims("The office panel", officeText);
 var shareScrubbed = shareText.split(shareInput.dateLabel).join("");
 reportClaims("The share message", shareScrubbed);
 check("the share message makes no claim", claimHitsIn(shareScrubbed).length === 0, shareScrubbed.slice(0, 120));
+
+// The office pack is the same promise in a longer shape, so it gets the same
+// scan. Its prepared date is the farmer's own and is removed first.
+var packScrubbed = packText.split(packInput.dateLabel).join("");
+reportClaims("The office pack", packScrubbed);
+check("the office pack makes no claim", claimHitsIn(packScrubbed).length === 0, packScrubbed.slice(0, 120));
+check("an empty office pack makes no claim either", claimHitsIn(emptyPack).length === 0, emptyPack.slice(0, 120));
 
 // A guard that cannot fail is decoration, so the shared list is tested here as
 // well: if somebody empties tools/claims.js, or weakens a pattern until it
