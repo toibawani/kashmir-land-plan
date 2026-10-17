@@ -461,7 +461,41 @@ while ((idMatch = idRe.exec(html)) !== null) {
   }
 });
 
-/* ---- 7. Every image the README shows must be on disk ---- */
+/* ---- 7. The office pack must stay wired and stay out of visit mode ---- */
+
+// The office pack is read from `window` when app.js loads, exactly like the
+// other modules, so the script tag has to come before app.js. If it is moved
+// after, nothing throws: the pack button simply does nothing, which is the
+// kind of break that reaches a farmer. Order is checked here instead.
+var packTag = html.indexOf("js/officepack.js");
+var appTag = html.indexOf("js/app.js");
+if (packTag === -1) {
+  failures.push("index.html no longer loads js/officepack.js, so the office pack button has no builder behind it");
+} else if (appTag !== -1 && packTag > appTag) {
+  failures.push("index.html loads js/officepack.js after js/app.js, so the pack would silently never build");
+}
+
+// Visit mode exists so that standing at a counter the screen holds the card,
+// the questions, the reading controls and nothing else. Anything new added to
+// the visit screen has to be either wanted there or marked to hide, and the
+// pack panel is deliberately wanted on the card screen but not in visit mode.
+var packPanel = /<section[^>]*id="office-pack-panel"[^>]*>/.exec(html);
+if (!packPanel) {
+  failures.push("index.html no longer contains the office pack panel (#office-pack-panel)");
+} else if (!/class="[^"]*visit-mode-hide/.test(packPanel[0])) {
+  failures.push('the office pack panel is not marked visit-mode-hide, so it would clutter the one-handed visit screen');
+}
+
+// And the rule that does the hiding must still exist. The class alone hides
+// nothing, and a stylesheet edit that drops the selector would leave visit
+// mode looking exactly like the full page.
+var cssPath = path.join(root, "css", "styles.css");
+var css = fs.existsSync(cssPath) ? fs.readFileSync(cssPath, "utf8") : "";
+if (css.indexOf("#screen-visit.is-visit-mode .visit-mode-hide") === -1) {
+  failures.push("css/styles.css no longer hides .visit-mode-hide inside visit mode, so visit mode shows the full page chrome");
+}
+
+/* ---- 8. Every image the README shows must be on disk ---- */
 
 // The README is the shop window, and a broken image there is the first thing a
 // visitor sees. It has happened the easy way already: screenshots were
