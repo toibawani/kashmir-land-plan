@@ -129,6 +129,42 @@ precache.forEach(function (r) {
   }
 });
 
+/* ---- 3b. A changed cached file must come with a version bump ---- */
+
+// This one exists because it actually happened: the app was edited, the files
+// on the server were correct, and a browser kept showing the old page from the
+// service worker cache, so a fix looked like it had not worked. The rule is
+// that if anything in CORE_ASSETS changes, CACHE_VERSION has to change with
+// it, because the version is what makes the browser drop the old copies.
+//
+// Checking "was the version bumped" needs history, which a build does not
+// have. So instead the file list and its contents are fingerprinted, and the
+// fingerprint is stored in sw.js next to the version. Change a cached file and
+// the build fails, printing the new line to paste in along with the reminder
+// to bump CACHE_VERSION. Updating the fingerprint without reading that
+// reminder is possible, but it is now a deliberate act rather than an
+// oversight.
+var fingerprint = require("crypto").createHash("sha256");
+precache.forEach(function (r) {
+  var full = path.join(root, r);
+  fingerprint.update(r);
+  fingerprint.update("\u0000");
+  fingerprint.update(fs.existsSync(full) ? fs.readFileSync(full) : "missing");
+  fingerprint.update("\u0000");
+});
+var actualFingerprint = fingerprint.digest("hex").slice(0, 16);
+var declared = sw.match(/var\s+CACHE_FINGERPRINT\s*=\s*"([^"]*)"/);
+if (!declared) {
+  failures.push("sw.js has no CACHE_FINGERPRINT, so nothing catches a cached file changing without a version bump");
+} else if (declared[1] !== actualFingerprint) {
+  failures.push(
+    "a cached file changed but sw.js was not updated. Raise CACHE_VERSION and set " +
+      'var CACHE_FINGERPRINT = "' +
+      actualFingerprint +
+      '"; in sw.js'
+  );
+}
+
 /* ---- 4. A recorded officer review must be complete ---- */
 
 // A half-filled review is worse than none at all: a bare "reviewed" flag
