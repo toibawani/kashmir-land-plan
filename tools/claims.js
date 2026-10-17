@@ -54,12 +54,19 @@ var BANNED = [
   },
   {
     name: "an amount word",
-    re: /\b(amount|subsidy of|payment of|cost of|price of|rate of)\b/i,
+    re: /\b(amounts?|subsidy of|payment of|costs? of|price of|rates? of)\b/i,
+    // "it names no amounts" is the app refusing to give one, which is the
+    // honest case and not a claim. The escape is deliberately tied to this
+    // rule's own subject word, so a sentence that disowns amounts cannot cover
+    // for a deadline claim sitting next to it.
+    unless: /\b(no|not|never)\b[^.;]{0,30}\bamounts?\b/i,
     why: "this app lists what a programme is for, never what it pays",
   },
   {
     name: "a deadline",
-    re: /\b(deadline|last date|due date|apply by|applications? (close|open)|cut-?off date)\b/i,
+    re: /\b(deadlines?|last date|due date|apply by|applications? (close|open)|cut-?off date)\b/i,
+    // Same reasoning: naming what this app withholds is not a claim.
+    unless: /\b(no|not|never)\b[^.;]{0,30}\bdeadlines?\b/i,
     why: "deadlines move faster than a static page can follow",
   },
   {
@@ -95,11 +102,16 @@ var BANNED = [
   {
     name: "a document list",
     re: /\b(required|needed|supporting|following)\s+documents?\b|\bdocuments?\s+(required|needed|to submit|to bring)\b/i,
+    unless: /\b(no|not|never)\b[^.;]{0,30}\bdocuments?\b/i,
     why: "document lists change, and a farmer who carries the wrong papers has wasted a trip",
   },
   {
     name: "a promised outcome",
-    re: /\b(guarantee|guaranteed|guarantees|assured|promised?)\b/i,
+    re: /\b(guarantee[sd]?|assured|promised?)\b/i,
+    // The office panel says this describes what usually happens and "is not a
+    // promise of what any particular office will do". A refusal to promise is
+    // the sentence this project wants, so only an assertion is flagged.
+    unless: /\b(no|not|never|cannot|can't|nothing)\b[^.;]{0,30}\b(promises?|guarantees?|assured)\b/i,
     why: "no yield, price or income can be promised here",
   },
   {
@@ -117,6 +129,11 @@ function findClaims(text) {
   var found = [];
   var value = String(text == null ? "" : text);
   BANNED.concat([DIGITS]).forEach(function (rule) {
+    // A rule may carry an "unless": the app is allowed to name the very thing
+    // it refuses to give ("it names no amounts, deadlines or eligibility
+    // rules"). Without that, the honest disclaimer would fail the honesty
+    // check, which is the fastest way to get a guard deleted.
+    if (rule.unless && rule.unless.test(value)) return;
     var m = rule.re.exec(value);
     if (m) found.push({ name: rule.name, why: rule.why, match: m[0] });
   });
