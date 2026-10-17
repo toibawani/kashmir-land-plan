@@ -963,7 +963,7 @@ MSG.markReady("ur", true);
 check("a ready language is offered in the switcher", MSG.available().length === 2, "a ready language did not appear");
 MSG.set("ur");
 check("t() returns the translated string", MSG.t("home.start") === "زمینی منصوبہ شروع کریں", MSG.t("home.start"));
-check("t() falls back to English for an untranslated key", MSG.t("home.lead") === "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and a one-page card to take to the office.", "an untranslated key did not fall back to English");
+check("t() falls back to English for an untranslated key", MSG.t("home.lead") === "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and one page you can print or send as a message to take to the office.", "an untranslated key did not fall back to English");
 MSG.set("en");
 
 /* ---- The honesty rules, against text the app generates ---- */

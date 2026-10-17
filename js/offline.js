@@ -42,7 +42,7 @@
     "Read the typical year for each option",
     "Compare the options side by side",
     "Get the questions to ask at the office",
-    "Make and print the office visit card",
+    "Make the office visit card, print it, or send the office pack as a message",
     "Save, rename and reopen your plans",
     "Read the plan aloud, where the phone has a voice",
   ];

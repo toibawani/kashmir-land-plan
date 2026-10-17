@@ -42,7 +42,7 @@
     "home.eyebrow": "For farmers in Jammu and Kashmir",
     "home.title": "My Land, My Plan",
     "home.lead":
-      "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and a one-page card to take to the office.",
+      "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and one page you can print or send as a message to take to the office.",
     "home.start": "Start a land plan",
     "home.demo": "Try sample journey",
     "home.note":
