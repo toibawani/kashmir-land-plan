@@ -27,6 +27,7 @@
   var FIT = window.MLMP_FIT;
   var OFFICE = window.MLMP_OFFICE;
   var SHARE = window.MLMP_SHARE;
+  var OFFICEPACK = window.MLMP_OFFICEPACK;
   var MSG = window.MLMP_MESSAGES;
 
   /** The four kinds of information this app mixes together. Kept explicit so
@@ -2195,6 +2196,140 @@
     }
   }
 
+  // ------------------------------------------------------------ Office pack
+
+  /**
+   * The plain object the office pack module turns into one message.
+   *
+   * It is built from state, the same source as the card and the share text, so
+   * the message, the printout and the screen describe one plan rather than
+   * three drifting copies of it. The review wording and the confirm-locally
+   * line are passed through unchanged, because a message is exactly where a
+   * farmer is most likely to forward something that looks official.
+   */
+  function buildOfficePackInput() {
+    var d = state.data;
+    var options = visitOptions();
+    return {
+      reference: currentPlanReference(),
+      planName: state.currentPlanName || "",
+      dateLabel: formatVisitDate(),
+      isDemo: state.isDemo,
+      reviewText: currentReview().text,
+      answers: {
+        district: d.district,
+        village: d.village,
+        size: d.size,
+        unit: d.unit,
+        landUse: labelLandUse(d.landUse),
+        water: labelWater(d.water),
+        terrain: labelTerrain(d.terrain),
+        soil: labelSoil(d.soil),
+        constraint: labelConstraint(d.constraint),
+      },
+      options: options.map(function (o) {
+        return { title: o.activity.title, marked: !!state.interested[o.activity.id] };
+      }),
+      optionNote: visitOptionNote(options.length, chosenOptions().length),
+      questions: currentQuestions().map(function (q) {
+        return {
+          text: q.text,
+          ticked: !!(state.coveredQuestions && state.coveredQuestions[q.id]),
+        };
+      }),
+      expectations: OFFICE && OFFICE.items ? OFFICE.items() : [],
+      expectationsClosing: OFFICE && OFFICE.closing ? OFFICE.closing() : "",
+      confirmLine: ACTIVITIES.confirmationLine,
+    };
+  }
+
+  function buildOfficePackText() {
+    if (!OFFICEPACK || !OFFICEPACK.build) return "";
+    return OFFICEPACK.build(buildOfficePackInput());
+  }
+
+  /**
+   * Open the pack on the visit screen. It is shown in place rather than on a
+   * new screen so a farmer can compare it with the card without losing the
+   * page they were on, and the text can be selected by hand if a browser
+   * blocks the clipboard.
+   */
+  function openOfficePack() {
+    var panel = $("#office-pack-panel");
+    var pre = $("#office-pack-text");
+    if (!panel || !pre) return;
+    if (!state.planReady || !state.options.length) {
+      setStatus("visit-status", "Finish the plot details first, then the office pack can be opened.");
+      return;
+    }
+    pre.textContent = buildOfficePackText();
+    panel.hidden = false;
+    panel.scrollIntoView({ block: "start", behavior: scrollBehavior() });
+    setStatus("visit-status", "Office pack ready. Share it, copy it, or print the card.");
+  }
+
+  function shareOfficePack() {
+    var text = buildOfficePackText();
+    if (!text) {
+      setStatus("visit-status", "The office pack could not be prepared. Print the card instead.");
+      return;
+    }
+    if (navigator.share) {
+      navigator.share({ title: "My land plan office pack", text: text }).then(
+        function () {
+          /* sent or dismissed: nothing to say */
+        },
+        function () {
+          copyOfficePack(text);
+        }
+      );
+    } else {
+      copyOfficePack(text);
+    }
+  }
+
+  function copyOfficePack(text) {
+    text = text || buildOfficePackText();
+    if (!text) return;
+    var done = function () {
+      setStatus("visit-status", "Office pack copied. Paste it into a message and send.");
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        if (legacyCopy(text)) done();
+        else setStatus("visit-status", "Could not copy automatically. Use Download as text, then share that file.");
+      });
+    } else if (legacyCopy(text)) {
+      done();
+    } else {
+      setStatus("visit-status", "This browser will not copy automatically. Use Download as text instead.");
+    }
+  }
+
+  /**
+   * The clipboard fallback for browsers without navigator.clipboard. The
+   * temporary field is off screen and readonly so a phone keyboard does not
+   * open, and it is always removed, including when the copy is refused.
+   */
+  function legacyCopy(text) {
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "readonly");
+    area.style.position = "fixed";
+    area.style.top = "-1000px";
+    area.style.left = "0";
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (_) {
+      ok = false;
+    }
+    if (area.parentNode) area.parentNode.removeChild(area);
+    return ok;
+  }
+
   // ------------------------------------------------------------ Reading out
 
   /**
@@ -3959,6 +4094,8 @@
         return;
       }
       setVisitMode(false);
+      var packPanel = $("#office-pack-panel");
+      if (packPanel) packPanel.hidden = true;
       renderVisitCard();
       showScreen("visit");
     }
@@ -4017,6 +4154,10 @@
     }
 
     $("#btn-visit-card") && $("#btn-visit-card").addEventListener("click", openVisitCard);
+    // The card is the outcome of the whole app, so it is reachable straight
+    // from the options rather than only after the summary. One less step in
+    // the moment a farmer actually decides to go to the office.
+    $("#btn-results-visit") && $("#btn-results-visit").addEventListener("click", openVisitCard);
     $("#btn-visit-plans") && $("#btn-visit-plans").addEventListener("click", openPlans);
     $("#btn-results-plans") && $("#btn-results-plans").addEventListener("click", openPlans);
     $("#btn-plans-visit") && $("#btn-plans-visit").addEventListener("click", openVisitCard);
@@ -4054,6 +4195,18 @@
     }
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
     $("#btn-visit-share") && $("#btn-visit-share").addEventListener("click", shareVisitCard);
+    $("#btn-visit-office-pack") &&
+      $("#btn-visit-office-pack").addEventListener("click", openOfficePack);
+    $("#btn-pack-share") && $("#btn-pack-share").addEventListener("click", shareOfficePack);
+    $("#btn-pack-copy") &&
+      $("#btn-pack-copy").addEventListener("click", function () {
+        copyOfficePack();
+      });
+    $("#btn-pack-print") &&
+      $("#btn-pack-print").addEventListener("click", function () {
+        if (FIT && FIT.prepareForPrint) FIT.prepareForPrint();
+        window.print();
+      });
     $("#btn-visit-mode") &&
       $("#btn-visit-mode").addEventListener("click", function () {
         setVisitMode(!visitModeOn());

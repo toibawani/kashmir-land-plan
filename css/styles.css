@@ -2487,6 +2487,52 @@ select:focus {
   color: var(--color-text-muted);
 }
 
+/* -- Office pack --
+   The pack sits on the visit screen as a panel rather than a new page, so a
+   farmer can compare it with the card without losing their place. The text
+   is a real pre block so it can be selected and copied by hand when a browser
+   blocks the clipboard. */
+
+.office-pack {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-5);
+  margin: var(--space-4) 0 var(--space-5);
+}
+
+.office-pack h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.office-pack p {
+  margin: 0 0 var(--space-3);
+  max-width: 46rem;
+}
+
+.office-pack-text {
+  margin: var(--space-3) 0;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 26rem;
+  overflow: auto;
+}
+
+.office-pack-note {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+}
+
 .visit-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
