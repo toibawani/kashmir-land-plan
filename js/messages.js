@@ -46,7 +46,7 @@
     "home.start": "Start a land plan",
     "home.demo": "Try sample journey",
     "home.note":
-      "A working prototype, not a government service. It does not approve schemes or judge your land. Everything it suggests is a question to raise with your local agriculture office.",
+      "A working prototype, not a government service. It does not approve schemes or judge your land. Everything it suggests is a question to raise with your local agriculture office. Your answers stay on this device.",
 
     "home.points.enterTitle": "What you enter",
     "home.points.enterBody":
