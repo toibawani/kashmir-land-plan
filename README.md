@@ -107,6 +107,10 @@ The farmer leaves with a WhatsApp message or a printed page."
 
 Jammu and Kashmir has a large share of underused or marginal land, and many small plots sit idle for lack of a clear path from idea to action. Farmers often face fragmented information: which crop suits the elevation, where to test soil, which office to ask. This app does not solve that alone, but it can help a farmer arrive at the office with a prepared set of questions and a one-page summary, rather than a vague request. It is a prototype, not a service, and it only becomes useful when an agriculture officer checks the suggestions against local reality. The goal is to save time on both sides and to keep the conversation honest.
 
+## Why this can matter in Jammu and Kashmir
+
+Jammu and Kashmir has a large share of underused or marginal land, and many small plots sit idle for lack of a clear path from idea to action. Farmers often face fragmented information: which crop suits the elevation, where to test soil, which office to ask. This app does not solve that alone, but it can help a farmer arrive at the office with a prepared set of questions and a one-page summary, rather than a vague request. It is a prototype, not a service, and it only becomes useful when an agriculture officer checks the suggestions against local reality. The goal is to save time on both sides and to keep the conversation honest.
+
 ## The four kinds of information in this app
 
 They are labelled in the interface, and the same labels are used in the plan you print or download.
