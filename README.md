@@ -90,8 +90,9 @@ The whole value of the app is one path. On a phone, or in a narrow window:
 4. **Open office pack**. One message now holds the plot, the marked options, the
    questions to ask, what to expect at the office, the review state and the
    reference code.
-5. **Share the pack** to hand it to the phone's share sheet, or **Copy the text**
-   to paste it into WhatsApp by hand. Both send the same words.
+5. **Open in WhatsApp** opens the same text in WhatsApp, or **Share the pack**
+   to hand it to the phone's share sheet, or **Copy text** to paste it by hand.
+   All three send the same words, which still say to confirm everything locally.
 6. Tick a question in the card as asked. The ticks ride along into the pack and
    the download, so what was already covered is not asked twice at the counter.
 7. **Read the card aloud**, or turn on **Visit mode** first: the screen keeps the
