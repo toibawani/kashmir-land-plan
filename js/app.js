@@ -2672,7 +2672,7 @@
   function setReadProgress(id, index, total, label) {
     var el = readStatusElement(id);
     if (!el) return;
-    el.textContent = "Reading: " + label + " (" + (index + 1) + " of " + total + "). Press Pause to hold it.";
+    el.textContent = "Now reading: " + label + " (" + (index + 1) + " of " + total + "). Press Pause to hold it.";
     el.hidden = false;
     var c = READ_CONTROLS[id];
     if (c && c.prev) {
@@ -2797,7 +2797,7 @@
 
   // The plan, cut into named sections so the ear can follow what the eye sees
   // as headings. Each section is read in order, and the interface names the
-  // one being read: "Reading: Questions to ask at the office (5 of 7)".
+  // one being read: "Now reading: Questions to ask at the office (5 of 7)".
   // Portal addresses are left out on purpose. A spelled-out web address is
   // useful on paper but only noise in a spoken sentence.
   function buildSpokenSections() {

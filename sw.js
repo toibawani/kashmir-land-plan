@@ -10,14 +10,14 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v19";
+var CACHE_VERSION = "mlmp-v20";
 
 /* A fingerprint of CORE_ASSETS below, checked by tools/verify.js. It is here
    because a cached file can change while the version does not, and the browser
    then keeps serving the old copy: the app looks unfixed when it is fixed.
    When the build complains, bump CACHE_VERSION and paste the fingerprint it
    prints. Both move together. */
-var CACHE_FINGERPRINT = "5c446d1ff5209c54";
+var CACHE_FINGERPRINT = "eea9f0af6561211a";
 var CORE_CACHE = CACHE_VERSION + "-core";
 var FONT_CACHE = CACHE_VERSION + "-fonts";
 
