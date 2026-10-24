@@ -2264,6 +2264,8 @@
     }
     pre.textContent = buildOfficePackText();
     panel.hidden = false;
+    var wa = $("#btn-pack-whatsapp");
+    if (wa && SHARE && SHARE.waUrl) wa.setAttribute("href", SHARE.waUrl(pre.textContent));
     panel.scrollIntoView({ block: "start", behavior: scrollBehavior() });
     setStatus("visit-status", "Office pack ready. Share it, copy it, or print the card.");
   }
