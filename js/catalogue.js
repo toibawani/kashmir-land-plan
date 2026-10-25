@@ -106,12 +106,12 @@
       title: "Temperate fruit and nut trees",
       zones: ["valley_temperate", "jammu_hills"],
       why:
-        "Apple, walnut, almond and cherry are the backbone of farming in the Kashmir valley and on the higher ground of the Jammu hills. Trees suit sloping ground that is awkward for field crops, and a small block is easier to manage than a large one.",
+        "Apple, walnut, almond and cherry are the backbone of farming in the Kashmir valley and on the higher ground of the Jammu hills. Apple is the major temperate fruit, covering a large area in the valley and contributing significantly to the regional economy. Trees suit sloping ground that is awkward for field crops, and a small block is easier to manage than a large one.",
       zoneNotes: {
         valley_temperate:
-          "Temperate fruit and nuts are the established system here, so planting material, advice and buyers are usually easier to find than for an unfamiliar crop.",
+          "Temperate fruit and nuts are the established system here, so planting material, advice and buyers are usually easier to find than for an unfamiliar crop. South Kashmir has the highest concentration of apple orchards, followed by North Kashmir and Central Kashmir. Baramulla district has the highest land under apple orchards.",
         jammu_hills:
-          "Fruit is grown in the upper parts of these districts, so tree crops only make sense on ground that is high and cool enough for the species you pick.",
+          "Fruit is grown in the upper parts of these districts, so tree crops only make sense on ground that is high and cool enough for the species you pick. Apple and other temperate fruit appear at higher elevations in the Chenab valley and hill districts.",
       },
       requirements: [
         "Enough cold winter weather for the species and variety you choose",
@@ -119,14 +119,15 @@
         "Willingness to wait several seasons before any real return",
       ],
       risks: [
-        "Frost or hail at flowering, which can cost a whole crop",
+        "Frost or hail at flowering, which can cost a whole crop. Erratic snowfall events in recent years have caused unprecedented losses.",
         "Disease and pest pressure, which builds up in older orchards",
         "Several years with no income, then a price fall in a heavy harvest year",
+        "Changing climate patterns that may shift flowering timing",
       ],
       missing:
-        "Whether your exact elevation and winter cold suit the species and variety you have in mind, and which varieties the local horticulture office recommends",
+        "Whether your exact elevation and winter cold suit the species and variety you have in mind, which varieties the local horticulture office recommends, and whether high-density planting is appropriate for your plot size",
       waterNote:
-        "Water matters most in the first two or three years and again at flowering and fruit fill. Once established on deep soil, trees cope with short dry spells better than young ones do.",
+        "Water matters most in the first two or three years and again at flowering and fruit fill. Once established on deep soil, trees cope with short dry spells better than young ones do. Drip irrigation and fertigation can improve productivity but require investment.",
       waterNeed: "medium",
       effort: "medium",
       cost: "medium",
@@ -307,28 +308,29 @@
       title: "Improve what you already grow, or add an intercrop",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:
-        "If the plot is already cropped, changing a variety, changing when you sow, or adding a second crop that suits the first one is usually cheaper and lower risk than starting something new.",
+        "If the plot is already cropped, changing a variety, changing when you sow, or adding a second crop that suits the first one is usually cheaper and lower risk than starting something new. Established cropping systems in J&K include rice-wheat-moong, rice-wheat-summer fodder, and maize-wheat rotations.",
       zoneNotes: {
         valley_temperate:
-          "Rice followed by mustard or oats is an established pattern in the valley, so a second crop along those lines is a known route rather than an experiment.",
+          "Rice followed by mustard or oats fodder is an established pattern in the valley, so a second crop along those lines is a known route rather than an experiment. Rice-mustard and rice-oat fodder are the main systems.",
         jammu_plains:
-          "Rice-wheat where you have irrigation and maize-wheat where you do not are the usual patterns here, so the adjustment is normally within that rotation.",
+          "Rice-wheat where you have irrigation and maize-wheat where you do not are the usual patterns here. The sub-tropical zone supports rice-wheat-moong and rice-wheat-summer fodder systems. Unirrigated Kandi areas run maize-wheat. The adjustment is normally within these established rotations.",
         jammu_hills:
-          "Maize-wheat rotations on rainfed land leave gaps that a well-chosen second crop or mix can use.",
+          "Maize-wheat rotations on rainfed land leave gaps that a well-chosen second crop or mix can use. Chickpea, field pea and lentil are major pulses in rabi season here, alongside oilseeds like mustard.",
       },
       requirements: [
         "A record of what you grew and how it did",
         "Willingness to trial the change on part of the plot first",
-        "Advice on what actually works in your area",
+        "Advice on what actually works in your area and the recommended varieties",
       ],
       risks: [
         "Changing something without advice can reduce the harvest you already have",
         "Labour clashing between the two crops",
         "Extra input cost with no certainty of extra return",
+        "Pest and disease carryover from one crop to the next in intensive rotations",
       ],
-      missing: "Your recent crop history and the current fertility status of the soil",
+      missing: "Your recent crop history, the current fertility status of the soil, and which varieties the local research station recommends for your zone",
       waterNote:
-        "This follows the crop you already grow, so it mostly uses water you are already applying. A second crop in the same year usually needs more water, not less.",
+        "This follows the crop you already grow, so it mostly uses water you are already applying. A second crop in the same year usually needs more water, not less. Kandi areas rely more on rainfall timing.",
       waterNeed: "varies",
       effort: "low",
       cost: "low",
