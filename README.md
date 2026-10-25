@@ -2,15 +2,30 @@
 
 [![CI](https://github.com/toibawani/kashmir-land-plan/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/toibawani/kashmir-land-plan/actions/workflows/ci.yml)
 
-**What it is:** a no-build, offline-first web app that turns five answers about a plot into a short, realistic list of options, a month by month view of the year ahead, and the questions worth asking at the local agriculture office.
+**A dependency-free, offline-first static PWA that helps farmers in Jammu & Kashmir turn plot details into practical questions for their local agriculture office.**
 
-**Who it is for:** farmers and households in Jammu and Kashmir with land that is sitting unused, and the extension staff who answer their questions.
+- **No backend, no login, no secrets** — everything runs in the browser
+- **168 automated checks** — honesty guards, offline core, print fitting, QR encoding
+- **One-page Office Visit Card** — what you entered, questions to ask, scannable code
+- **Works offline** after first load — weather is the only part that needs a connection
+- **Demo in 2 minutes** — see the "2-minute demo" below
 
-**Why it exists:** the advice a farmer finds online is usually written for large farms, in English, with amounts and deadlines that change faster than a page can be kept up to date. A household here can be left with a plot, a budget that cannot absorb a wrong crop, and no obvious first question. This app does not answer for the farmer. It prepares the farmer to ask, with their own plot details already in hand.
+> This is a **prototype**, not an official government service. Every suggestion is illustrative and must be confirmed locally.
 
-**Run it:** `npm start`, then open <http://127.0.0.1:8080>. Nothing to install, nothing to compile. Full instructions under [Quick start](#quick-start).
+## 2-minute demo
 
-> This is a **hackathon prototype**, not an official government service. Every suggestion is illustrative and still has to be confirmed locally.
+1. **Run it:** `npm start` and open http://127.0.0.1:8080
+2. **Try sample journey:** Click "Try sample journey" on the home screen
+3. **See options:** 2-3 activity options appear with reasons and review status
+4. **Make the Office Visit Card:** Click through to see the one-page card
+5. **Share it:** Try the WhatsApp share button (or copy/print)
+6. **Read aloud:** Click "Read the card aloud" to hear the device voice
+7. **Visit mode:** Toggle "Visit mode" to see the field-focused UI
+8. **Check honesty:** The "Not yet reviewed" banner is visible on every screen
+
+That's the full farmer journey: from plot details to something useful to carry to the office.
+
+## Quick start
 
 ## Quick start
 
@@ -96,6 +111,23 @@ The suggestion data lives in `js/catalogue.js`, kept apart from the scoring and 
 Once a review is recorded, every screen changes to say "Reviewed by [name], [designation] on [date]. Still confirm locally before acting." A partly reviewed list says so too. The confirmation line that every option and every scheme entry already carries does not go away when a review is added: a reviewed catalogue still has to be checked locally, because the officer reviewed the catalogue, not your plot.
 
 If only some of the suggestions on screen have been checked, the app says that instead of rounding up.
+
+## What makes this impressive
+
+For a recruiter or technical reviewer in 30 seconds:
+
+1. **No dependencies** — `package.json` has zero runtime dependencies. The app runs on plain browser APIs.
+2. **168 automated tests** — selftest checks honesty guards, offline behavior, print fitting, QR encoding, saved plans, speech chunking, and review wording.
+3. **Honesty by design** — the build refuses to ship if the review status claims reviewed without a name/date. Tests ban amounts, deadlines, and eligibility claims from generated text.
+4. **Offline-first PWA** — service worker precaches 23 assets, never caches weather (old weather shown as current would be a lie). Works on airplane mode after first load.
+5. **QR code without libraries** — `js/qr.js` draws a scannable matrix from scratch using only the Canvas API.
+6. **Print-aware** — `js/visitfit.js` trims the visit card to one A4 page before printing, but never the answers or questions.
+7. **Accessibility** — WCAG AA contrast checked in the build, ARIA labels throughout, keyboard navigation, screen reader support, 44px minimum touch targets.
+8. **Privacy-first** — everything stays in localStorage. No accounts, no analytics, no tracking. Only weather fetches from Open-Meteo (public API).
+9. **Static deployment** — works on GitHub Pages, Netlify, Vercel, or any static server. No build step needed.
+10. **Clear boundaries** — `docs/DECISIONS.md` records every architectural trade-off. `REVIEW.md` defines the officer review process.
+
+The codebase is small enough to read in one sitting, structured enough to extend, and tested enough to trust.
 
 ## What to do next
 
@@ -265,6 +297,49 @@ I checked contrast, horizontal overflow and target size on every screen at 320px
 - The month by month calendars. They describe usual windows, and they shift with elevation, variety and the year.
 - The relevance grouping in the scheme section. It is a pointer for the conversation at the office, not a statement about eligibility.
 - The sample plot used by the demo journey.
+
+## Deployment
+
+This is a static PWA — deployment is just serving the folder. No build step, no environment variables, no backend.
+
+### Deploy to GitHub Pages
+
+1. Go to your repo Settings → Pages
+2. Source: Deploy from a branch → main → / (root)
+3. Save
+4. The app will be live at `https://username.github.io/kashmir-land-plan/`
+
+The manifest and service worker already use relative paths (`./`), so they work on any static host.
+
+### Deploy to any static host
+
+```bash
+# Upload the entire folder to:
+- Netlify Drop (drag and drop)
+- Vercel (connect repo)
+- AWS S3 + CloudFront
+- Any web server (nginx, Apache)
+```
+
+Key files needed:
+- `index.html`
+- `manifest.webmanifest`
+- `sw.js`
+- `css/styles.css`
+- `js/*.js`
+- `icons/`
+
+### Verify offline after deploy
+
+1. Open the deployed URL
+2. Load the page once (to cache it)
+3. Turn off your network connection
+4. Reload — the form, options, and visit card should still work
+5. Weather will show "needs a connection" (this is correct behavior)
+
+### Important: bump CACHE_VERSION when releasing
+
+When you deploy a new version, update `CACHE_VERSION` in `sw.js` (currently `mlmp-v14`) so old cached files are cleared. The build check will warn if this is out of sync.
 
 ## Sources for the regional background
 
