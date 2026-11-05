@@ -392,9 +392,10 @@ main {
   margin-bottom: var(--space-2);
 }
 
-.point h3 {
+.point h2 {
   font-family: var(--font-sans);
   font-size: 1rem;
+  margin: 0.15rem 0 0.35rem;
   font-weight: 600;
   margin: 0 0 var(--space-2);
 }

@@ -43,3 +43,42 @@ jobs:
       # means CI cannot drift from what a contributor runs by hand.
       - name: Pre-flight check and tests
         run: npm test
+
+  phone:
+    name: 360px phone audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # The audit needs the folder served and a Chrome to drive, exactly as it
+      # does locally. Both are started here rather than inside the script so a
+      # failure says which one never came up.
+      - name: Serve the folder
+        run: python3 -m http.server 8080 --bind 127.0.0.1 &
+
+      - name: Start headless Chrome
+        run: |
+          google-chrome --headless=new --disable-gpu --no-first-run \
+            --remote-debugging-port=9333 --user-data-dir=/tmp/mlmp-chrome about:blank &
+
+      - name: Wait for the server and the browser
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8080/ >/dev/null && \
+               curl -sf http://127.0.0.1:9333/json/version >/dev/null; then
+              echo "ready after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "the server or Chrome never became ready"; exit 1
+
+      - name: Audit the layout and tap targets
+        run: npm run phone-check
