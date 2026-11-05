@@ -52,6 +52,10 @@
   var ACTIVITIES = {
     kitchen_garden: {
       id: "kitchen_garden",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Water running short at flowering and fruiting",
+      sources: ["dac_jk_guide", "icar_jk"],
       title: "Kitchen garden and mixed vegetables",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:
@@ -103,6 +107,10 @@
 
     orchard_temp: {
       id: "orchard_temp",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Frost or hail at flowering, which can cost a whole crop",
+      sources: ["icar_jk", "dac_jk_guide"],
       title: "Temperate fruit and nut trees",
       zones: ["valley_temperate", "jammu_hills"],
       why:
@@ -153,6 +161,10 @@
 
     orchard_subtrop: {
       id: "orchard_subtrop",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Winter frost in the colder pockets",
+      sources: ["niti_horticulture", "dac_jk_guide"],
       title: "Sub-tropical fruit trees",
       zones: ["jammu_plains", "jammu_hills"],
       why:
@@ -202,6 +214,10 @@
 
     fodder_or_pasture: {
       id: "fodder_or_pasture",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Low cash return if there is no livestock to feed",
+      sources: ["icar_jk", "dac_jk_guide"],
       title: "Fodder crop or managed pasture",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:
@@ -253,6 +269,10 @@
 
     protected_cultivation: {
       id: "protected_cultivation",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Disease or contamination causing a total loss while you are still learning",
+      sources: [],
       title: "Protected cultivation: polyhouse, mushroom or nursery",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:
@@ -304,6 +324,10 @@
 
     intercrop_or_improve: {
       id: "intercrop_or_improve",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Changing something without advice can reduce the harvest you already have",
+      sources: ["icar_jk", "dac_jk_guide"],
       title: "Improve what you already grow, or add an intercrop",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:
@@ -355,6 +379,10 @@
 
     beekeeping: {
       id: "beekeeping",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Colony loss from disease, mites, or spray drifting from nearby fields",
+      sources: [],
       title: "Beekeeping as an allied activity",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:
@@ -406,6 +434,10 @@
 
     saffron_karewa: {
       id: "saffron_karewa",
+      startupCost: { status: "ask-officer" },
+      timeToFirstIncome: { status: "ask-officer" },
+      mainRisk: "Corm rot and disease where the ground does not drain properly",
+      sources: ["iiim_saffron", "rkvy_saffron"],
       title: "Saffron on suitable upland",
       districtsOnly: ["Pulwama", "Budgam", "Srinagar", "Kishtwar"],
       zones: ["valley_temperate", "jammu_hills"],
@@ -490,6 +522,14 @@
 
   Object.keys(ACTIVITIES).forEach(function (id) {
     var a = ACTIVITIES[id];
+    // Cost and first income default to a question, never a number. A field is
+    // only "verified" when a source id and a check date are present too.
+    if (!a.startupCost || typeof a.startupCost !== "object") a.startupCost = { status: "ask-officer" };
+    if (!a.timeToFirstIncome || typeof a.timeToFirstIncome !== "object") {
+      a.timeToFirstIncome = { status: "ask-officer" };
+    }
+    if (!a.mainRisk) a.mainRisk = (a.risks && a.risks[0]) || "Ask the officer";
+    if (!Array.isArray(a.sources)) a.sources = [];
     if (!a.reviewStatus) a.reviewStatus = "not-reviewed";
     if (a.reviewedBy == null) a.reviewedBy = "";
     if (a.designation == null) a.designation = "";

@@ -697,6 +697,76 @@ if (catalogue) {
   });
 }
 
+/* ---- 10. Every catalogue entry declares its sources and its gaps ---- */
+
+// A figure on an option card is only allowed when a public document backs it.
+// The rule is enforced here rather than trusted to an editor, and an entry
+// whose figure is missing has to be accounted for in NEEDS_SOURCES.md so the
+// gap stays visible instead of quietly becoming a guess.
+var sourcesSandbox = { window: {} };
+try {
+  new vm.Script(fs.readFileSync(path.join(root, "js", "sources.js"), "utf8"), {
+    filename: "js/sources.js",
+  }).runInNewContext(sourcesSandbox);
+} catch (err) {
+  failures.push("js/sources.js could not be loaded: " + err.message);
+}
+var SOURCES = sourcesSandbox.window.MLMP_SOURCES;
+
+if (catalogue && SOURCES) {
+  var needsSources = "";
+  try {
+    needsSources = fs.readFileSync(path.join(root, "NEEDS_SOURCES.md"), "utf8");
+  } catch (_) {
+    failures.push("NEEDS_SOURCES.md is missing, so an unverified figure has nowhere to be accounted for");
+  }
+
+  Object.keys(catalogue.activities).forEach(function (id) {
+    var a = catalogue.activities[id];
+    var label = 'js/catalogue.js activity "' + id + '"';
+
+    if (!a.startupCost || !a.timeToFirstIncome) {
+      failures.push(label + " has no startup cost or time to first income field");
+    }
+    if (!Array.isArray(a.sources)) {
+      failures.push(label + " has no sources list");
+    } else {
+      a.sources.forEach(function (sid) {
+        if (!SOURCES.byId(sid)) {
+          failures.push(label + ' cites "' + sid + '", which is not registered in js/sources.js');
+        }
+      });
+    }
+    if (!a.mainRisk) {
+      failures.push(label + " has no main risk");
+    } else if (a.risks && a.risks[0] && a.mainRisk !== a.risks[0]) {
+      failures.push(label + " mainRisk has drifted from the first risk in its own list");
+    }
+
+    ["startupCost", "timeToFirstIncome"].forEach(function (field) {
+      var f = a[field];
+      if (!f) return;
+      if (f.status === "verified") {
+        if (
+          !f.value ||
+          !f.sourceId ||
+          !SOURCES.byId(f.sourceId) ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(f.checkedOn || "")
+        ) {
+          failures.push(
+            label +
+              "." +
+              field +
+              " is marked verified without a value, a registered source and a YYYY-MM-DD check date"
+          );
+        }
+      } else if (needsSources && needsSources.indexOf(a.title) === -1) {
+        failures.push(label + " has no verified " + field + " and is missing from NEEDS_SOURCES.md");
+      }
+    });
+  });
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {

@@ -61,6 +61,7 @@ load(
   [
     "regions.js",
     "catalogue.js",
+    "sources.js",
     "activities.js",
     "schemes.js",
     "questions.js",
@@ -79,6 +80,7 @@ load(
 var R = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
 var ACT = sandbox.window.MLMP_ACTIVITIES;
+var SOURCES = sandbox.window.MLMP_SOURCES;
 
 console.log("altitude zones");
 
@@ -159,6 +161,41 @@ check(
   optionsFor("valley", "Anantnag").indexOf("saffron_karewa") === -1 &&
     optionsFor("valley", "Pulwama").indexOf("saffron_karewa") !== -1
 );
+
+console.log("sources and figures");
+
+check("the source registry loads", !!SOURCES && SOURCES.ids().length > 0);
+check("every source has a name, a url and a stated use", SOURCES.all().every(function (s) {
+  return s.name && /^https?:\/\//.test(s.url) && s.usedFor;
+}));
+
+var needsFile = fs.readFileSync(path.join(root, "NEEDS_SOURCES.md"), "utf8");
+
+CATALOGUE.ids.forEach(function (id) {
+  var a = CATALOGUE.activities[id];
+  check('"' + id + '" declares cost, time, risk and sources', !!(a.startupCost && a.timeToFirstIncome && a.mainRisk && Array.isArray(a.sources)));
+  check('"' + id + '" main risk matches its own risk list', a.mainRisk === a.risks[0], a.mainRisk);
+  check(
+    '"' + id + '" cites only registered sources',
+    a.sources.every(function (sid) {
+      return !!SOURCES.byId(sid);
+    }),
+    a.sources.join(", ")
+  );
+  check('"' + id + '" is accounted for in NEEDS_SOURCES.md', needsFile.indexOf(a.title) !== -1);
+
+  ["startupCost", "timeToFirstIncome"].forEach(function (field) {
+    var f = a[field];
+    if (f.status === "verified") {
+      check(
+        '"' + id + '" ' + field + ' has a value, source and check date',
+        !!f.value && !!SOURCES.byId(f.sourceId) && /^\d{4}-\d{2}-\d{2}$/.test(f.checkedOn || "")
+      );
+    } else {
+      check('"' + id + '" ' + field + ' is a question, not a number', !/\d/.test(String(f.value || "")));
+    }
+  });
+});
 
 console.log("review wording");
 

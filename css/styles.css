@@ -2981,3 +2981,34 @@ select:focus {
 .checklist-plain li {
   margin-bottom: 0.4rem;
 }
+
+/* Source tags under an option. The label is the institution; the sentence
+   beside it says exactly what that document supports, so a tag cannot be read
+   as a general endorsement of the option. */
+.source-tags {
+  margin: 0.4rem 0 0.6rem;
+  padding-left: 1.1rem;
+}
+
+.source-tags li {
+  margin-bottom: 0.45rem;
+  line-height: 1.45;
+}
+
+.source-tags a {
+  font-weight: 600;
+}
+
+.source-for {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.85rem;
+  color: #4a4a42;
+}
+
+.visit-option-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  color: #4a4a42;
+}
