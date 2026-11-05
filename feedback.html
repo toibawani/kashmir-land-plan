@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="description" content="Local field-test answers for My Land, My Plan. Not linked from the app." />
+  <title>Field-test answers | My Land, My Plan</title>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .feedback-page {
+      max-width: 44rem;
+      margin: 2rem auto;
+      padding: 0 1rem 3rem;
+    }
+    .feedback-page h1 {
+      font-size: 1.6rem;
+    }
+    .feedback-count {
+      font-size: 1.1rem;
+      margin: 0.5rem 0 1rem;
+    }
+    .feedback-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin: 1rem 0;
+    }
+    .feedback-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .feedback-table th,
+    .feedback-table td {
+      border: 1px solid #c9c3b2;
+      padding: 0.4rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .feedback-table th {
+      background: #eee9dc;
+    }
+  </style>
+</head>
+<body>
+  <main class="feedback-page">
+    <h1>Field-test answers</h1>
+    <p>
+      This page is not linked from the app. It reads only the answers saved in this browser by the
+      three questions on the visit card. Nothing is uploaded, and this page has no account or server.
+    </p>
+    <p class="feedback-count" id="feedback-count" role="status">Reading local answers...</p>
+    <div class="feedback-actions">
+      <button type="button" class="btn btn-primary" id="btn-export">Export as CSV</button>
+      <button type="button" class="btn btn-secondary" id="btn-clear">Delete local answers</button>
+      <a class="btn btn-secondary" href="index.html">Back to the app</a>
+    </div>
+    <p class="hint" id="feedback-status" role="status"></p>
+    <div id="feedback-table-host"></div>
+    <noscript>
+      <p>This page needs JavaScript to read the answers saved in this browser.</p>
+    </noscript>
+  </main>
+
+  <script src="js/feedback.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      var FB = window.MLMP_FEEDBACK;
+      var countEl = document.getElementById("feedback-count");
+      var host = document.getElementById("feedback-table-host");
+      var status = document.getElementById("feedback-status");
+
+      function esc(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function render() {
+        if (!FB) {
+          countEl.textContent = "The feedback module did not load.";
+          return;
+        }
+        var rows = FB.list();
+        countEl.textContent =
+          rows.length === 0
+            ? "No answers saved in this browser yet."
+            : rows.length + (rows.length === 1 ? " answer" : " answers") + " saved in this browser.";
+        if (!rows.length) {
+          host.innerHTML = "";
+          return;
+        }
+        host.innerHTML =
+          '<table class="feedback-table"><thead><tr>' +
+          ["Saved", "District", "Altitude", "Language", "Useful", "Wrong for this district", "Would use"]
+            .map(function (h) {
+              return "<th scope=\"col\">" + h + "</th>";
+            })
+            .join("") +
+          "</tr></thead><tbody>" +
+          rows
+            .map(function (r) {
+              return (
+                "<tr><td>" +
+                esc(r.savedAt) +
+                "</td><td>" +
+                esc(r.district) +
+                "</td><td>" +
+                esc(r.altitude) +
+                "</td><td>" +
+                esc(r.language) +
+                "</td><td>" +
+                esc(r.useful) +
+                "</td><td>" +
+                esc(r.wrong) +
+                "</td><td>" +
+                esc(r.wouldUse) +
+                "</td></tr>"
+              );
+            })
+            .join("") +
+          "</tbody></table>";
+      }
+
+      document.getElementById("btn-export").addEventListener("click", function () {
+        var rows = FB.list();
+        if (!rows.length) {
+          status.textContent = "There is nothing to export yet.";
+          return;
+        }
+        var blob = new Blob([FB.toCsv(rows)], { type: "text/csv;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = "mlmp-field-test-answers.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        status.textContent = "Exported. The file was created on this device.";
+      });
+
+      document.getElementById("btn-clear").addEventListener("click", function () {
+        var ok = window.confirm("Delete every field-test answer saved in this browser? This cannot be undone.");
+        if (!ok) return;
+        FB.clear();
+        status.textContent = "Local answers deleted.";
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

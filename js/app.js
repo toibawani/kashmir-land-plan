@@ -30,6 +30,7 @@
   var MSG = window.MLMP_MESSAGES;
   var SOURCES = window.MLMP_SOURCES;
   var VISIT = window.MLMP_VISIT;
+  var FEEDBACK = window.MLMP_FEEDBACK;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -98,6 +99,8 @@
     currentPlanName: "",
     /** Held from beforeinstallprompt until the farmer asks to install. */
     installPrompt: null,
+    /** Set after the optional field-test questions are saved. */
+    feedbackSaved: false,
   };
 
   // ------------------------------------------------------------- Helpers
@@ -3477,12 +3480,109 @@
     return lines.join("\n");
   }
 
+  /**
+   * Three optional questions after the card. This is a field-test instrument,
+   * not a product feature: local only, no account, no identifier and no
+   * network. Skipping it is explicitly fine, and the form says where the
+   * answer goes because a farmer is right to ask.
+   */
+  function renderFeedback() {
+    var host = $("#feedback-host");
+    if (!host || !FEEDBACK) return;
+    host.hidden = false;
+    var saved = FEEDBACK.list();
+
+    if (state.feedbackSaved) {
+      host.innerHTML =
+        "<h2>Thank you</h2>" +
+        "<p>Your answer is saved on this phone. Nothing was sent anywhere.</p>" +
+        '<p class="hint">' +
+        saved.length +
+        (saved.length === 1 ? " answer" : " answers") +
+        " saved on this device.</p>";
+      return;
+    }
+
+    var qs = FEEDBACK.questions();
+    var byId = {};
+    qs.forEach(function (q) {
+      byId[q.id] = q;
+    });
+
+    var choiceHtml = function (q) {
+      return (
+        '<fieldset class="feedback-question"><legend>' +
+        escapeHtml(q.text) +
+        "</legend>" +
+        '<div class="radio-group">' +
+        q.options
+          .map(function (opt) {
+            return (
+              '<label class="radio-card"><input type="radio" name="' +
+              escapeHtml(q.id) +
+              '" value="' +
+              escapeHtml(opt) +
+              '" /><span>' +
+              escapeHtml(opt) +
+              "</span></label>"
+            );
+          })
+          .join("") +
+        "</div></fieldset>"
+      );
+    };
+
+    host.innerHTML =
+      "<h2>Three quick questions</h2>" +
+      "<p>Optional. This is a field test, so your answer helps find what is wrong. It stays on this phone.</p>" +
+      '<form id="feedback-form" class="feedback-form">' +
+      choiceHtml(byId.useful) +
+      '<fieldset class="feedback-question"><legend>' +
+      escapeHtml(byId.wrong.text) +
+      "</legend>" +
+      '<label class="sr-only" for="feedback-wrong">What is wrong for your district</label>' +
+      '<textarea id="feedback-wrong" name="wrong" maxlength="400" rows="3"></textarea>' +
+      '<p class="hint">' +
+      escapeHtml(byId.wrong.hint) +
+      "</p></fieldset>" +
+      choiceHtml(byId.wouldUse) +
+      '<div class="results-actions"><button type="submit" class="btn btn-secondary">Save this answer on the phone</button></div>' +
+      '<p class="inline-status" id="feedback-status" role="status" hidden></p>' +
+      "</form>";
+
+    var form = $("#feedback-form");
+    if (!form) return;
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var fd = new FormData(form);
+      var result = FEEDBACK.save({
+        district: state.data.district,
+        altitude: state.data.altitude || REGIONS.defaultAltitude(state.data.district),
+        language: MSG ? MSG.get() : "en",
+        useful: String(fd.get("useful") || ""),
+        wrong: String(fd.get("wrong") || ""),
+        wouldUse: String(fd.get("wouldUse") || ""),
+      });
+      var status = $("#feedback-status");
+      if (!result.ok) {
+        if (status) {
+          status.hidden = false;
+          status.textContent = result.error;
+        }
+        return;
+      }
+      state.feedbackSaved = true;
+      renderFeedback();
+    });
+  }
+
   function renderVisitCard() {
     var host = $("#visit-card");
     if (!host) return;
     host.innerHTML = buildVisitCard();
     drawVisitQr();
     renderOfficePanel();
+    renderFeedback();
   }
 
   /**
