@@ -48,24 +48,31 @@
 
   function build(input) {
     input = input || {};
+    // Labels come from the translation layer, with the English originals as
+    // the fallback. The message follows the language chosen in the app, so a
+    // farmer who reads Urdu does not send a card headed in English.
+    var L = input.labels || {};
+    function label(key, fallback) {
+      return L[key] || fallback;
+    }
     var lines = [];
 
     // WhatsApp treats *word* as bold, so the reference and the plan name are
     // wrapped rather than decorated, which keeps the paste clean on any phone.
-    lines.push("*My land plan*" + (input.reference ? "  " + input.reference : ""));
-    if (input.planName) lines.push("Plan: " + input.planName);
+    lines.push("*" + label("heading", "My land plan") + "*" + (input.reference ? "  " + input.reference : ""));
+    if (input.planName) lines.push(label("plan", "Plan") + ": " + input.planName);
     lines.push("");
 
     var plot = joinPlot(input);
     if (plot) lines.push(plot);
-    if (input.dateLabel) lines.push("Prepared " + input.dateLabel + (input.isDemo ? " (sample journey)" : "") + ".");
+    if (input.dateLabel) lines.push(label("prepared", "Prepared") + " " + input.dateLabel + (input.isDemo ? " (sample journey)" : "") + ".");
     lines.push("");
 
     var options = input.options || [];
     if (options.length) {
-      lines.push("Options to discuss:");
+      lines.push(label("options", "Options to discuss") + ":");
       options.forEach(function (o, i) {
-        var mark = o.marked ? " (marked)" : "";
+        var mark = o.marked ? " " + label("marked", "(marked)") : "";
         lines.push((i + 1) + ". " + o.title + mark);
       });
       lines.push("");
@@ -76,9 +83,9 @@
     });
     if (questions.length) {
       var shown = questions.slice(0, MAX_QUESTIONS);
-      lines.push("Questions I want to ask:");
+      lines.push(label("questions", "Questions I want to ask") + ":");
       shown.forEach(function (q, i) {
-        var ticked = q.ticked ? " [done]" : "";
+        var ticked = q.ticked ? " " + label("done", "[done]") : "";
         lines.push((i + 1) + ". " + q.text + ticked);
       });
       if (questions.length > shown.length) {
@@ -93,7 +100,7 @@
 
     if (input.confirmLine) lines.push(input.confirmLine);
 
-    lines.push("Made with the My Land, My Plan prototype. Not an official document.");
+    lines.push(label("madeWith", "Made with the My Land, My Plan prototype. Not an official document."));
 
     return lines.join("\n");
   }
