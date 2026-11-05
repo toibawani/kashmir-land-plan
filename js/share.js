@@ -78,6 +78,24 @@
       lines.push("");
     }
 
+    var documents = input.documents || [];
+    if (documents.length) {
+      lines.push(label("carry", "Carry") + ":");
+      documents.slice(0, 3).forEach(function (line, i) {
+        lines.push(i + 1 + ". " + line);
+      });
+      lines.push("");
+    }
+
+    var soilChecks = input.soilChecks || [];
+    if (soilChecks.length) {
+      lines.push(label("soil", "Soil checks") + ":");
+      soilChecks.slice(0, 2).forEach(function (line, i) {
+        lines.push(i + 1 + ". " + line);
+      });
+      lines.push("");
+    }
+
     var questions = (input.questions || []).filter(function (q) {
       return trim(q.text);
     });
@@ -86,7 +104,9 @@
       lines.push(label("questions", "Questions I want to ask") + ":");
       shown.forEach(function (q, i) {
         var ticked = q.ticked ? " " + label("done", "[done]") : "";
-        lines.push((i + 1) + ". " + q.text + ticked);
+        lines.push(
+          (i + 1) + ". " + (q.about ? "[" + q.about + "] " : "") + q.text + ticked
+        );
       });
       if (questions.length > shown.length) {
         lines.push("(and " + (questions.length - shown.length) + " more on the printed card)");

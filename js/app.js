@@ -29,6 +29,7 @@
   var SHARE = window.MLMP_SHARE;
   var MSG = window.MLMP_MESSAGES;
   var SOURCES = window.MLMP_SOURCES;
+  var VISIT = window.MLMP_VISIT;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -2324,6 +2325,7 @@
     var questions = currentQuestions().map(function (q) {
       return {
         text: q.text,
+        about: q.about || "",
         ticked: !!(state.coveredQuestions && state.coveredQuestions[q.id]),
       };
     });
@@ -2345,6 +2347,8 @@
         return { title: o.activity.title, marked: !!state.interested[o.activity.id] };
       }),
       questions: questions,
+      documents: VISIT && VISIT.documents ? VISIT.documents(d) : [],
+      soilChecks: VISIT && VISIT.soilChecks ? VISIT.soilChecks(d) : [],
       reviewText: currentReview().text,
       confirmLine: confirmLine(),
       labels: {
@@ -2352,6 +2356,8 @@
         plan: tr("share.plan", "Plan"),
         options: tr("share.options", "Options to discuss"),
         questions: tr("share.questions", "Questions I want to ask"),
+        carry: tr("share.carry", "Carry"),
+        soil: tr("share.soil", "Soil checks"),
         marked: tr("share.marked", "(marked)"),
         done: tr("share.done", "[done]"),
         prepared: tr("share.prepared", "Prepared"),
@@ -3197,6 +3203,48 @@
         "</ol>"
       : "<p>No options were marked or shown, so there is nothing listed here.</p>";
 
+    var grouped = VISIT && VISIT.groupQuestions ? VISIT.groupQuestions(options, questions) : { byOption: [], general: questions };
+    var carry = VISIT && VISIT.documents ? VISIT.documents(d) : [];
+    var soilChecks = VISIT && VISIT.soilChecks ? VISIT.soilChecks(d) : [];
+
+    var groupedQuestionsHtml = (function () {
+      var blocks = grouped.byOption
+        .filter(function (group) {
+          return group.questions.length;
+        })
+        .map(function (group) {
+          return (
+            '<div class="visit-option-questions">' +
+            "<h4>" +
+            escapeHtml(group.activity.title) +
+            "</h4>" +
+            questionsListHtml(group.questions, { hideAbout: true, ticked: true, checkable: true }) +
+            "</div>"
+          );
+        })
+        .join("");
+      if (grouped.general.length) {
+        blocks +=
+          '<div class="visit-option-questions">' +
+          "<h4>For the whole visit</h4>" +
+          questionsListHtml(grouped.general, { hideAbout: true, ticked: true, checkable: true }) +
+          "</div>";
+      }
+      return blocks;
+    })();
+
+    var listHtml = function (items) {
+      return (
+        '<ul class="visit-doc-list">' +
+        items
+          .map(function (line) {
+            return "<li>" + escapeHtml(line) + "</li>";
+          })
+          .join("") +
+        "</ul>"
+      );
+    };
+
     var supportHtml = (function () {
       var ids = options.length
         ? options.map(function (o) {
@@ -3280,10 +3328,18 @@
       '<div class="visit-section break-avoid">' +
       "<h3>" + escapeHtml(tr("visit.questions", "Questions I would like to ask")) + "</h3>" +
       (questions.length
-        ? questionsListHtml(questions, { hideAbout: true, ticked: true, checkable: true }) +
+        ? groupedQuestionsHtml +
           questionCounterHtml(questions) +
           '<p class="visit-note no-print">Ticked boxes are saved on this device. Tick the rest with a pen once this is printed.</p>'
         : "<p>No questions were generated.</p>") +
+      "</div>" +
+      '<div class="visit-section break-avoid" data-fit-part="carry">' +
+      "<h3>" + escapeHtml(tr("visit.documents", "What to carry")) + "</h3>" +
+      listHtml(carry) +
+      "</div>" +
+      '<div class="visit-section break-avoid" data-fit-part="soil">' +
+      "<h3>" + escapeHtml(tr("visit.soil", "Soil checks")) + "</h3>" +
+      listHtml(soilChecks) +
       "</div>" +
       (supportHtml
         ? '<div class="visit-section break-avoid" data-fit-part="support"><h3>' + escapeHtml(tr("visit.support", "Support worth asking about")) + "</h3>" + supportHtml + "</div>"
@@ -3313,6 +3369,9 @@
     var options = visitOptions();
     var questions = currentQuestions();
     var allMarked = chosenOptions();
+    var grouped = VISIT && VISIT.groupQuestions ? VISIT.groupQuestions(options, questions) : { byOption: [], general: questions };
+    var carry = VISIT && VISIT.documents ? VISIT.documents(d) : [];
+    var soilChecks = VISIT && VISIT.soilChecks ? VISIT.soilChecks(d) : [];
     var lines = [];
 
     lines.push("MY LAND, MY PLAN: OFFICE VISIT CARD");
@@ -3360,16 +3419,46 @@
     lines.push("QUESTIONS I WOULD LIKE TO ASK");
     lines.push("-----------------------------");
     if (questions.length) {
-      questions.forEach(function (q, i) {
-        // The tick rides along into the download, so a downloaded card read
-        // later still shows what the office already covered.
-        var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
-        lines.push(i + 1 + ". [" + (ticked ? "x" : " ") + "] " + q.text);
+      var counter = 1;
+      grouped.byOption.forEach(function (group) {
+        if (!group.questions.length) return;
+        lines.push("");
+        lines.push("For " + group.activity.title + ":");
+        group.questions.forEach(function (q) {
+          // The tick rides along into the download, so a downloaded card read
+          // later still shows what the office already covered.
+          var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
+          lines.push(counter + ". [" + (ticked ? "x" : " ") + "] " + q.text);
+          counter += 1;
+        });
       });
+      if (grouped.general.length) {
+        lines.push("");
+        lines.push("For the whole visit:");
+        grouped.general.forEach(function (q) {
+          var ticked = state.coveredQuestions && state.coveredQuestions[q.id];
+          lines.push(counter + ". [" + (ticked ? "x" : " ") + "] " + q.text);
+          counter += 1;
+        });
+      }
       lines.push(questionCoverCount(questions) + " of " + questions.length + " covered.");
     } else {
       lines.push("No questions were generated.");
     }
+    lines.push("");
+
+    lines.push("WHAT TO CARRY");
+    lines.push("-------------");
+    carry.forEach(function (line) {
+      lines.push("- " + line);
+    });
+    lines.push("");
+
+    lines.push("SOIL CHECKS");
+    lines.push("-----------");
+    soilChecks.forEach(function (line) {
+      lines.push("- " + line);
+    });
     lines.push("");
 
     lines.push("NOTES FROM THE VISIT");
@@ -4327,7 +4416,15 @@
         FIT.prepareForPrint();
       });
     }
+    $("#btn-results-visit") && $("#btn-results-visit").addEventListener("click", openVisitCard);
     $("#btn-visit-download") && $("#btn-visit-download").addEventListener("click", downloadVisitCard);
+    // Saving a copy is a download, not an account. It works with no signal,
+    // and the status says where the file went rather than implying a server.
+    $("#btn-visit-save") &&
+      $("#btn-visit-save").addEventListener("click", function () {
+        downloadVisitCard();
+        setStatus("visit-status", "Saved as a text file on this device. It opens without a signal.");
+      });
     $("#btn-visit-share") && $("#btn-visit-share").addEventListener("click", shareVisitCard);
     $("#btn-visit-mode") &&
       $("#btn-visit-mode").addEventListener("click", function () {
