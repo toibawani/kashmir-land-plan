@@ -74,6 +74,7 @@ load(
     "office.js",
     "share.js",
     "visitcard.js",
+    "feedback.js",
     "messages.js",
   ],
   sandbox
@@ -87,6 +88,7 @@ var csv = require("../tools/lib/review-csv.js");
 var MSG = sandbox.window.MLMP_MESSAGES;
 var SHARE = sandbox.window.MLMP_SHARE;
 var VISIT = sandbox.window.MLMP_VISIT;
+var FB = sandbox.window.MLMP_FEEDBACK;
 
 console.log("altitude zones");
 
@@ -367,6 +369,40 @@ rejectRow("kitchen_garden,accept,=cmd,Office,Officer,2026-11-05,", "a formula-sh
 
 var badHeader = csv.validate([["activity_id", "decision"], ["kitchen_garden", "accept"]], CATALOGUE.ids);
 check("a missing header column is refused", badHeader.errors.length > 0);
+
+console.log("field-test answers");
+
+check("three questions are defined", FB.questions().length === 3);
+check("the questions are the ones the field test asks", FB.questions().map(function (q) { return q.id; }).join(",") === "useful,wrong,wouldUse");
+check("there is no name or phone field", !FB.questions().some(function (q) { return /name|phone|email/i.test(q.id + " " + q.text); }));
+
+var emptySave = FB.save({ useful: "Maybe", wouldUse: "Perhaps" });
+check("an answer with nothing valid is refused", emptySave.ok === false);
+
+var saved = FB.save({
+  district: "Pulwama",
+  altitude: "valley",
+  language: "ur",
+  useful: "Yes",
+  wrong: "=cmd something on this plot",
+  wouldUse: "Maybe",
+});
+check("a valid answer is saved locally", saved.ok === true);
+check("the store has one answer", FB.list().length === 1, String(FB.list().length));
+check("the free text has no spreadsheet formula prefix", FB.list()[0].wrong.charAt(0) !== "=", FB.list()[0].wrong);
+check("the district and language are kept", FB.list()[0].district === "Pulwama" && FB.list()[0].language === "ur");
+
+var csvText = FB.toCsv(FB.list());
+check("the csv starts with the documented header", csvText.indexOf(FB.CSV_HEADER.join(",")) === 0);
+check("the csv carries the answer", csvText.indexOf("Pulwama") !== -1);
+check("the csv quotes every cell", csvText.split("\r\n")[1].indexOf('"') === 0);
+
+var formulaRow = FB.toCsv([{ savedAt: "2026-11-05", district: "=HYPERLINK()", useful: "Yes" }]);
+check("a formula-shaped stored value cannot start a cell on export", !/[",]=/.test(formulaRow), formulaRow);
+check("the formula text itself is kept as plain text", formulaRow.indexOf("HYPERLINK()") !== -1, formulaRow);
+
+FB.clear();
+check("clearing removes the answers", FB.count() === 0);
 
 console.log("");
 
