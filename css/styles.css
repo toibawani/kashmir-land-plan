@@ -3012,3 +3012,33 @@ select:focus {
   font-size: 0.82rem;
   color: #4a4a42;
 }
+
+/* Per-entry officer review badge. Small on purpose: it is a fact about the
+   entry, not a warning competing with the option itself. */
+.review-badge {
+  margin: 0.35rem 0 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.review-badge-not {
+  background: #f4efe2;
+  border: 1px solid #c9b98d;
+  color: #544a2c;
+}
+
+.review-badge-reviewed {
+  background: #e8f0e6;
+  border: 1px solid #8ba17f;
+  color: #2f4a2c;
+}
+
+.visit-review {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: #5a5a50;
+}
