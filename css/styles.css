@@ -3128,3 +3128,39 @@ select:focus {
   margin-bottom: 0.35rem;
   line-height: 1.45;
 }
+
+/* The optional field-test questions. Visually quieter than the card, because
+   the card is the artefact and this is a favour the farmer is doing us. */
+.feedback-block {
+  margin: 1.75rem 0;
+  padding: 1.1rem 1.2rem;
+  border: 1px dashed #9a9a88;
+  border-radius: 10px;
+  background: #faf8f2;
+}
+
+.feedback-block h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.feedback-question {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.feedback-question legend {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  padding: 0;
+}
+
+.feedback-form textarea {
+  width: 100%;
+  font: inherit;
+  padding: 0.6rem;
+  border: 1px solid #8a8a7a;
+  border-radius: 8px;
+  min-height: 4.5rem;
+}
