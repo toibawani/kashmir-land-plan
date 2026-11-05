@@ -35,6 +35,7 @@
   var CATALOGUE_REVIEW = {
     reviewStatus: "not-reviewed",
     reviewedBy: "",
+    office: "",
     designation: "",
     reviewedOn: "",
   };
@@ -520,6 +521,68 @@
     "Dec",
   ];
 
+  /**
+   * Officer review records live in js/reviews.js, which the import script
+   * rewrites. They are merged and validated here, not trusted.
+   *
+   * A record only counts as a review when it has a status of "reviewed" AND a
+   * name, an office and a real YYYY-MM-DD date. Anything less is downgraded to
+   * not-reviewed and flagged, so a half-recorded review can never appear on a
+   * screen as if an officer had signed it. A review never removes the advice
+   * to confirm locally.
+   */
+  function cleanReviewRecord(record) {
+    var r = record && typeof record === "object" ? record : {};
+    var text = function (value) {
+      return typeof value === "string" ? value.trim().slice(0, 120) : "";
+    };
+    var name = text(r.reviewedBy);
+    var office = text(r.office);
+    var designation = text(r.designation);
+    var date = text(r.reviewedOn);
+    var realDate = /^\d{4}-\d{2}-\d{2}$/.test(date) && !isNaN(Date.parse(date + "T00:00:00Z"));
+    if (r.reviewStatus !== "reviewed") {
+      return {
+        reviewStatus: "not-reviewed",
+        reviewedBy: "",
+        office: "",
+        designation: "",
+        reviewedOn: "",
+        rejected: false,
+      };
+    }
+    if (!name || !office || !realDate) {
+      return {
+        reviewStatus: "not-reviewed",
+        reviewedBy: "",
+        office: "",
+        designation: "",
+        reviewedOn: "",
+        rejected: true,
+      };
+    }
+    return {
+      reviewStatus: "reviewed",
+      reviewedBy: name,
+      office: office,
+      designation: designation,
+      reviewedOn: date,
+      rejected: false,
+    };
+  }
+
+  var REVIEW_DATA = (window.MLMP_REVIEWS && window.MLMP_REVIEWS.entries) || {};
+  var WHOLE_LIST = window.MLMP_REVIEWS && window.MLMP_REVIEWS.catalogue;
+  if (WHOLE_LIST) {
+    var whole = cleanReviewRecord(WHOLE_LIST);
+    CATALOGUE_REVIEW.reviewStatus = whole.reviewStatus;
+    CATALOGUE_REVIEW.reviewedBy = whole.reviewedBy;
+    CATALOGUE_REVIEW.office = whole.office;
+    CATALOGUE_REVIEW.designation = whole.designation;
+    CATALOGUE_REVIEW.reviewedOn = whole.reviewedOn;
+    CATALOGUE_REVIEW.reviewRejected = whole.rejected;
+  }
+
   Object.keys(ACTIVITIES).forEach(function (id) {
     var a = ACTIVITIES[id];
     // Cost and first income default to a question, never a number. A field is
@@ -530,10 +593,21 @@
     }
     if (!a.mainRisk) a.mainRisk = (a.risks && a.risks[0]) || "Ask the officer";
     if (!Array.isArray(a.sources)) a.sources = [];
-    if (!a.reviewStatus) a.reviewStatus = "not-reviewed";
-    if (a.reviewedBy == null) a.reviewedBy = "";
-    if (a.designation == null) a.designation = "";
-    if (a.reviewedOn == null) a.reviewedOn = "";
+    a.reviewStatus = "not-reviewed";
+    a.reviewedBy = "";
+    a.office = "";
+    a.designation = "";
+    a.reviewedOn = "";
+    a.reviewRecordRejected = false;
+    if (Object.prototype.hasOwnProperty.call(REVIEW_DATA, id)) {
+      var record = cleanReviewRecord(REVIEW_DATA[id]);
+      a.reviewStatus = record.reviewStatus;
+      a.reviewedBy = record.reviewedBy;
+      a.office = record.office;
+      a.designation = record.designation;
+      a.reviewedOn = record.reviewedOn;
+      a.reviewRecordRejected = record.rejected;
+    }
   });
 
   window.MLMP_CATALOGUE = {
@@ -543,5 +617,7 @@
     phases: PHASES,
     months: MONTHS,
     ids: Object.keys(ACTIVITIES),
+    // Exposed so the review pipeline can be tested without a browser.
+    cleanReviewRecord: cleanReviewRecord,
   };
 })();
