@@ -176,7 +176,9 @@ body {
 
 #lang-select {
   font: inherit;
-  font-size: 0.9rem;
+  /* 16px keeps a phone from zooming in when the language is changed, and the
+     extra size is welcome when the control holds three scripts at once. */
+  font-size: 1rem;
   color: var(--color-text);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
