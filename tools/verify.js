@@ -229,6 +229,11 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
           where + ' is marked "reviewed" but the reviewer name is a placeholder ("' + record.reviewedBy + '"), so no officer is actually behind this review'
         );
       }
+      if (!String(record.office || "").trim()) {
+        failures.push(
+          where + ' is marked "reviewed" but names no office; a review has to say where the officer sits'
+        );
+      }
       if (record.designation && looksLikeAPlaceholder(record.designation)) {
         failures.push(
           where + ' is marked "reviewed" but the designation is a placeholder ("' + record.designation + '")'
@@ -250,6 +255,8 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
     checkReviewRecord('The "' + id + '" activity review', {
       reviewStatus: a.reviewStatus || "not-reviewed",
       reviewedBy: a.reviewedBy || "",
+      office: a.office || "",
+      designation: a.designation || "",
       reviewedOn: a.reviewedOn || "",
     });
   });
@@ -260,7 +267,10 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   // Note the split: formatReview wordsmiths a single record, while reviewFor
   // decides what the whole shown list may claim. The mixed state only exists
   // at the list level, so that is where it is checked.
-  [{ status: "not-reviewed" }, { status: "reviewed", reviewedBy: "Test Officer", reviewedOn: "2026-01-01" }].forEach(
+  [
+    { status: "not-reviewed" },
+    { status: "reviewed", reviewedBy: "Test Officer", office: "Test Office", reviewedOn: "2026-01-01" },
+  ].forEach(
     function (entry) {
       var text = activities.formatReview(entry).text;
       if (!/confirm locally/i.test(text)) {
@@ -274,7 +284,7 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
   // so it is pinned here: the mixed path only triggers when part of the list
   // is still unchecked, which needs at least two entries on the list.
   var mixed = activities.reviewFor([
-    { reviewStatus: "reviewed", reviewedBy: "Test Officer", reviewedOn: "2026-01-01" },
+    { reviewStatus: "reviewed", reviewedBy: "Test Officer", office: "Test Office", reviewedOn: "2026-01-01" },
     {},
   ]);
   if (mixed.status !== "mixed") {
@@ -302,7 +312,14 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
       'A record marked "reviewed" with no reviewer name still counts as reviewed, so the app could show a sign-off with no officer behind it'
     );
   }
-  if (activities.isReviewed({ reviewStatus: "reviewed", reviewedBy: "A Test Officer" }) !== true) {
+  if (
+    activities.isReviewed({
+      reviewStatus: "reviewed",
+      reviewedBy: "A Test Officer",
+      office: "Test Office",
+      reviewedOn: "2026-01-01",
+    }) !== true
+  ) {
     failures.push("A complete review record no longer counts as reviewed, so a real review would be hidden from the farmer");
   }
 }
@@ -529,6 +546,7 @@ if (catalogue && activities) {
   var reviewedText = activities.formatReview({
     reviewStatus: "reviewed",
     reviewedBy: "Test Officer",
+    office: "Test Office",
     designation: "Test Designation",
     reviewedOn: "2026-01-01",
   }).text;
