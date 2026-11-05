@@ -22,6 +22,22 @@ Please read each suggestion and mark anything you disagree with:
 You do not need to approve anything. Crossing out a wrong line is the
 most useful thing you can do.
 
+## The pack you may be handed
+
+Three files, generated from the same list:
+
+- `review-sheets/index.html` is the cover. It says what is being asked and
+  lists every district, grouped by the ground the app assumes there.
+- `review-sheets/<District>.html` is one page for the district you serve.
+- `review-sheets/all.html` is every district in one document, for a single
+  print job or PDF.
+
+Take the district sheet that matches where you work. Its top line says which
+kind of ground the app assumes for that district, because several districts
+here hold more than one. If you serve a different part of it, write which
+ground you mean beside the line you are correcting: that answer is as useful
+as a correction.
+
 ## How to give your feedback
 
 Use whichever of these is easiest:
