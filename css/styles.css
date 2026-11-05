@@ -3164,3 +3164,78 @@ select:focus {
   border-radius: 8px;
   min-height: 4.5rem;
 }
+
+/* ------------------------------------------------------------------
+   Phone reality.
+
+   The field-test phone is a 360px Android in daylight, held in one hand,
+   often while standing. Three target sizes were still under the 48px the
+   brief asks for, and a few blocks were padded for a desk. Nothing here
+   changes the layout above 480px.
+   ------------------------------------------------------------------ */
+
+#lang-select,
+.nav-toggle,
+.btn-quiet {
+  min-height: 48px;
+}
+
+.nav-toggle {
+  width: 48px;
+  height: 48px;
+}
+
+/* A line of text that happens to be a link is not a tap target in the same
+   sense as a button; a link styled as one still is, and .btn already covers
+   it. This only lifts the controls that were genuinely too small. */
+
+@media (max-width: 480px) {
+  .container {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+
+  .hero h1,
+  .screen-title {
+    font-size: clamp(1.55rem, 7.5vw, 2rem);
+    line-height: 1.2;
+  }
+
+  .hero-lead,
+  .screen-intro {
+    font-size: 1rem;
+  }
+
+  .option-card,
+  .checklist-card,
+  .schemes-card,
+  .summary-strip,
+  .feedback-block {
+    padding: var(--space-4);
+  }
+
+  .btn {
+    padding: 0 var(--space-4);
+  }
+
+  /* Long words, URLs and Urdu do not always break where a desk layout
+     expects. Break inside a word only when there is no other way. */
+  .option-card,
+  .visit-card,
+  .checklist-card,
+  .schemes-card,
+  .summary-card {
+    overflow-wrap: break-word;
+  }
+
+  .compare-table {
+    min-width: 420px;
+    font-size: 0.9rem;
+  }
+
+  .provenance-item,
+  .provenance-compact .provenance-item {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
