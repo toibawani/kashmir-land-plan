@@ -109,6 +109,8 @@ Every string the app shows on the critical path, in the three languages it offer
 | `share.plan` | Plan | योजना | منصوبہ |
 | `share.options` | Options to discuss | चर्चा के विकल्प | بحث کے اختیارات |
 | `share.questions` | Questions I want to ask | जो सवाल मैं पूछना चाहता हूं | جو سوال میں پوچھنا چاہتا ہوں |
+| `share.carry` | Carry | साथ ले जाएं | ساتھ لے جائیں |
+| `share.soil` | Soil checks | मिट्टी की जांच | مٹی کی جانچ |
 | `share.marked` | (marked) | (चिह्नित) | (نشان زدہ) |
 | `share.done` | [done] | [हो गया] | [ہو گیا] |
 | `share.prepared` | Prepared | तैयार | تیار |

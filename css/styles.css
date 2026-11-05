@@ -3106,3 +3106,25 @@ select:focus {
   direction: ltr;
   text-align: right;
 }
+
+/* Questions grouped under the option they belong to. This is the order the
+   conversation happens in, so the grouping is functional, not decorative. */
+.visit-option-questions {
+  margin: 0.5rem 0 0.9rem;
+}
+
+.visit-option-questions h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.visit-doc-list {
+  margin: 0.3rem 0 0.6rem;
+  padding-left: 1.15rem;
+}
+
+.visit-doc-list li {
+  margin-bottom: 0.35rem;
+  line-height: 1.45;
+}

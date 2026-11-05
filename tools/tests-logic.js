@@ -73,6 +73,7 @@ load(
     "visitfit.js",
     "office.js",
     "share.js",
+    "visitcard.js",
     "messages.js",
   ],
   sandbox
@@ -85,6 +86,7 @@ var SOURCES = sandbox.window.MLMP_SOURCES;
 var csv = require("../tools/lib/review-csv.js");
 var MSG = sandbox.window.MLMP_MESSAGES;
 var SHARE = sandbox.window.MLMP_SHARE;
+var VISIT = sandbox.window.MLMP_VISIT;
 
 console.log("altitude zones");
 
@@ -248,6 +250,39 @@ check(
   CATALOGUE.ids.every(function (id) {
     return ACT.formatReview(CATALOGUE.activities[id]).status === "not-reviewed";
   })
+);
+
+console.log("visit card parts");
+
+var carryNone = VISIT.documents({ soil: "none" });
+var carryDone = VISIT.documents({ soil: "done" });
+check("the carry list always tells the farmer to ask", carryNone.join(" ").match(/does not guess/i) !== null);
+check("the carry list mentions the card itself", carryNone.join(" ").match(/This card/i) !== null);
+check("a soil report changes the carry list", carryDone.join(" ").match(/soil test report/i) !== null);
+check("with no soil test the list says to ask for one", carryNone.join(" ").match(/Ask where to get one/i) !== null);
+check("no carry line states a document requirement", !carryNone.concat(carryDone).some(function (line) { return /must bring|documents? required|required documents/i.test(line); }));
+
+var soilNo = VISIT.soilChecks({ soil: "none" }).join(" ");
+var soilYes = VISIT.soilChecks({ soil: "done" }).join(" ");
+check("soil checks ask how to get a test when there is none", /how to get a soil test/i.test(soilNo));
+check("soil checks use a report the farmer already has", /take your soil test report/i.test(soilYes));
+check("soil checks ask about drainage and sampling", /drainage/i.test(soilNo) && /sample/i.test(soilNo));
+
+var groupOptions = [
+  { activity: { id: "a", title: "Option A" } },
+  { activity: { id: "b", title: "Option B" } },
+];
+var groupQs = [
+  { id: "q1", about: "Option A", text: "A question" },
+  { id: "q2", about: "Option B", text: "B question" },
+  { id: "q3", about: null, text: "Closing question" },
+];
+var grouped = VISIT.groupQuestions(groupOptions, groupQs);
+check("each question lands under its own option", grouped.byOption[0].questions[0].id === "q1" && grouped.byOption[1].questions[0].id === "q2");
+check("a question with no option stays in the general list", grouped.general.length === 1 && grouped.general[0].id === "q3");
+check(
+  "no question is lost when grouping",
+  grouped.byOption.reduce(function (n, g) { return n + g.questions.length; }, 0) + grouped.general.length === groupQs.length
 );
 
 console.log("languages");
