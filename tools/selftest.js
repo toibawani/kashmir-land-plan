@@ -882,6 +882,84 @@ check("t() returns the translated string", MSG.t("home.start") === "زمینی �
 check("t() falls back to English for an untranslated key", MSG.t("home.lead") === "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and a one-page card to take to the office.", "an untranslated key did not fall back to English");
 MSG.set("en");
 
+/* ---- The honesty rules, against text the app generates ---- */
+
+// The build check scans the copy an editor writes (js/catalogue.js and
+// js/schemes.js). The text below is generated at run time from a farmer's own
+// plan, and it is the text that actually leaves the app, so it is held to the
+// same rule using the same patterns, from tools/claims.js.
+console.log("generated text makes no claims");
+var claims = require("./claims.js");
+
+// The number rule is deliberately not applied here. A question that quotes the
+// farmer's own plot back - "is three kanal enough for this?" - is the point of
+// the questions module, and their own figure is not a claim this app is making.
+// Every claim shape in tools/claims.js still applies.
+function claimHitsIn(text) {
+  // Uses BANNED rules (with unless) but deliberately does not include DIGITS.
+  // The questions module quotes the farmer's own plot (e.g. "is three kanal enough"),
+  // and their own figures are not claims this app is making.
+  var hits = [];
+  var value = String(text == null ? "" : text);
+  claims.BANNED.forEach(function (rule) {
+    if (rule.unless && rule.unless.test(value)) return;
+    var m = rule.re.exec(value);
+    if (m) hits.push({ name: rule.name, match: m[0], why: rule.why });
+  });
+  return hits;
+}
+
+function findClaimsIn(text) {
+  // Same logic as tools/claims.js findClaims, applied to runtime text.
+  // Includes DIGITS for the build check against officer-edited copy.
+  var found = [];
+  var value = String(text == null ? "" : text);
+  claims.BANNED.concat([claims.DIGITS]).forEach(function (rule) {
+    if (rule.unless && rule.unless.test(value)) return;
+    var m = rule.re.exec(value);
+    if (m) found.push({ name: rule.name, why: rule.why, match: m[0] });
+  });
+  return found;
+}
+
+function reportClaims(where, text) {
+  // Uses claimHitsIn which has the unless check from tools/claims.js.
+  // This is the same logic the check() function tests.
+  claimHitsIn(text).forEach(function (hit) {
+    failures.push(where + " makes a claim this app cannot back: " + hit.name + ' ("' + hit.match + '"): ' + hit.why);
+  });
+}
+
+var questionText = questions
+  .map(function (q) {
+    return q.text;
+  })
+  .join(" ");
+reportClaims("The generated questions", questionText);
+
+var officeText = officeItems.join(" ") + " " + OFFICE.closing() + " " + OFFICE.heading();
+reportClaims("The office panel", officeText);
+
+// The prepared date is the farmer's own plan fact, printed deliberately, so it
+// is removed before the scan rather than exempted from it. A scheme deadline
+// hiding in the options or questions would still be caught.
+var shareScrubbed = shareText.split(shareInput.dateLabel).join("");
+reportClaims("The share message", shareScrubbed);
+check("the share message makes no claim", claimHitsIn(shareScrubbed).length === 0, shareScrubbed.slice(0, 120));
+
+// A guard that cannot fail is decoration, so the shared list is tested here as
+// well: if somebody empties tools/claims.js, or weakens a pattern until it
+// matches nothing, this is what fails, in CI, rather than the guard quietly
+// passing everything forever.
+var planted = "Small farmers are eligible for a subsidy of Rs 40,000 towards this. Apply by 31 March 2027 and bring the required documents.";
+var plantedHits = claims.findClaims(planted);
+check("the claim patterns are still in force", plantedHits.length >= 4, plantedHits.map(function (h) { return h.name; }).join(", ") || "no pattern matched a planted claim");
+check(
+  "the claim patterns still let the honest wording through",
+  claims.findClaims("Eligibility rules are set by the government and change, so confirm yours with the local office.").length === 0,
+  "an honest sentence was flagged as a claim"
+);
+
 /* ---- Report ---- */
 
 console.log("");

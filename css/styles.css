@@ -2952,3 +2952,32 @@ select:focus {
     flex: 1 1 100%;
   }
 }
+
+/* The honest gap state. Used when the catalogue has no entries for an
+   altitude zone: it should read as an answer, not as an empty list. */
+.zone-gap {
+  margin: 1.5rem 0;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #b9892f;
+  border-radius: 12px;
+  background: #fdf6e7;
+}
+
+.zone-gap h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.zone-gap h3 {
+  margin-bottom: 0.35rem;
+  font-size: 1rem;
+}
+
+.checklist-plain {
+  margin: 0.35rem 0 0.75rem;
+  padding-left: 1.15rem;
+}
+
+.checklist-plain li {
+  margin-bottom: 0.4rem;
+}

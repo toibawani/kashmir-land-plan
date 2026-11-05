@@ -63,6 +63,7 @@
   function blankData() {
     return {
       district: "",
+      altitude: "",
       village: "",
       size: "",
       unit: "kanal",
@@ -217,13 +218,23 @@
     opts = opts || {};
     var d = state.data;
     if (!d.district) return "";
-    var zone = REGIONS.zoneFor(d.district);
+    var zone = planZone();
+    var altitude = planAltitude();
     var info = REGIONS.district(d.district) || {};
     var weatherName = REGIONS.weatherQuery(d.district) || d.district;
     var parts = [];
     parts.push("<h2>Location used for this plan</h2>");
     parts.push('<p class="section-kind"><span class="kind-tag kind-user">Your answers</span> <span class="kind-tag kind-regional">Regional background</span></p>');
     parts.push("<p><strong>District you selected:</strong> " + escapeHtml(d.district) + (d.village ? ", village " + escapeHtml(d.village) : "") + ".</p>");
+    if (altitude) {
+      parts.push(
+        "<p><strong>Altitude zone you chose:</strong> " +
+          escapeHtml(altitude.label) +
+          " (" +
+          escapeHtml(altitude.band) +
+          ").</p>"
+      );
+    }
     if (zone) {
       parts.push(
         "<p><strong>Regional grouping used:</strong> " +
@@ -231,6 +242,12 @@
           ". Approximate elevation band for this grouping: " +
           escapeHtml(zone.elevationBand) +
           ".</p>"
+      );
+    } else if (altitude) {
+      parts.push(
+        '<p class="option-note">' +
+          escapeHtml(altitude.gap || "This catalogue has no entries for this altitude zone.") +
+          "</p>"
       );
     }
     parts.push(
@@ -376,6 +393,7 @@
 
     if (step === 1) {
       if (!d.district) fail("district", "Please select a district.");
+      if (!d.altitude) fail("altitude", "Please select the altitude zone of the plot.");
       if (!d.village || d.village.trim().length < 2) {
         fail("village", "Please enter a village or locality name.");
       }
@@ -406,6 +424,7 @@
     if (!form) return;
     var fd = new FormData(form);
     state.data.district = String(fd.get("district") || "");
+    state.data.altitude = String(fd.get("altitude") || "");
     state.data.village = String(fd.get("village") || "").trim();
     state.data.size = String(fd.get("size") || "");
     state.data.unit = String(fd.get("unit") || "kanal");
@@ -423,6 +442,8 @@
       if (el) el.value = val || "";
     };
     setVal("district", d.district);
+    syncAltitudeOptions();
+    setVal("altitude", d.altitude || REGIONS.defaultAltitude(d.district));
     setVal("village", d.village);
     setVal("size", d.size);
     setVal("unit", d.unit);
@@ -565,6 +586,54 @@
 
   // ------------------------------------------- Recommendation (sample)
 
+  /**
+   * The altitude the plan is built on. The farmer's own choice wins; the
+   * district only supplies a default. Returns null when nothing is known yet.
+   */
+  function planAltitude() {
+    var id = state.data.altitude || REGIONS.defaultAltitude(state.data.district);
+    return REGIONS.altitudeZone(id);
+  }
+
+  /**
+   * The catalogue zone for this plan. Null means the catalogue has no honest
+   * entries for this altitude, which the results screen states plainly rather
+   * than papering over with lowland crops.
+   */
+  function planZone() {
+    var alt = planAltitude();
+    return alt ? REGIONS.catalogueZoneFor(alt.id) : null;
+  }
+
+  /** Fill the altitude select from the region data, keeping any choice. */
+  function syncAltitudeOptions() {
+    var sel = $("#altitude");
+    if (!sel) return;
+    var chosen = sel.value || state.data.altitude || "";
+    sel.innerHTML =
+      '<option value="">Select the ground you farm</option>' +
+      Object.keys(REGIONS.ALTITUDE_ZONES)
+        .map(function (id) {
+          var alt = REGIONS.ALTITUDE_ZONES[id];
+          return '<option value="' + escapeHtml(id) + '">' + escapeHtml(alt.label) + " (" + escapeHtml(alt.band) + ")</option>";
+        })
+        .join("");
+    // A stored draft may name an altitude this build no longer has. Leaving
+    // the select empty is honest: the form then asks for it again.
+    if (chosen && REGIONS.altitudeZone(chosen)) sel.value = chosen;
+  }
+
+  /** District change resets the suggestion, which the farmer can override. */
+  function onDistrictChange() {
+    var district = $("#district");
+    var altitude = $("#altitude");
+    if (!district || !altitude) return;
+    state.data.district = district.value;
+    altitude.value = REGIONS.defaultAltitude(district.value);
+    state.data.altitude = altitude.value;
+    updateFormLocationContext();
+  }
+
   /** Convert the plot size to an approximate kanal figure for coarse banding. */
   function sizeInKanal() {
     var n = parseFloat(state.data.size) || 0;
@@ -602,8 +671,11 @@
    */
   function computeOptions() {
     var d = state.data;
-    var zone = REGIONS.zoneFor(d.district);
+    var zone = planZone();
     var zoneId = zone ? zone.id : null;
+    // Null is a real result: high altitude, or a district the catalogue does
+    // not cover. Every activity is gated out below instead of being ranked.
+    state.noLocalData = !!(planAltitude() && !zone);
     var scores = {};
     var reasons = {};
 
@@ -623,7 +695,11 @@
     // ranked low.
     ACTIVITIES.ids.forEach(function (id) {
       var a = ACTIVITIES.ALL[id];
-      if (zoneId && a.zones.indexOf(zoneId) === -1) scores[id] = -999;
+      if (!zoneId) {
+        scores[id] = -999;
+        return;
+      }
+      if (a.zones.indexOf(zoneId) === -1) scores[id] = -999;
       if (a.districtsOnly && a.districtsOnly.indexOf(d.district) === -1) scores[id] = -999;
     });
 
@@ -915,7 +991,7 @@
 
     var zoneCard = $("#results-zone");
     if (zoneCard) {
-      var zone = REGIONS.zoneFor(d.district);
+      var zone = planZone();
       if (zone) {
         var info = REGIONS.district(d.district) || {};
         zoneCard.hidden = false;
@@ -943,6 +1019,33 @@
 
     var list = $("#options-list");
     if (!list) return;
+
+    var gapHost = $("#zone-gap");
+    if (gapHost) {
+      var alt = planAltitude();
+      if (state.noLocalData) {
+        gapHost.hidden = false;
+        gapHost.innerHTML =
+          "<h2>Not enough local data for this altitude</h2>" +
+          '<p class="section-kind"><span class="kind-tag kind-user">Your answers</span></p>' +
+          "<p>" +
+          escapeHtml((alt && alt.gap) || "This catalogue has no entries for this altitude zone.") +
+          "</p>" +
+          "<h3>Ask the officer</h3>" +
+          '<ul class="checklist-plain">' +
+          ((alt && alt.checklist) || [])
+            .map(function (t) {
+              return "<li>" + escapeHtml(t) + "</li>";
+            })
+            .join("") +
+          "</ul>" +
+          '<p class="option-note">This is not a shortage of suggestions to be filled in later with a guess. The catalogue is missing here on purpose until an officer has checked what is actually practised at this height.</p>';
+      } else {
+        gapHost.hidden = true;
+        gapHost.innerHTML = "";
+      }
+    }
+
     list.innerHTML = opts
       .map(function (option, i) {
         var a = option.activity;
@@ -1196,15 +1299,20 @@
 
   function getChecklistItems() {
     var d = state.data;
-    var items = [
+    var alt = planAltitude();
+    var items = [];
+    // The altitude zone adds its own checks first. For high altitude that is
+    // the whole checklist: asking is the only honest next step there.
+    if (alt && alt.checklist) items = items.concat(alt.checklist);
+    items = items.concat([
       "Visit or call the nearest agriculture office or Kisan Khidmat Ghar with your plot details.",
       d.soil === "none"
         ? "Ask how to get a soil test for your plot, and what it involves."
         : "Take your soil test report when you meet the officer and ask for it to be interpreted.",
       "Discuss water access and whether any irrigation or water-saving support applies to your situation.",
       "Ask which of the activity ideas, if any, are realistic for your village and season, and what training is available.",
-      "Check the current position on any scheme you were told about. Do not rely on amounts, deadlines or rules from this app.",
-    ];
+      "Check the current position on any scheme you were told about. Do not rely on amounts, deadlines or rules from this app."
+    ]);
     if (Object.keys(state.interested).some(function (k) { return state.interested[k]; })) {
       items.push("Ask specifically about the options you marked interested in, including what the first year would actually cost you.");
     }
@@ -1788,6 +1896,12 @@
   function labelLandUse(v) {
     return { unused: "mostly unused", partly: "partly used", cultivated: "currently cultivated" }[v] || v;
   }
+  /** Human wording for a stored altitude id, or "" when it is not set. */
+  function altitudeLabel(id) {
+    var alt = REGIONS.altitudeZone(id) || REGIONS.altitudeZone(REGIONS.defaultAltitude(state.data.district));
+    return alt ? alt.label : "";
+  }
+
   function labelWater(v) {
     return { reliable: "reliable", seasonal: "seasonal", limited: "limited", unknown: "not sure" }[v] || v;
   }
@@ -2878,6 +2992,7 @@
       data.size,
       data.unit,
       data.landUse,
+      data.altitude,
       data.water,
       data.terrain,
       data.soil,
@@ -2938,6 +3053,7 @@
 
     var answerRows = [
       ["District", d.district || "not given"],
+      ["Altitude zone", altitudeLabel(d.altitude) || "not given"],
       ["Village or locality", d.village || "not given"],
       ["Approximate size", (d.size || "not given") + " " + (d.unit || "")],
       ["Currently", labelLandUse(d.landUse)],
@@ -3320,6 +3436,7 @@
     var rows = [
       { label: "District and village", value: function (p) { return (p.data.district || "not given") + (p.data.village ? ", " + p.data.village : ""); } },
       { label: "Plot size", value: function (p) { return (p.data.size || "not given") + " " + (p.data.unit || ""); } },
+      { label: "Altitude zone", value: function (p) { return altitudeLabel(p.data.altitude) || "not given"; } },
       { label: "Currently", value: function (p) { return labelLandUse(p.data.landUse); } },
       { label: "Water access", value: function (p) { return labelWater(p.data.water); } },
       { label: "Terrain", value: function (p) { return labelTerrain(p.data.terrain); } },
@@ -3589,6 +3706,7 @@
     state.interested = {};
     state.data = {
       district: "Pulwama",
+      altitude: "valley",
       village: "Tral (sample)",
       size: "3",
       unit: "kanal",
@@ -3790,6 +3908,7 @@
   }
 
   function bind() {
+    $("#district") && $("#district").addEventListener("change", onDistrictChange);
     $("#btn-start") && $("#btn-start").addEventListener("click", startPlan);
     $("#btn-demo") && $("#btn-demo").addEventListener("click", loadDemo);
     $("#btn-about-home") && $("#btn-about-home").addEventListener("click", goHome);
@@ -4390,6 +4509,10 @@
       weatherSelect.innerHTML = '<option value="">Select district</option>' + options;
     }
 
+    // The altitude select is filled from the same region data, and a stored
+    // draft may already name an altitude, so it is painted before the form is
+    // ever shown.
+    fillFormFromState();
     bind();
     setAboutReviewStatus();
     initLanguage();
