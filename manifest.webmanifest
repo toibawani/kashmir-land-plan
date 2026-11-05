@@ -1,7 +1,7 @@
 {
   "name": "My Land, My Plan",
   "short_name": "My Land Plan",
-  "description": "Turn basic details about an underused plot into practical options and clear next steps for checking local support in Jammu and Kashmir. A prototype, not an official service.",
+  "description": "An offline-first J&K land planning app: prepare practical options and office-visit questions without inventing scheme eligibility or crop guarantees.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "./index.html#home",
