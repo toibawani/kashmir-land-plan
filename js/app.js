@@ -28,6 +28,7 @@
   var OFFICE = window.MLMP_OFFICE;
   var SHARE = window.MLMP_SHARE;
   var MSG = window.MLMP_MESSAGES;
+  var SOURCES = window.MLMP_SOURCES;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -865,6 +866,59 @@
     );
   }
 
+  /** A field's value if a public document backs it, otherwise a question. */
+  function evidenceField(field) {
+    if (field && field.status === "verified" && field.value) return field.value;
+    return "Ask the officer";
+  }
+
+  function optionSourcesHtml(a) {
+    var ids = (a && a.sources) || [];
+    if (!SOURCES || !SOURCES.byId) return "";
+    var items = ids
+      .map(function (id) {
+        var s = SOURCES.byId(id);
+        if (!s) return "";
+        return (
+          '<li><a href="' +
+          escapeHtml(s.url) +
+          '" target="_blank" rel="noopener noreferrer">' +
+          escapeHtml(s.short) +
+          '</a> <span class="source-for">' +
+          escapeHtml(s.usedFor) +
+          "</span></li>"
+        );
+      })
+      .filter(Boolean)
+      .join("");
+    if (!items) {
+      return '<p class="option-note">No public source has been checked for this entry yet. It is listed in NEEDS_SOURCES.md.</p>';
+    }
+    return '<ul class="source-tags">' + items + "</ul>";
+  }
+
+  /**
+   * Cost, first income and the main risk, with the sources that back them.
+   * The block is labelled as a rough estimate on purpose: until an officer has
+   * checked the entry, even the qualitative risk is a prompt for a question.
+   */
+  function optionEvidence(a) {
+    return (
+      '<div class="option-section option-evidence">' +
+      "<h3>Cost, time and risk</h3>" +
+      '<p class="section-kind"><span class="kind-tag kind-illustrative">Rough estimate, confirm locally</span></p>' +
+      '<dl class="rating-list">' +
+      ratingRow("Rough startup cost", evidenceField(a.startupCost)) +
+      ratingRow("Time to first income", evidenceField(a.timeToFirstIncome)) +
+      ratingRow("Main risk", a.mainRisk || "Ask the officer") +
+      "</dl>" +
+      "<h4>Sources for this entry</h4>" +
+      optionSourcesHtml(a) +
+      '<p class="option-note">A figure appears only where a public document backs it. Otherwise the field asks the officer, and the gap is listed in NEEDS_SOURCES.md.</p>' +
+      "</div>"
+    );
+  }
+
   function optionRatings(a) {
     return (
       '<div class="option-section">' +
@@ -1073,6 +1127,7 @@
           "</div>" +
           optionZoneNote(option, d.district) +
           optionRatings(a) +
+          optionEvidence(a) +
           optionReasonList(option) +
           '<div class="option-section">' +
           "<h3>Basic requirements</h3>" +
@@ -3071,7 +3126,11 @@
               "<li>" +
               escapeHtml(o.activity.title) +
               (state.interested[o.activity.id] ? ' <span class="visit-flag">marked to follow up</span>' : "") +
-              "</li>"
+              '<span class="visit-option-meta">Cost: ' +
+              escapeHtml(evidenceField(o.activity.startupCost)) +
+              ". First income: " +
+              escapeHtml(evidenceField(o.activity.timeToFirstIncome)) +
+              ".</span></li>"
             );
           })
           .join("") +
