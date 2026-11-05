@@ -3042,3 +3042,67 @@ select:focus {
   font-size: 0.78rem;
   color: #5a5a50;
 }
+
+/* Shown while a translation has not been checked by a native speaker. It sits
+   above everything and is not dismissible: it is a statement about the words
+   on the screen, not a tip. */
+.translation-notice {
+  padding: 0.7rem 1rem;
+  background: #fdf6e7;
+  border-bottom: 1px solid #b9892f;
+  color: #4a3a12;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Urdu. Nastaliq if the device has it, a readable Naskh fallback otherwise.
+   Line height is larger because the script needs the vertical room. */
+[lang="ur"] {
+  font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Segoe UI", Tahoma, sans-serif;
+  line-height: 1.9;
+}
+
+[dir="rtl"] body {
+  text-align: right;
+}
+
+[dir="rtl"] .site-header .logo,
+[dir="rtl"] .nav-menu {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-menu {
+  padding-right: 0;
+}
+
+[dir="rtl"] .checklist,
+[dir="rtl"] .checklist-plain,
+[dir="rtl"] .source-tags,
+[dir="rtl"] .visit-support,
+[dir="rtl"] .office-list {
+  padding-right: 1.2rem;
+  padding-left: 0;
+}
+
+[dir="rtl"] .field,
+[dir="rtl"] .option-card,
+[dir="rtl"] .visit-card,
+[dir="rtl"] .screen-intro,
+[dir="rtl"] .hero {
+  text-align: right;
+}
+
+[dir="rtl"] .progress-fill {
+  margin-left: auto;
+}
+
+/* Catalogue prose stays left to right even in an RTL interface: it is English
+   text, and mirroring English is harder to read, not easier. */
+[dir="rtl"] .option-card p,
+[dir="rtl"] .option-card li,
+[dir="rtl"] .visit-card p,
+[dir="rtl"] .visit-card li {
+  direction: ltr;
+  text-align: right;
+}

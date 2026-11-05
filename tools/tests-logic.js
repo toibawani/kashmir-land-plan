@@ -83,6 +83,8 @@ var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
 var ACT = sandbox.window.MLMP_ACTIVITIES;
 var SOURCES = sandbox.window.MLMP_SOURCES;
 var csv = require("../tools/lib/review-csv.js");
+var MSG = sandbox.window.MLMP_MESSAGES;
+var SHARE = sandbox.window.MLMP_SHARE;
 
 console.log("altitude zones");
 
@@ -247,6 +249,55 @@ check(
     return ACT.formatReview(CATALOGUE.activities[id]).status === "not-reviewed";
   })
 );
+
+console.log("languages");
+
+check("three languages are offered", MSG.available().length === 3);
+check("Urdu is right to left", MSG.dir("ur") === "rtl");
+check("Hindi is left to right", MSG.dir("hi") === "ltr");
+check("English is the reviewed source", MSG.reviewed("en") === true);
+check("Hindi is not claimed as reviewed", MSG.reviewed("hi") === false);
+check("Urdu is not claimed as reviewed", MSG.reviewed("ur") === false);
+
+var enKeys = MSG.keys();
+["hi", "ur"].forEach(function (code) {
+  var dict = MSG.dict(code);
+  var missing = enKeys.filter(function (k) {
+    return !Object.prototype.hasOwnProperty.call(dict, k);
+  });
+  check(code + " covers every English key", missing.length === 0, missing.join(", "));
+  check(
+    code + " has no empty translation",
+    enKeys.every(function (k) {
+      return String(dict[k] || "").trim().length > 0;
+    })
+  );
+});
+
+["form.location", "results.title", "visit.title", "share.questions", "common.confirmLocally"].forEach(function (key) {
+  check(
+    '"' + key + '" is actually translated in Hindi and Urdu',
+    MSG.dict("hi")[key] !== MSG.dict("en")[key] && MSG.dict("ur")[key] !== MSG.dict("en")[key]
+  );
+});
+
+check("an unknown key falls back to the caller's English", MSG.tr("no.such.key", "English fallback") === "English fallback");
+
+// The share message is built from labels, so it follows the chosen language.
+var urShare = SHARE.build({
+  reference: "MLMP-TEST",
+  options: [{ title: "Test", marked: true }],
+  questions: [{ text: "Test question", ticked: false }],
+  labels: {
+    heading: MSG.dict("ur")["share.heading"],
+    options: MSG.dict("ur")["share.options"],
+    questions: MSG.dict("ur")["share.questions"],
+    marked: MSG.dict("ur")["share.marked"],
+    madeWith: MSG.dict("ur")["share.madeWith"],
+  },
+});
+check("the share message can be built in Urdu", urShare.indexOf(MSG.dict("ur")["share.options"]) !== -1);
+check("the share message still carries the reference", urShare.indexOf("MLMP-TEST") !== -1);
 
 console.log("review csv import");
 

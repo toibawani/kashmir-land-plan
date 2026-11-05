@@ -23,6 +23,8 @@
     You are offline. The land plan still works on this device. Weather needs a connection.
   </div>
 
+  <div class="translation-notice" id="translation-notice" hidden role="status"></div>
+
   <header class="site-header" role="banner">
     <div class="header-inner">
       <a href="#home" class="logo" id="logo-link" aria-label="My Land, My Plan home">
@@ -151,22 +153,22 @@
           <fieldset class="form-step" data-step="1" id="step-1">
             <legend class="step-legend">Location</legend>
             <div class="field">
-              <label for="district">District <span class="req">required</span></label>
+              <label for="district"><span data-i18n="form.district">District</span> <span class="req" data-i18n="form.required">required</span></label>
               <select id="district" name="district" required>
-                <option value="">Select district</option>
+                <option value="" data-i18n="form.selectDistrict">Select district</option>
               </select>
               <p class="field-error" id="err-district" hidden></p>
             </div>
             <div class="field">
-              <label for="altitude">Altitude zone <span class="req">required</span></label>
+              <label for="altitude"><span data-i18n="form.altitude">Altitude zone</span> <span class="req" data-i18n="form.required">required</span></label>
               <select id="altitude" name="altitude" required>
-                <option value="">Select the ground you farm</option>
+                <option value="" data-i18n="form.selectAltitude">Select the ground you farm</option>
               </select>
               <p class="hint">A district can hold more than one kind of ground. Pick the one that matches the plot, not the district town.</p>
               <p class="field-error" id="err-altitude" hidden></p>
             </div>
             <div class="field">
-              <label for="village">Village or locality <span class="req">required</span></label>
+              <label for="village"><span data-i18n="form.village">Village or locality</span> <span class="req" data-i18n="form.required">required</span></label>
               <input type="text" id="village" name="village" required maxlength="80" autocomplete="off" placeholder="e.g. Tral, or your village name" />
               <p class="hint">This stays on your device. Only the district is used for the regional notes. Weather is looked up for a nearby town, not this village.</p>
               <p class="field-error" id="err-village" hidden></p>
@@ -178,12 +180,12 @@
             <legend class="step-legend">Plot size</legend>
             <div class="field-row">
               <div class="field">
-                <label for="size">Approximate size <span class="req">required</span></label>
+                <label for="size"><span data-i18n="form.size">Plot size</span> <span class="req" data-i18n="form.required">required</span></label>
                 <input type="number" id="size" name="size" required min="0.01" max="500" step="0.01" placeholder="e.g. 2" />
                 <p class="field-error" id="err-size" hidden></p>
               </div>
               <div class="field">
-                <label for="unit">Unit</label>
+                <label for="unit" data-i18n="form.unit">Unit</label>
                 <select id="unit" name="unit">
                   <option value="kanal">Kanal</option>
                   <option value="acre">Acre</option>
@@ -198,21 +200,21 @@
           <fieldset class="form-step" data-step="3" id="step-3" hidden>
             <legend class="step-legend">Current use and water</legend>
             <div class="field">
-              <span class="label-like">Current land use <span class="req">required</span></span>
+              <span class="label-like"><span data-i18n="form.landUse">Current land use</span> <span class="req" data-i18n="form.required">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
-                <label class="radio-card"><input type="radio" name="landUse" value="unused" required /><span>Mostly unused</span></label>
-                <label class="radio-card"><input type="radio" name="landUse" value="partly" /><span>Partly used</span></label>
-                <label class="radio-card"><input type="radio" name="landUse" value="cultivated" /><span>Currently cultivated</span></label>
+                <label class="radio-card"><input type="radio" name="landUse" value="unused" required /><span data-i18n="form.landUse.unused">Mostly unused</span></label>
+                <label class="radio-card"><input type="radio" name="landUse" value="partly" /><span data-i18n="form.landUse.partly">Partly used</span></label>
+                <label class="radio-card"><input type="radio" name="landUse" value="cultivated" /><span data-i18n="form.landUse.cultivated">Currently cultivated</span></label>
               </div>
               <p class="field-error" id="err-landUse" hidden></p>
             </div>
             <div class="field">
-              <span class="label-like">Water access <span class="req">required</span></span>
+              <span class="label-like"><span data-i18n="form.water">Water access</span> <span class="req" data-i18n="form.required">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
-                <label class="radio-card"><input type="radio" name="water" value="reliable" required /><span>Reliable</span></label>
-                <label class="radio-card"><input type="radio" name="water" value="seasonal" /><span>Seasonal</span></label>
-                <label class="radio-card"><input type="radio" name="water" value="limited" /><span>Limited</span></label>
-                <label class="radio-card"><input type="radio" name="water" value="unknown" /><span>Not sure</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="reliable" required /><span data-i18n="form.water.reliable">Reliable</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="seasonal" /><span data-i18n="form.water.seasonal">Seasonal</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="limited" /><span data-i18n="form.water.limited">Limited</span></label>
+                <label class="radio-card"><input type="radio" name="water" value="unknown" /><span data-i18n="form.water.unknown">Not sure</span></label>
               </div>
               <p class="field-error" id="err-water" hidden></p>
             </div>
@@ -221,20 +223,20 @@
           <fieldset class="form-step" data-step="4" id="step-4" hidden>
             <legend class="step-legend">Terrain and soil</legend>
             <div class="field">
-              <span class="label-like">Terrain <span class="req">required</span></span>
+              <span class="label-like"><span data-i18n="form.terrain">Terrain</span> <span class="req" data-i18n="form.required">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
-                <label class="radio-card"><input type="radio" name="terrain" value="flat" required /><span>Mostly flat</span></label>
-                <label class="radio-card"><input type="radio" name="terrain" value="sloped" /><span>Sloped or hilly</span></label>
-                <label class="radio-card"><input type="radio" name="terrain" value="unknown" /><span>Not sure</span></label>
+                <label class="radio-card"><input type="radio" name="terrain" value="flat" required /><span data-i18n="form.terrain.flat">Mostly flat</span></label>
+                <label class="radio-card"><input type="radio" name="terrain" value="sloped" /><span data-i18n="form.terrain.sloped">Sloped or hilly</span></label>
+                <label class="radio-card"><input type="radio" name="terrain" value="unknown" /><span data-i18n="form.terrain.unknown">Not sure</span></label>
               </div>
               <p class="field-error" id="err-terrain" hidden></p>
             </div>
             <div class="field">
-              <label for="soil">Soil test (optional)</label>
+              <label for="soil" data-i18n="form.soil">Soil test (optional)</label>
               <select id="soil" name="soil">
-                <option value="none">No recent soil test</option>
-                <option value="done">I have a recent soil test</option>
-                <option value="partial">Partial or old results</option>
+                <option value="none" data-i18n="form.soil.none">No recent soil test</option>
+                <option value="done" data-i18n="form.soil.done">I have a recent soil test</option>
+                <option value="partial" data-i18n="form.soil.partial">Partial or old results</option>
               </select>
               <p class="hint">If you have a test, take it when you visit the agriculture office. This app does not interpret lab reports.</p>
             </div>
@@ -243,14 +245,14 @@
           <fieldset class="form-step" data-step="5" id="step-5" hidden>
             <legend class="step-legend">Main constraint</legend>
             <div class="field">
-              <span class="label-like">What limits you most right now? <span class="req">required</span></span>
+              <span class="label-like"><span data-i18n="form.constraint">Main constraint</span> <span class="req" data-i18n="form.required">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
-                <label class="radio-card"><input type="radio" name="constraint" value="water" required /><span>Water</span></label>
-                <label class="radio-card"><input type="radio" name="constraint" value="cost" /><span>Cost / investment</span></label>
-                <label class="radio-card"><input type="radio" name="constraint" value="labour" /><span>Labour</span></label>
-                <label class="radio-card"><input type="radio" name="constraint" value="advice" /><span>Access to advice</span></label>
-                <label class="radio-card"><input type="radio" name="constraint" value="market" /><span>Market access</span></label>
-                <label class="radio-card"><input type="radio" name="constraint" value="unsure" /><span>Not sure</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="water" required /><span data-i18n="form.constraint.water">Water</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="cost" /><span data-i18n="form.constraint.cost">Cost or investment</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="labour" /><span data-i18n="form.constraint.labour">Labour</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="advice" /><span data-i18n="form.constraint.advice">Access to advice</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="market" /><span data-i18n="form.constraint.market">Market access</span></label>
+                <label class="radio-card"><input type="radio" name="constraint" value="unsure" /><span data-i18n="form.constraint.unsure">Not sure</span></label>
               </div>
               <p class="field-error" id="err-constraint" hidden></p>
             </div>
@@ -263,7 +265,7 @@
           </div>
 
           <div class="form-footer-actions">
-            <button type="button" class="btn btn-quiet" id="btn-save-draft">Save draft on this device</button>
+            <button type="button" class="btn btn-quiet" id="btn-save-draft" data-i18n="form.saveDraft">Save draft on this device</button>
             <p class="inline-status" id="save-status" role="status" hidden></p>
           </div>
         </form>
@@ -499,7 +501,7 @@
             <div class="results-actions visit-hero-actions">
               <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print">Print or save as PDF</button>
               <button type="button" class="btn btn-secondary" id="btn-visit-share">Share on WhatsApp</button>
-              <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download">Download as text</button>
+              <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download" data-i18n="visit.download">Download as text</button>
             </div>
             <div class="read-controls">
               <div class="results-actions">
@@ -526,7 +528,7 @@
         <div class="visit-card" id="visit-card" role="region" aria-label="Office visit card"></div>
         <div class="office-host no-print visit-mode-hide" id="office-host"></div>
         <div class="results-actions no-print visit-mode-hide">
-          <button type="button" class="btn btn-secondary" id="btn-visit-back">Back to summary</button>
+          <button type="button" class="btn btn-secondary" id="btn-visit-back" data-i18n="visit.back">Back to summary</button>
           <button type="button" class="btn btn-secondary" id="btn-visit-plans">My saved plans</button>
         </div>
         <p class="inline-status no-print" id="visit-status" role="status" hidden></p>

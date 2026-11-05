@@ -108,6 +108,20 @@
     return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   };
 
+  /**
+   * Translate a string for the current language. The fallback is the English
+   * already in the markup, so a language that is missing a key still shows a
+   * real sentence rather than a key name or a blank.
+   */
+  function tr(key, fallback) {
+    return MSG && MSG.tr ? MSG.tr(key, fallback) : fallback;
+  }
+
+  /** The confirm-locally line in the current language. */
+  function confirmLine() {
+    return tr("common.confirmLocally", ACTIVITIES.confirmationLine);
+  }
+
   function escapeHtml(str) {
     if (str == null) return "";
     return String(str)
@@ -616,7 +630,15 @@
       Object.keys(REGIONS.ALTITUDE_ZONES)
         .map(function (id) {
           var alt = REGIONS.ALTITUDE_ZONES[id];
-          return '<option value="' + escapeHtml(id) + '">' + escapeHtml(alt.label) + " (" + escapeHtml(alt.band) + ")</option>";
+          return (
+            '<option value="' +
+            escapeHtml(id) +
+            '">' +
+            escapeHtml(tr("altitude." + id, alt.label)) +
+            " (" +
+            escapeHtml(alt.band) +
+            ")</option>"
+          );
         })
         .join("");
     // A stored draft may name an altitude this build no longer has. Leaving
@@ -910,15 +932,20 @@
   function optionReviewBadge(a) {
     if (ACTIVITIES.isReviewed(a)) {
       return (
-        '<p class="review-badge review-badge-reviewed">Reviewed by ' +
-        escapeHtml(a.reviewedBy) +
-        (a.office ? ", " + escapeHtml(a.office) : "") +
-        " on " +
-        escapeHtml(a.reviewedOn) +
+        '<p class="review-badge review-badge-reviewed">' +
+        escapeHtml(
+          MSG && MSG.t
+            ? MSG.t("review.badgeReviewed", {
+                name: a.reviewedBy,
+                office: a.office || "",
+                date: a.reviewedOn,
+              })
+            : "Reviewed by " + a.reviewedBy + ", " + (a.office || "") + " on " + a.reviewedOn
+        ) +
         "</p>"
       );
     }
-    return '<p class="review-badge review-badge-not">Not reviewed by an officer yet</p>';
+    return '<p class="review-badge review-badge-not">' + escapeHtml(tr("review.badgeNot", "Not reviewed by an officer yet")) + "</p>";
   }
 
   function optionEvidence(a) {
@@ -1099,10 +1126,10 @@
       if (state.noLocalData) {
         gapHost.hidden = false;
         gapHost.innerHTML =
-          "<h2>Not enough local data for this altitude</h2>" +
+          "<h2>" + escapeHtml(tr("results.gapTitle", "Not enough local data for this altitude")) + "</h2>" +
           '<p class="section-kind"><span class="kind-tag kind-user">Your answers</span></p>' +
           "<p>" +
-          escapeHtml((alt && alt.gap) || "This catalogue has no entries for this altitude zone.") +
+          escapeHtml(tr("results.gapBody", (alt && alt.gap) || "This catalogue has no entries for this altitude zone.")) +
           "</p>" +
           "<h3>Ask the officer</h3>" +
           '<ul class="checklist-plain">' +
@@ -1137,7 +1164,7 @@
           '<p class="option-meta"><span class="kind-tag kind-illustrative">Illustrative</span> An option to discuss, not a verified recommendation</p>' +
           optionReviewBadge(a) +
           '<p class="option-confirm">' +
-          escapeHtml(ACTIVITIES.confirmationLine) +
+          escapeHtml(confirmLine()) +
           "</p>" +
           '<div class="option-section">' +
           "<h3>Why it may be worth exploring</h3>" +
@@ -1608,7 +1635,7 @@
             : "") +
           '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
           '<p class="option-confirm">' +
-          escapeHtml(ACTIVITIES.confirmationLine) +
+          escapeHtml(confirmLine()) +
           "</p>" +
           "<p><strong>Why it may be worth exploring.</strong> " +
           escapeHtml(a.why) +
@@ -2056,7 +2083,7 @@
         i + 1 + ". " + a.title + (isInterested ? "   [FOLLOW UP]" : "")
       );
       lines.push("   Illustrative option, not a verified recommendation.");
-      lines.push("   " + ACTIVITIES.confirmationLine);
+      lines.push("   " + confirmLine());
       lines.push("   Why it may be worth exploring: " + a.why);
       var zoneNote = a.zoneNotes ? a.zoneNotes[zone ? zone.id : ""] : "";
       if (zoneNote) lines.push("   Why it might fit your area: " + zoneNote);
@@ -2319,7 +2346,17 @@
       }),
       questions: questions,
       reviewText: currentReview().text,
-      confirmLine: ACTIVITIES.confirmationLine,
+      confirmLine: confirmLine(),
+      labels: {
+        heading: tr("share.heading", "My land plan"),
+        plan: tr("share.plan", "Plan"),
+        options: tr("share.options", "Options to discuss"),
+        questions: tr("share.questions", "Questions I want to ask"),
+        marked: tr("share.marked", "(marked)"),
+        done: tr("share.done", "[done]"),
+        prepared: tr("share.prepared", "Prepared"),
+        madeWith: tr("share.madeWith", "Made with the My Land, My Plan prototype. Not an official document."),
+      },
     };
   }
 
@@ -2632,9 +2669,9 @@
     // during the visit, and the ticks follow the same questions into the
     // summary, the visit card and the downloads.
     el.innerHTML =
-      "<h2>Questions to ask at the office</h2>" +
+      "<h2>" + escapeHtml(tr("results.questionsTitle", "Questions to ask at the office")) + "</h2>" +
       '<p class="section-kind"><span class="kind-tag kind-illustrative">Illustrative</span></p>' +
-      "<p>Written from what you entered and from the options you marked. They are questions, not answers, and no officer has seen them.</p>" +
+      "<p>" + escapeHtml(tr("results.questionsIntro", "Written from what you entered and from the options you marked. They are questions, not answers, and no officer has seen them.")) + "</p>" +
       '<p class="option-note">Tick each one as the officer covers it. The tick is saved on this device and shows on the visit card too.</p>' +
       questionsListHtml(questions, { checkable: true }) +
       questionCounterHtml(questions) +
@@ -2934,7 +2971,7 @@
 
     sections.push({
       label: "A last word",
-      text: ACTIVITIES.confirmationLine + " This is an illustrative prototype, not an official service.",
+      text: confirmLine() + " This is an illustrative prototype, not an official service.",
     });
     return sections;
   }
@@ -3026,7 +3063,7 @@
         : null,
       {
         label: "A last word",
-        text: ACTIVITIES.confirmationLine + " This card was made by the farmer using a prototype, not by any department.",
+        text: confirmLine() + " This card was made by the farmer using a prototype, not by any department.",
       },
       // Drop any section that was turned off, so the reader never sees a gap
       // where a missing module would have been.
@@ -3195,7 +3232,7 @@
     // is everywhere else, never a quieter paragraph.
     return (
       '<div class="visit-head">' +
-      "<h2>My Land, My Plan: office visit card</h2>" +
+      "<h2>" + escapeHtml(tr("visit.cardTitle", "My Land, My Plan: office visit card")) + "</h2>" +
       // When the card comes from a named saved plan, the name goes at the very
       // top. A farmer who keeps several plans can end up with a stack of
       // printed cards that all read "MLMP-PUL-3K-8F2C", and the code is exactly
@@ -3210,7 +3247,7 @@
       ".</p>" +
       // The reference sits directly under the date, before anything else, so
       // it is the first line of every phone call, letter and file name.
-      '<p class="visit-reference">Plan reference: <strong>' + escapeHtml(currentPlanReference()) + "</strong></p>" +
+      '<p class="visit-reference">' + escapeHtml(tr("visit.reference", "Plan reference")) + ": <strong>" + escapeHtml(currentPlanReference()) + "</strong></p>" +
       '<p class="visit-reference-note">Made on this device from your answers. Quote it when you call about this plan.</p>' +
       // The code beside the letters. An officer can point a phone at it instead
       // of typing twelve characters, and the caption keeps it honest: the scan
@@ -3223,7 +3260,7 @@
       reviewBannerHtml(currentReview()) +
       "</div>" +
       '<div class="visit-section">' +
-      "<h3>What I entered</h3>" +
+      "<h3>" + escapeHtml(tr("visit.whatIEntered", "What I entered")) + "</h3>" +
       '<dl class="visit-answers">' +
       answerRows
         .map(function (row) {
@@ -3233,7 +3270,7 @@
       "</dl>" +
       "</div>" +
       '<div class="visit-section break-avoid">' +
-      "<h3>Options I want to discuss</h3>" +
+      "<h3>" + escapeHtml(tr("visit.options", "Options I want to discuss")) + "</h3>" +
       optionsHtml +
       '<p class="visit-note">These are options to discuss, not recommendations. Nothing about them has been checked against my plot.</p>' +
       (visitOptionNote(options.length, chosenOptions().length)
@@ -3241,7 +3278,7 @@
         : "") +
       "</div>" +
       '<div class="visit-section break-avoid">' +
-      "<h3>Questions I would like to ask</h3>" +
+      "<h3>" + escapeHtml(tr("visit.questions", "Questions I would like to ask")) + "</h3>" +
       (questions.length
         ? questionsListHtml(questions, { hideAbout: true, ticked: true, checkable: true }) +
           questionCounterHtml(questions) +
@@ -3249,17 +3286,23 @@
         : "<p>No questions were generated.</p>") +
       "</div>" +
       (supportHtml
-        ? '<div class="visit-section break-avoid" data-fit-part="support"><h3>Support worth asking about</h3>' + supportHtml + "</div>"
+        ? '<div class="visit-section break-avoid" data-fit-part="support"><h3>' + escapeHtml(tr("visit.support", "Support worth asking about")) + "</h3>" + supportHtml + "</div>"
         : "") +
       '<div class="visit-section break-avoid" data-fit-part="notes">' +
-      "<h3>Notes from the visit</h3>" +
+      "<h3>" + escapeHtml(tr("visit.notes", "Notes from the visit")) + "</h3>" +
       '<div class="visit-lines">' +
       lines +
       "</div>" +
       "</div>" +
       '<p class="visit-foot">' +
-      escapeHtml(ACTIVITIES.confirmationLine) +
-      " This card was made by the farmer using a prototype, not by any department. It is not an official document and it does not establish eligibility for anything." +
+      escapeHtml(confirmLine()) +
+      " " +
+      escapeHtml(
+        tr(
+          "visit.foot",
+          "This card was made by the farmer using a prototype, not by any department. It is not an official document and it does not establish eligibility for anything."
+        )
+      ) +
       "</p>"
     );
   }
@@ -3336,7 +3379,7 @@
     lines.push("");
     lines.push("");
     lines.push("");
-    lines.push(ACTIVITIES.confirmationLine);
+    lines.push(confirmLine());
     lines.push("Made by the farmer using a prototype. Not an official document.");
     // The printed and on-screen card also carry a small scannable code beside
     // the reference. Plain text cannot hold one, so the download says so rather
@@ -3865,6 +3908,42 @@
    * here are the same English already in the markup, so turning a language
    * on later changes the words and nothing else.
    */
+  /**
+   * Apply the chosen language to the document: the direction, the lang
+   * attribute and the notice that says whether a native speaker has checked
+   * the translation. The notice is not dismissible, because an unreviewed
+   * translation of an agricultural question is not a cosmetic detail.
+   */
+  function applyLanguageChrome() {
+    if (!MSG) return;
+    var lang = MSG.get();
+    document.documentElement.setAttribute("lang", lang);
+    if (MSG.dir(lang) === "rtl") document.documentElement.setAttribute("dir", "rtl");
+    else document.documentElement.removeAttribute("dir");
+
+    var notice = $("#translation-notice");
+    if (notice) {
+      if (lang === "en" || MSG.reviewed(lang)) {
+        notice.hidden = true;
+        notice.textContent = "";
+      } else {
+        notice.hidden = false;
+        notice.textContent = MSG.tr("lang.notice", "");
+      }
+    }
+  }
+
+  /** Repaint the screen the farmer is on after a language change. */
+  function refreshForLanguage() {
+    MSG.apply();
+    applyLanguageChrome();
+    var active = $(".screen-active");
+    if (!active) return;
+    if (active.id === "screen-results" && state.options.length) renderResults();
+    else if (active.id === "screen-visit") renderVisitCard();
+    else if (active.id === "screen-summary" && state.options.length) renderSummary();
+  }
+
   function initLanguage() {
     if (!MSG) return;
     var wrap = $("#lang-switch");
@@ -3880,19 +3959,14 @@
         .join("");
       select.addEventListener("change", function () {
         MSG.set(select.value);
-        MSG.apply();
-        if (MSG.dir(select.value) === "rtl") {
-          document.documentElement.setAttribute("dir", "rtl");
-        } else {
-          document.documentElement.removeAttribute("dir");
-        }
-        document.documentElement.setAttribute("lang", select.value);
+        refreshForLanguage();
       });
     }
     // Paint the critical-path strings. In English this is a no-op on screen
     // (the markup already holds the same words), but it keeps the markup and
     // the module in step, so a translator's work shows up with no code change.
     MSG.apply();
+    applyLanguageChrome();
   }
 
   /**
@@ -4584,7 +4658,8 @@
 
     var districtSelect = $("#district");
     if (districtSelect) {
-      districtSelect.innerHTML = '<option value="">Select district</option>' + options;
+      districtSelect.innerHTML =
+        '<option value="">' + escapeHtml(tr("form.selectDistrict", "Select district")) + "</option>" + options;
     }
     var weatherSelect = $("#weather-district");
     if (weatherSelect) {

@@ -861,27 +861,38 @@ check("the WhatsApp link carries the reference", decodeURIComponent(waLink).inde
 
 /* ---- Language foundation ---- */
 
-// The foundation ships English only. The switcher must stay hidden (available()
-// returns one language) until a translator registers and marks a second one
-// ready, and nothing machine-made is ever marked ready by the module itself.
+// Three languages ship. None of them claims to have been checked by a native
+// speaker except English, which is where the copy was written. The switcher is
+// offered because the translations are complete, and the interface shows a
+// notice while they are not reviewed.
 console.log("language foundation");
 check("the messages module loads", !!MSG, "no MLMP_MESSAGES");
-check("English is the only ready language at ship time", MSG.available().length === 1 && MSG.available()[0].code === "en", "more than English is offered");
+check(
+  "English, Hindi and Urdu are offered",
+  MSG.available().length === 3 &&
+    MSG.available().map(function (l) { return l.code; }).join(",") === "en,hi,ur",
+  MSG.available().map(function (l) { return l.code; }).join(",")
+);
 check("t() returns the English string", MSG.t("home.start") === "Start a land plan", MSG.t("home.start"));
-check("t() falls back to the key for an unknown string", MSG.t("no.such.key") === "no.such.key", "unknown key did not fall back");
-check("every critical-path key resolves in English", ["nav.home", "nav.plan", "home.title", "home.lead", "home.start", "home.demo", "home.note", "home.points.enterTitle", "common.confirmLocally", "common.notOfficial"].every(function (k) { return MSG.t(k) !== k; }), "a critical key is missing its English value");
+check("tr() falls back to the caller's English for an unknown key", MSG.tr("no.such.key", "Fallback") === "Fallback");
+check(
+  "every key resolves in English",
+  MSG.keys().every(function (k) {
+    return MSG.t(k) !== k;
+  }),
+  "a key is missing its English value"
+);
+check("Urdu is right to left", MSG.dir("ur") === "rtl", MSG.dir("ur"));
+check("Hindi is left to right", MSG.dir("hi") === "ltr", MSG.dir("hi"));
+check("Hindi is not claimed as reviewed", MSG.reviewed("hi") === false);
+check("Urdu is not claimed as reviewed", MSG.reviewed("ur") === false);
 
-// A translator's path: register a full set, mark it ready, and the switcher
-// offers it. This is the mechanism a real translator uses, exercised here so
-// the plumbing is proven without shipping an unfinished language.
-MSG.register("ur", { "home.start": "زمینی منصوبہ شروع کریں", "nav.home": "ہوم" });
-check("a registered but unready language is not offered", MSG.available().length === 1, "an unready language appeared in the switcher");
-MSG.markReady("ur", true);
-check("a ready language is offered in the switcher", MSG.available().length === 2, "a ready language did not appear");
 MSG.set("ur");
-check("t() returns the translated string", MSG.t("home.start") === "زمینی منصوبہ شروع کریں", MSG.t("home.start"));
-check("t() falls back to English for an untranslated key", MSG.t("home.lead") === "Answer a few questions about a plot you are not using, and get activity options to explore, a month-by-month guide, questions to ask, and a one-page card to take to the office.", "an untranslated key did not fall back to English");
+check("Urdu translates the home heading", MSG.t("home.title") !== "My Land, My Plan", MSG.t("home.title"));
+check("Urdu translates confirm locally", MSG.t("common.confirmLocally") !== MSG.dict("en")["common.confirmLocally"]);
+check("the language choice reads back", MSG.get() === "ur", MSG.get());
 MSG.set("en");
+check("English is restored", MSG.get() === "en");
 
 /* ---- The honesty rules, against text the app generates ---- */
 
