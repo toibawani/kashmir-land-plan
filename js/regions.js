@@ -66,6 +66,76 @@
   };
 
   /**
+   * The altitude zones a farmer picks from. A district only suggests one; the
+   * farmer's own knowledge of the ground wins, because one district can hold a
+   * valley floor, a river terrace and a high pasture.
+   *
+   * `catalogueZones` is the list of catalogue zones this altitude has honest
+   * entries for. An empty list is deliberate: the high altitude case has no
+   * reviewed local data in this catalogue, and the app says that instead of
+   * falling back to lowland crops. `gap` is the sentence shown when it does.
+   */
+  var ALTITUDE_ZONES = {
+    valley: {
+      id: "valley",
+      label: "Valley or low ground",
+      band: "roughly 1,500 to 2,500 m",
+      catalogueZones: ["valley_temperate"],
+      summary:
+        "Cool temperate valley floor and side valleys. The growing season is short, and cold air settles on the lowest ground in winter.",
+      checklist: [
+        "Ask whether the plot sits where cold air settles in winter, and what that has done to crops in past years.",
+        "Ask when the sowing window opens at your height, not at the district town.",
+      ],
+    },
+    plains: {
+      id: "plains",
+      label: "Plains and foothills",
+      band: "roughly 250 to 700 m",
+      catalogueZones: ["jammu_plains"],
+      summary:
+        "Hot summers, a stronger monsoon and mild winters. Water, rather than heat, is usually what limits a second crop.",
+      checklist: [
+        "Ask about the canal or tube-well share for this land, and what happens to it in a dry spell.",
+        "Ask whether the plot drains after heavy rain, because waterlogged ground rules some options out.",
+      ],
+    },
+    hills: {
+      id: "hills",
+      label: "Mid-altitude hills",
+      band: "roughly 700 to 2,500 m",
+      catalogueZones: ["jammu_hills"],
+      summary:
+        "The transition belt between the plains and the high mountains. Conditions change quickly with height, and much of the farming is rainfed.",
+      checklist: [
+        "Ask how the slope drains, and whether past erosion has taken topsoil from the plot.",
+        "Ask which side of the ridge the plot is on, because aspect changes the season at the same height.",
+      ],
+    },
+    high_altitude: {
+      id: "high_altitude",
+      label: "High altitude",
+      band: "above roughly 2,500 m",
+      catalogueZones: [],
+      summary:
+        "High ground above the altitudes this catalogue has entries for.",
+      checklist: [
+        "Ask the officer which activities are actually practised at your height, and which are not.",
+        "Ask whether the plot is snow-bound for part of the year, and for how long in a usual year.",
+      ],
+      gap:
+        "This catalogue has no honest data for high altitude ground. No options are shown here on purpose, because filling the gap with lowland crops would be a guess. Ask the officer which activities are actually practised at your height.",
+    },
+  };
+
+  // Which altitude the district suggests. The farmer can always change it.
+  var DISTRICT_ALTITUDE = {
+    valley_temperate: "valley",
+    jammu_plains: "plains",
+    jammu_hills: "hills",
+  };
+
+  /**
    * Districts as they stand now. Each entry carries the coarse zone and an
    * optional note where a reliable source supports a district-level statement.
    * Notes elsewhere are deliberately left empty rather than guessed.
@@ -149,6 +219,25 @@
     return d ? ZONES[d.zone] : null;
   }
 
+  function altitudeZone(id) {
+    return ALTITUDE_ZONES[id] || null;
+  }
+
+  function defaultAltitude(name) {
+    var d = district(name);
+    return d ? DISTRICT_ALTITUDE[d.zone] || "" : "";
+  }
+
+  /**
+   * The catalogue zone for an altitude, or null when the catalogue has no
+   * honest entries for it. Null is a real answer here, not a lookup failure.
+   */
+  function catalogueZoneFor(altitudeId) {
+    var alt = altitudeZone(altitudeId);
+    if (!alt || !alt.catalogueZones.length) return null;
+    return ZONES[alt.catalogueZones[0]] || null;
+  }
+
   /**
    * Name sent to the weather geocoder. This is the district name, which in J&K
    * is also the usual name of the district headquarters town. It is a nearby
@@ -161,10 +250,14 @@
 
   window.MLMP_REGIONS = {
     ZONES: ZONES,
+    ALTITUDE_ZONES: ALTITUDE_ZONES,
     DISTRICTS: DISTRICTS,
     SAFFRON_DISTRICTS: SAFFRON_DISTRICTS,
     district: district,
     zoneFor: zoneFor,
+    altitudeZone: altitudeZone,
+    defaultAltitude: defaultAltitude,
+    catalogueZoneFor: catalogueZoneFor,
     weatherQuery: weatherQuery,
     /** Flat, ordered list for the district dropdown. */
     names: Object.keys(DISTRICTS).sort(function (a, b) {
