@@ -149,7 +149,7 @@
 
         <form id="land-form" novalidate>
           <fieldset class="form-step" data-step="1" id="step-1">
-            <legend class="step-legend">Location</legend>
+            <legend class="step-legend" data-i18n="form.location">Location</legend>
             <div class="field">
               <label for="district">District <span class="req">required</span></label>
               <select id="district" name="district" required>
@@ -167,7 +167,7 @@
           </fieldset>
 
           <fieldset class="form-step" data-step="2" id="step-2" hidden>
-            <legend class="step-legend">Plot size</legend>
+            <legend class="step-legend" data-i18n="form.size">Plot size</legend>
             <div class="field-row">
               <div class="field">
                 <label for="size">Approximate size <span class="req">required</span></label>
@@ -188,7 +188,7 @@
           </fieldset>
 
           <fieldset class="form-step" data-step="3" id="step-3" hidden>
-            <legend class="step-legend">Current use and water</legend>
+            <legend class="step-legend" data-i18n="form.water">Current use and water</legend>
             <div class="field">
               <span class="label-like">Current land use <span class="req">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
@@ -211,7 +211,7 @@
           </fieldset>
 
           <fieldset class="form-step" data-step="4" id="step-4" hidden>
-            <legend class="step-legend">Terrain and soil</legend>
+            <legend class="step-legend" data-i18n="form.terrain">Terrain and soil</legend>
             <div class="field">
               <span class="label-like">Terrain <span class="req">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
@@ -233,7 +233,7 @@
           </fieldset>
 
           <fieldset class="form-step" data-step="5" id="step-5" hidden>
-            <legend class="step-legend">Main constraint</legend>
+            <legend class="step-legend" data-i18n="form.constraint">Main constraint</legend>
             <div class="field">
               <span class="label-like">What limits you most right now? <span class="req">required</span></span>
               <div class="radio-group" role="radiogroup" aria-required="true">
@@ -249,9 +249,9 @@
           </fieldset>
 
           <div class="form-actions">
-            <button type="button" class="btn btn-secondary" id="btn-back" hidden>Back</button>
-            <button type="button" class="btn btn-primary" id="btn-next">Continue</button>
-            <button type="submit" class="btn btn-primary" id="btn-submit" hidden>See options</button>
+            <button type="button" class="btn btn-secondary" id="btn-back" hidden data-i18n="form.back">Back</button>
+            <button type="button" class="btn btn-primary" id="btn-next" data-i18n="form.continue">Continue</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit" hidden data-i18n="form.submit">See options</button>
           </div>
 
           <div class="form-footer-actions">
@@ -266,8 +266,8 @@
     <section id="screen-results" class="screen" aria-labelledby="results-title" hidden>
       <div class="container">
         <div class="results-header">
-          <h1 id="results-title" class="screen-title">Possible activities to explore</h1>
-          <p class="screen-intro">
+          <h1 id="results-title" class="screen-title" data-i18n="results.title">Possible activities to explore</h1>
+          <p class="screen-intro" data-i18n="results.intro">
             These are options to discuss, based on what you entered and on general information about your district.
             They are not an assessment of your plot, and they are not an approval of anything.
           </p>
@@ -304,11 +304,11 @@
         <div id="questions-block" class="questions-block" hidden></div>
 
         <div class="results-actions no-print">
-          <button type="button" class="btn btn-secondary" id="btn-edit">Edit details</button>
+          <button type="button" class="btn btn-secondary" id="btn-edit" data-i18n="results.edit">Edit details</button>
           <button type="button" class="btn btn-primary" id="btn-compare">Compare options</button>
         </div>
-        <button type="button" class="btn btn-secondary no-print" id="btn-results-plans">My saved plans</button>
-        <button type="button" class="btn btn-quiet no-print" id="btn-reset-results">Start over with new details</button>
+        <button type="button" class="btn btn-secondary no-print" id="btn-results-plans" data-i18n="results.plans">My saved plans</button>
+        <button type="button" class="btn btn-quiet no-print" id="btn-reset-results" data-i18n="results.reset">Start over with new details</button>
 
         <div class="provenance-wrap">
           <h2>What is in this page</h2>
@@ -481,15 +481,15 @@
       <div class="container narrow">
           <div class="visit-hero no-print">
             <p class="visit-hero-eyebrow visit-mode-hide">Your takeaway</p>
-            <h1 id="visit-title" class="screen-title">Office visit card</h1>
-            <p class="screen-intro visit-mode-hide">
+            <h1 id="visit-title" class="screen-title" data-i18n="visit.title">Office visit card</h1>
+            <p class="screen-intro visit-mode-hide" data-i18n="visit.intro">
               This is the one thing worth carrying to the office. It holds what you entered, the options you
               marked and the questions to ask, all on one page. Nothing on it is a recommendation, and none
               of it has been approved by anyone.
             </p>
             <div class="results-actions visit-hero-actions">
-              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print">Print or save as PDF</button>
-              <button type="button" class="btn btn-secondary" id="btn-visit-share">Share on WhatsApp</button>
+              <button type="button" class="btn btn-primary btn-lg" id="btn-visit-print" data-i18n="visit.print">Print or save as PDF</button>
+              <button type="button" class="btn btn-secondary" id="btn-visit-share" data-i18n="visit.share">Share on WhatsApp</button>
               <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download">Download as text</button>
             </div>
             <div class="read-controls">
