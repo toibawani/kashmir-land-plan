@@ -8,7 +8,7 @@
     "start": "node tools/serve.js",
     "build": "node tools/verify.js",
     "lint": "node tools/lint.js",
-    "test": "node tools/lint.js && node tools/verify.js && node tools/selftest.js && node tools/tests-logic.js && node tools/translation-check.js --check",
+    "test": "node tools/lint.js && node tools/verify.js && node tools/selftest.js && node tools/tests-logic.js && node tools/translation-check.js --check && node tools/review-sheet.js --check",
     "translation-check": "node tools/translation-check.js",
     "screenshots": "node tools/screenshots.js",
     "phone-check": "node tools/phone-check.js",
