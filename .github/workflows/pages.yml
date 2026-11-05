@@ -1,0 +1,74 @@
+name: Deploy to GitHub Pages
+
+# The app is a static folder, so publishing it is a copy, not a build. The
+# workflow runs the same checks as CI first, then publishes only the files a
+# browser needs: no tools, no review sheets, no markdown, no repository files.
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pages deploys are serialised: a half-finished deploy must not be replaced by
+# a newer one, so unlike CI this does not cancel in progress.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish the static folder
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Never publish a folder that has not passed its own checks.
+      - name: Pre-flight check and tests
+        run: npm test
+
+      # The app uses relative paths throughout, so it works unchanged under
+      # the /kashmir-land-plan/ prefix a project Pages site is served from.
+      - name: Assemble the public folder
+        run: |
+          mkdir -p _site
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.gitignore' \
+            --exclude '.freebuff' \
+            --exclude 'node_modules' \
+            --exclude 'tools' \
+            --exclude 'review-sheets' \
+            --exclude '_site' \
+            --exclude '*.md' \
+            ./ _site/
+          echo "Publishing $(find _site -type f | wc -l) files"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload the artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
