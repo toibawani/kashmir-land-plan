@@ -5,11 +5,12 @@
   "license": "MIT",
   "description": "My Land, My Plan: a no-build, offline-capable prototype for farmers in Jammu and Kashmir. This file exists only so `npm start` can serve the folder and `npm run build` can run the pre-flight check; there are no dependencies and no build step.",
   "scripts": {
-    "start": "python3 -m http.server 8080 --bind 127.0.0.1",
+    "start": "node tools/serve.js",
     "build": "node tools/verify.js",
     "test": "node tools/verify.js && node tools/selftest.js && node tools/tests-logic.js && node tools/translation-check.js --check",
     "translation-check": "node tools/translation-check.js",
     "screenshots": "node tools/screenshots.js",
+    "phone-check": "node tools/phone-check.js",
     "review-sheets": "node tools/review-sheet.js",
     "review-import": "node tools/import-review.js"
   }
