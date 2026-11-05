@@ -94,6 +94,7 @@ check("not-reviewed keeps the confirm-locally sentence", /confirm locally/i.test
 var reviewed = ACTIVITIES.formatReview({
   reviewStatus: "reviewed",
   reviewedBy: "A Test Officer",
+  office: "District Agriculture Office",
   designation: "Agriculture Extension Officer",
   reviewedOn: "2026-09-30",
 });

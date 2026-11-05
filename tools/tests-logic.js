@@ -60,6 +60,7 @@ sandbox.window.localStorage = makeStorage();
 load(
   [
     "regions.js",
+    "reviews.js",
     "catalogue.js",
     "sources.js",
     "activities.js",
@@ -81,6 +82,7 @@ var R = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;
 var ACT = sandbox.window.MLMP_ACTIVITIES;
 var SOURCES = sandbox.window.MLMP_SOURCES;
+var csv = require("../tools/lib/review-csv.js");
 
 console.log("altitude zones");
 
@@ -210,11 +212,75 @@ check(
 var reviewed = ACT.formatReview({
   reviewStatus: "reviewed",
   reviewedBy: "A Test Officer",
+  office: "District Agriculture Office, Test District",
   designation: "Agriculture Extension Officer",
   reviewedOn: "2026-09-30",
 });
 check("a complete review names the officer", /A Test Officer/.test(reviewed.text));
 check("every review wording keeps confirm locally", /confirm locally/i.test(reviewed.text));
+
+console.log("review records");
+
+var CLEAN = CATALOGUE.cleanReviewRecord;
+check(
+  "a review with no office is refused",
+  CLEAN({ reviewStatus: "reviewed", reviewedBy: "A", reviewedOn: "2026-09-30" }).reviewStatus === "not-reviewed"
+);
+check(
+  "a review with no name is refused",
+  CLEAN({ reviewStatus: "reviewed", office: "Office", reviewedOn: "2026-09-30" }).reviewStatus === "not-reviewed"
+);
+check(
+  "a review with an impossible date is refused",
+  CLEAN({ reviewStatus: "reviewed", reviewedBy: "A", office: "Office", reviewedOn: "2026-13-45" }).reviewStatus === "not-reviewed"
+);
+var good = CLEAN({
+  reviewStatus: "reviewed",
+  reviewedBy: "A Test Officer",
+  office: "District Agriculture Office",
+  reviewedOn: "2026-09-30",
+});
+check("a complete record is accepted", good.reviewStatus === "reviewed" && good.office === "District Agriculture Office");
+check(
+  "nothing in the shipped catalogue displays as reviewed",
+  CATALOGUE.ids.every(function (id) {
+    return ACT.formatReview(CATALOGUE.activities[id]).status === "not-reviewed";
+  })
+);
+
+console.log("review csv import");
+
+var HEADER = "activity_id,decision,reviewer_name,office,designation,reviewed_on,note";
+function csvRow(values) {
+  return HEADER + "\n" + values;
+}
+
+var parsed = csv.parseCsv('a,b\n"x,y","line1\nline2"\n');
+check("quoted commas survive parsing", parsed[1][0] === "x,y", parsed[1][0]);
+check("quoted newlines survive parsing", parsed[1][1] === "line1\nline2");
+
+var okRows = csv.parseCsv(
+  csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,")
+);
+var okResult = csv.validate(okRows, CATALOGUE.ids);
+check("a complete row is accepted", okResult.errors.length === 0 && !!okResult.records.kitchen_garden);
+check("the accepted record carries the office", okResult.records.kitchen_garden.office === "District Agriculture Office");
+
+function rejectRow(values, name) {
+  var result = csv.validate(csv.parseCsv(csvRow(values)), CATALOGUE.ids);
+  check(name, result.errors.length > 0 && Object.keys(result.records).length === 0, result.errors.join("; "));
+}
+
+rejectRow("not_an_activity,accept,A,Office,Officer,2026-11-05,", "an unknown activity id is refused");
+rejectRow("kitchen_garden,accept,,Office,Officer,2026-11-05,", "a review with no name is refused by the importer");
+rejectRow("kitchen_garden,accept,A,,Officer,2026-11-05,", "a review with no office is refused by the importer");
+rejectRow("kitchen_garden,accept,A,Office,Officer,2026-02-31,", "an impossible date is refused by the importer");
+rejectRow("kitchen_garden,accept,A,Office,Officer,05/11/2026,", "a non-ISO date is refused by the importer");
+rejectRow("kitchen_garden,maybe,A,Office,Officer,2026-11-05,", "an unknown decision is refused by the importer");
+rejectRow("kitchen_garden,accept,=cmd,Office,Officer,2026-11-05,", "a formula-shaped name is refused by the importer");
+
+var badHeader = csv.validate([["activity_id", "decision"], ["kitchen_garden", "accept"]], CATALOGUE.ids);
+check("a missing header column is refused", badHeader.errors.length > 0);
 
 console.log("");
 

@@ -8,6 +8,8 @@
     "start": "python3 -m http.server 8080 --bind 127.0.0.1",
     "build": "node tools/verify.js",
     "test": "node tools/verify.js && node tools/selftest.js && node tools/tests-logic.js",
-    "screenshots": "node tools/screenshots.js"
+    "screenshots": "node tools/screenshots.js",
+    "review-sheets": "node tools/review-sheet.js",
+    "review-import": "node tools/import-review.js"
   }
 }

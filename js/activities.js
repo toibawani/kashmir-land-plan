@@ -13,7 +13,15 @@
   }
 
   function isReviewed(entry) {
-    return !!(entry && entry.reviewStatus === "reviewed" && entry.reviewedBy);
+    // A review needs all three: the person, where they sit, and when they
+    // looked. Missing any one of them is not a review this app will display.
+    return !!(
+      entry &&
+      entry.reviewStatus === "reviewed" &&
+      entry.reviewedBy &&
+      entry.office &&
+      /^(\d{4})-(\d{2})-(\d{2})$/.test(entry.reviewedOn || "")
+    );
   }
 
   // The exact words below matter, because they are shown word for word on the
@@ -34,6 +42,7 @@
     }
     var parts = [entry.reviewedBy];
     if (entry.designation) parts.push(entry.designation);
+    if (entry.office) parts.push(entry.office);
     var who = parts.join(", ");
     var when = entry.reviewedOn ? " on " + entry.reviewedOn : "";
     return {

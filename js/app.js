@@ -902,6 +902,25 @@
    * The block is labelled as a rough estimate on purpose: until an officer has
    * checked the entry, even the qualitative risk is a prompt for a question.
    */
+  /**
+   * A small, honest badge for one catalogue entry. It repeats what the data
+   * says and nothing more: an entry with no recorded review says so, and an
+   * entry with a full record names the officer and the office.
+   */
+  function optionReviewBadge(a) {
+    if (ACTIVITIES.isReviewed(a)) {
+      return (
+        '<p class="review-badge review-badge-reviewed">Reviewed by ' +
+        escapeHtml(a.reviewedBy) +
+        (a.office ? ", " + escapeHtml(a.office) : "") +
+        " on " +
+        escapeHtml(a.reviewedOn) +
+        "</p>"
+      );
+    }
+    return '<p class="review-badge review-badge-not">Not reviewed by an officer yet</p>';
+  }
+
   function optionEvidence(a) {
     return (
       '<div class="option-section option-evidence">' +
@@ -1116,6 +1135,7 @@
           escapeHtml(a.title) +
           "</h2>" +
           '<p class="option-meta"><span class="kind-tag kind-illustrative">Illustrative</span> An option to discuss, not a verified recommendation</p>' +
+          optionReviewBadge(a) +
           '<p class="option-confirm">' +
           escapeHtml(ACTIVITIES.confirmationLine) +
           "</p>" +
@@ -3126,6 +3146,9 @@
               "<li>" +
               escapeHtml(o.activity.title) +
               (state.interested[o.activity.id] ? ' <span class="visit-flag">marked to follow up</span>' : "") +
+              '<span class="visit-review">' +
+              (ACTIVITIES.isReviewed(o.activity) ? "Reviewed by an officer" : "Not reviewed by an officer") +
+              "</span>" +
               '<span class="visit-option-meta">Cost: ' +
               escapeHtml(evidenceField(o.activity.startupCost)) +
               ". First income: " +
