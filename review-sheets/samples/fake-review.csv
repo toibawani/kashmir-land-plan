@@ -1,0 +1,4 @@
+district,entry_id,entry_text,verdict,correction,reviewer_name,office,date
+"Baramulla","beekeeping","Beekeeping as an allied activity","right","","TEST ONLY Fake Reviewer","TEST ONLY No Such Office","2026-11-05"
+"Baramulla","fodder_or_pasture","Fodder crop or managed pasture","wrong","TEST ONLY fake correction, never apply this","TEST ONLY Fake Reviewer","TEST ONLY No Such Office","2026-11-05"
+"Baramulla","kitchen_garden","Kitchen garden and mixed vegetables","not sure","","","",""
