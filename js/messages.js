@@ -152,6 +152,7 @@
     "lang.notice":
       "This translation has not been checked by a native speaker yet. Option details are still in English. Always confirm locally before acting.",
     "lang.englishOnly": "Option details are in English only for now.",
+    "lang.uncheckedShort": "native-speaker check pending",
 
     "common.confirmLocally":
       "Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar.",
@@ -290,6 +291,7 @@
     "lang.notice":
       "इस अनुवाद को अभी किसी मूल वक्ता ने नहीं जांचा। विकल्पों का विवरण अभी अंग्रेज़ी में है। करने से पहले हमेशा स्थानीय रूप से पुष्टि करें।",
     "lang.englishOnly": "विकल्पों का विवरण अभी केवल अंग्रेज़ी में है।",
+    "lang.uncheckedShort": "मूल वक्ता की जाँच बाकी",
 
     "common.confirmLocally":
       "फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें।",
@@ -427,6 +429,7 @@
     "lang.notice":
       "اس ترجمے کی ابھی کسی مادری زبان بولنے والے نے جانچ نہیں کی۔ اختیارات کی تفصیل ابھی انگریزی میں ہے۔ کرنے سے پہلے ہمیشہ مقامی طور پر تصدیق کریں۔",
     "lang.englishOnly": "اختیارات کی تفصیل ابھی صرف انگریزی میں ہے۔",
+    "lang.uncheckedShort": "مادری زبان والے کی جانچ باقی",
 
     "common.confirmLocally":
       "فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔",
@@ -537,6 +540,23 @@
     return !!(LANGS[code] && LANGS[code].reviewed);
   }
 
+  /**
+   * The label for a language in the switcher. A language no native speaker has
+   * checked is marked in the menu itself, where the choice is made, not only in
+   * the notice that appears after the reader has already switched to it. The
+   * marker is driven by the same `reviewed` flag as the notice, so it cannot be
+   * removed by editing a label: setting `reviewed: true` is the only way, and
+   * that needs a person and a date behind it.
+   */
+  function optionLabel(code) {
+    var entry = LANGS[code];
+    if (!entry) return "";
+    if (entry.reviewed) return entry.label;
+    var note =
+      (entry.strings && entry.strings["lang.uncheckedShort"]) || EN["lang.uncheckedShort"];
+    return entry.label + " \u2014 " + note;
+  }
+
   function register(lang, dict) {
     if (!lang || !dict) return;
     var existing = LANGS[lang] || { label: lang, dir: "ltr", ready: false, reviewed: false, strings: {} };
@@ -602,6 +622,7 @@
     setLabel: setLabel,
     available: available,
     reviewed: reviewed,
+    optionLabel: optionLabel,
     set: set,
     get: get,
     dir: dir,
