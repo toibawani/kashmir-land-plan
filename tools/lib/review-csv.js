@@ -9,9 +9,13 @@
  *   activity_id,decision,reviewer_name,office,designation,reviewed_on,note
  *     the original hand-written form, decisions accept / reject / fix
  *
- *   district,entry_id,entry_text,verdict,correction,reviewer_name,office,date
+ *   district,entry_id,entry_text,verdict,correction,reviewer_name,office,date,
+ *   sheet_version
  *     the prefilled CSV that sits beside each district sheet, so an officer's
- *     verdicts are typed next to text they never have to copy
+ *     verdicts are typed next to text they never have to copy. The version is
+ *     the release and catalogue digest printed in the sheet's footer; a file
+ *     from a different version is refused, because the ticks may be about
+ *     lines the app no longer shows.
  *
  * The CSV is untrusted input: it arrives from a visit, a phone, an email. It is
  * therefore never evaluated, every value is length-limited and stripped of
@@ -44,6 +48,7 @@ var PACK_COLUMNS = [
   "reviewer_name",
   "office",
   "date",
+  "sheet_version",
 ];
 
 // accept: the entry is right for the district as written.
@@ -61,6 +66,7 @@ var MAX = {
   note: 600,
   text: 200,
   district: 60,
+  version: 60,
 };
 
 var DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -279,6 +285,53 @@ function validatePack(rows, context) {
   if (errors.length) return { records: records, corrections: corrections, errors: errors, skipped: 0 };
 
   var index = indexOf(header);
+
+  /*
+   * The version is checked once for the whole file, before any verdict is
+   * looked at: a sheet printed from a different catalogue is not a partly
+   * usable file, it is the wrong piece of paper.
+   */
+  var versions = rows
+    .slice(1)
+    .map(function (row) {
+      return clean(row[index.sheet_version], MAX.version);
+    })
+    .filter(function (value) {
+      return value !== "";
+    });
+  var expected = context && context.sheetVersion;
+
+  if (!versions.length) {
+    errors.push(
+      "This file has no sheet version, so it cannot be traced to a printed sheet. " +
+        "Use the CSV from npm run review-sheets."
+    );
+    return { records: records, corrections: corrections, errors: errors, skipped: 0 };
+  }
+  var other = null;
+  versions.forEach(function (value) {
+    if (value !== versions[0]) other = value;
+  });
+  if (other) {
+    errors.push(
+      "The rows in this file carry more than one sheet version (" +
+        versions[0] +
+        " and " +
+        other +
+        "). Use one printed sheet per file."
+    );
+    return { records: records, corrections: corrections, errors: errors, skipped: 0 };
+  }
+  if (expected && versions[0] !== expected) {
+    errors.push(
+      "This sheet was printed from " +
+        versions[0] +
+        ", but the catalogue is now " +
+        expected +
+        ". Reprint the sheet with npm run review-sheets and mark the new copy."
+    );
+    return { records: records, corrections: corrections, errors: errors, skipped: 0 };
+  }
 
   rows.slice(1).forEach(function (row, n) {
     var line = n + 2;

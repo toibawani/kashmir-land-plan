@@ -1,8 +1,8 @@
-district,entry_id,entry_text,verdict,correction,reviewer_name,office,date
-"Pulwama","beekeeping","Beekeeping as an allied activity","","","","",""
-"Pulwama","fodder_or_pasture","Fodder crop or managed pasture","","","","",""
-"Pulwama","intercrop_or_improve","Improve what you already grow, or add an intercrop","","","","",""
-"Pulwama","kitchen_garden","Kitchen garden and mixed vegetables","","","","",""
-"Pulwama","protected_cultivation","Protected cultivation: polyhouse, mushroom or nursery","","","","",""
-"Pulwama","saffron_karewa","Saffron on suitable upland","","","","",""
-"Pulwama","orchard_temp","Temperate fruit and nut trees","","","","",""
+district,entry_id,entry_text,verdict,correction,reviewer_name,office,date,sheet_version
+"Pulwama","beekeeping","Beekeeping as an allied activity","","","","","","v1.0.0 · catalogue d20337e"
+"Pulwama","fodder_or_pasture","Fodder crop or managed pasture","","","","","","v1.0.0 · catalogue d20337e"
+"Pulwama","intercrop_or_improve","Improve what you already grow, or add an intercrop","","","","","","v1.0.0 · catalogue d20337e"
+"Pulwama","kitchen_garden","Kitchen garden and mixed vegetables","","","","","","v1.0.0 · catalogue d20337e"
+"Pulwama","protected_cultivation","Protected cultivation: polyhouse, mushroom or nursery","","","","","","v1.0.0 · catalogue d20337e"
+"Pulwama","saffron_karewa","Saffron on suitable upland","","","","","","v1.0.0 · catalogue d20337e"
+"Pulwama","orchard_temp","Temperate fruit and nut trees","","","","","","v1.0.0 · catalogue d20337e"

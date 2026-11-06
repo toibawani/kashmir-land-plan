@@ -45,6 +45,13 @@ only the verdict and the correction have to be typed afterwards. A verdict of
 entry is unreviewed. `node tools/import-review.js <file.csv> --dry-run` prints
 exactly what would be recorded and writes nothing; drop the flag to record it.
 
+Every row also carries the sheet version printed in the footer, for example
+`v1.0.0 · catalogue d20337e`: the release, and a digest of the catalogue files
+the sheet was generated from. The importer prints the version it expects and
+refuses a file printed from a different one, telling you to reprint the sheet
+and mark the new copy. That is deliberate: ticks on an old print may belong to a
+line the app no longer shows.
+
 ## How to give your feedback
 
 Use whichever of these is easiest:
