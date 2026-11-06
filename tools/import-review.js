@@ -3,9 +3,25 @@
  * Import an officer's filled-in review CSV.
  *
  * Usage
- *   node tools/import-review.js review-sheets/visit.csv
- *   node tools/import-review.js review-sheets/visit.csv --dry-run
+ *   node tools/import-review.js review-sheets/Baramulla.csv
+ *   node tools/import-review.js review-sheets/Baramulla.csv --dry-run
+ *   node tools/import-review.js review-sheets/Baramulla.csv --out /tmp/reviews.js
  *   node tools/import-review.js --template review-sheets/review-template.csv
+ *
+ * Two formats are accepted: the prefilled per-district CSV that ships beside
+ * each sheet (`district,entry_id,entry_text,verdict,correction,reviewer_name,
+ * office,date`), and the original hand-written one (`activity_id,decision,...`).
+ * The rules for both live in tools/lib/review-csv.js, so the command and the
+ * tests cannot drift apart.
+ *
+ * `--dry-run` does everything except write: it parses, validates, resolves what
+ * would change, prints it row by row, and exits. Nothing on disk is touched,
+ * not even the report. Use it on a real sheet before the real import.
+ *
+ * `--out` writes the records somewhere other than js/reviews.js. It exists so
+ * the tests can import a fake sample into a throwaway file and prove the
+ * result, without any chance of a fake review reaching the real catalogue, and
+ * so a pilot can be rehearsed off to the side. The default never changes.
  *
  * The CSV is untrusted input: it comes back from a visit, a phone or an email.
  * It is parsed, every value is length-limited and stripped of control
@@ -36,12 +52,15 @@ function fail(message) {
 }
 
 function parseArgs(argv) {
-  var args = { file: null, dryRun: false, template: null };
+  var args = { file: null, dryRun: false, template: null, out: null };
   for (var i = 0; i < argv.length; i += 1) {
     var a = argv[i];
     if (a === "--dry-run") args.dryRun = true;
     else if (a === "--template") {
       args.template = argv[i + 1];
+      i += 1;
+    } else if (a === "--out") {
+      args.out = argv[i + 1];
       i += 1;
     } else if (a.indexOf("--") === 0) {
       fail("Unknown option: " + a);
@@ -51,21 +70,48 @@ function parseArgs(argv) {
   return args;
 }
 
-function catalogueIds() {
+/** The catalogue, the activities and the per-district sheet contents. */
+function loadContext() {
   var sandbox = { window: {} };
-  new vm.Script(fs.readFileSync(path.join(root, "js", "catalogue.js"), "utf8"), {
-    filename: "js/catalogue.js",
-  }).runInNewContext(sandbox);
-  return Object.keys(sandbox.window.MLMP_CATALOGUE.activities);
+  ["regions.js", "catalogue.js", "activities.js"].forEach(function (file) {
+    new vm.Script(fs.readFileSync(path.join(root, "js", file), "utf8"), {
+      filename: "js/" + file,
+    }).runInNewContext(sandbox);
+  });
+
+  var REGIONS = sandbox.window.MLMP_REGIONS;
+  var ACT = sandbox.window.MLMP_ACTIVITIES;
+  var ids = Object.keys(sandbox.window.MLMP_CATALOGUE.activities);
+  var districts = {};
+
+  REGIONS.names.forEach(function (name) {
+    var zone = REGIONS.catalogueZoneFor(REGIONS.defaultAltitude(name));
+    var entries = {};
+    if (zone) {
+      ACT.ids
+        .map(function (id) {
+          return ACT.ALL[id];
+        })
+        .filter(function (a) {
+          if (a.zones.indexOf(zone.id) === -1) return false;
+          if (a.districtsOnly && a.districtsOnly.indexOf(name) === -1) return false;
+          return true;
+        })
+        .forEach(function (a) {
+          entries[a.id] = a.title;
+        });
+    }
+    districts[name] = entries;
+  });
+
+  return { ids: ids, districts: districts };
 }
 
 /** Read the current records so an import adds instead of wiping. */
-function readExisting() {
-  if (!fs.existsSync(reviewsFile)) return { catalogue: null, entries: {} };
+function readExisting(file) {
+  if (!fs.existsSync(file)) return { catalogue: null, entries: {} };
   var sandbox = { window: {} };
-  new vm.Script(fs.readFileSync(reviewsFile, "utf8"), {
-    filename: "js/reviews.js",
-  }).runInNewContext(sandbox);
+  new vm.Script(fs.readFileSync(file, "utf8"), { filename: file }).runInNewContext(sandbox);
   var data = sandbox.window.MLMP_REVIEWS || {};
   return {
     catalogue: data.catalogue || null,
@@ -106,7 +152,7 @@ function writeReport(result) {
   );
   lines.push("");
   if (!result.corrections.length) {
-    lines.push("No corrections were supplied. Every row accepted the entry as written.");
+    lines.push("No corrections were supplied. Every recorded row accepted the entry as written.");
   } else {
     lines.push("| Activity | Decision | Note | Officer's office | Checked on |");
     lines.push("| --- | --- | --- | --- | --- |");
@@ -117,7 +163,7 @@ function writeReport(result) {
           " | " +
           c.decision +
           " | " +
-          c.note.replace(/\|/g, "\\|") +
+          (c.note || "no correction text supplied").replace(/\|/g, "\\|") +
           " | " +
           c.office.replace(/\|/g, "\\|") +
           " | " +
@@ -134,6 +180,59 @@ function writeReport(result) {
   writeAtomic(reportFile, lines.join("\n"));
 }
 
+function describe(record) {
+  return (
+    record.reviewedBy +
+    ", " +
+    record.office +
+    (record.designation ? ", " + record.designation : "") +
+    ", " +
+    record.reviewedOn
+  );
+}
+
+/** Print exactly what the import would do, entry by entry. */
+function printDryRun(result, existing) {
+  var ids = Object.keys(result.records).sort();
+  var count = ids.length;
+  console.log("Dry run: nothing was written, not js/reviews.js and not the report.");
+  console.log(
+    count === 0
+      ? "No verdicts are filled in, so nothing would change."
+      : "Would record " +
+          count +
+          (count === 1 ? " review:" : " reviews:")
+  );
+  ids.forEach(function (id) {
+    var before = existing.entries[id];
+    var after = result.records[id];
+    var state = "new";
+    if (before) {
+      state =
+        before.reviewedBy === after.reviewedBy &&
+        before.office === after.office &&
+        before.reviewedOn === after.reviewedOn
+          ? "unchanged"
+          : "replaces " + describe(before);
+    }
+    console.log("  " + id + " -> reviewed (" + describe(after) + ") " + state);
+  });
+  if (result.skipped) {
+    console.log(
+      "Would skip " +
+        result.skipped +
+        (result.skipped === 1 ? " row with no verdict" : " rows with no verdict") +
+        " or marked not sure; those entries stay unreviewed."
+    );
+  }
+  if (result.corrections.length) {
+    console.log("Corrections a person would still have to apply to js/catalogue.js:");
+    result.corrections.forEach(function (c) {
+      console.log("  " + c.id + " (" + c.decision + "): " + (c.note || "no correction text supplied"));
+    });
+  }
+}
+
 var args = parseArgs(process.argv.slice(2));
 
 if (args.template) {
@@ -147,8 +246,11 @@ if (args.template) {
 }
 
 if (!args.file) {
-  fail("Usage: node tools/import-review.js <filled-in.csv> [--dry-run]");
+  fail("Usage: node tools/import-review.js <filled-in.csv> [--dry-run] [--out <file>]");
 }
+
+var outFile = args.out ? path.resolve(process.cwd(), args.out) : reviewsFile;
+var writingToDefault = outFile === reviewsFile;
 
 var filePath = path.resolve(process.cwd(), args.file);
 if (!fs.existsSync(filePath)) fail("No such file: " + args.file);
@@ -156,9 +258,10 @@ var stat = fs.statSync(filePath);
 if (!stat.isFile()) fail("Not a file: " + args.file);
 if (stat.size > MAX_FILE_BYTES) fail("That file is larger than 1 MB, so it is not a review sheet.");
 
+var context = loadContext();
 var text = fs.readFileSync(filePath, "utf8");
 var rows = csv.parseCsv(text);
-var result = csv.validate(rows, catalogueIds());
+var result = csv.validate(rows, context.ids, context);
 
 if (result.errors.length) {
   console.error("Import refused. Nothing was written.");
@@ -168,34 +271,53 @@ if (result.errors.length) {
   process.exit(1);
 }
 
-var existing = readExisting();
+var existing = readExisting(outFile);
 var merged = { catalogue: existing.catalogue, entries: Object.assign({}, existing.entries) };
 Object.keys(result.records).forEach(function (id) {
   merged.entries[id] = result.records[id];
 });
 
-var count = Object.keys(result.records).length;
-console.log(
-  (args.dryRun ? "Dry run: would record " : "Recorded ") +
-    count +
-    (count === 1 ? " review." : " reviews.")
-);
-
 if (args.dryRun) {
-  result.corrections.forEach(function (c) {
-    console.log("  correction needed: " + c.id + " (" + c.decision + ") " + (c.note || ""));
-  });
+  printDryRun(result, existing);
   process.exit(0);
 }
 
-writeAtomic(reviewsFile, serialise(merged));
-writeReport(result);
-console.log("Updated js/reviews.js and REVIEW_IMPORT_REPORT.md.");
+var count = Object.keys(result.records).length;
+if (!count) {
+  console.log(
+    "No verdicts are filled in, so nothing changed. js/reviews.js and REVIEW_IMPORT_REPORT.md were left alone."
+  );
+  process.exit(0);
+}
+
+writeAtomic(outFile, serialise(merged));
+var where = path.relative(root, outFile);
+if (/^\.\./.test(where)) where = outFile;
+console.log("Recorded " + count + (count === 1 ? " review" : " reviews") + " in " + where + ".");
+
+if (writingToDefault) {
+  writeReport(result);
+  console.log("Updated REVIEW_IMPORT_REPORT.md.");
+}
+
 if (result.corrections.length) {
   console.log(
     result.corrections.length +
       " correction" +
       (result.corrections.length === 1 ? "" : "s") +
       " still need applying to js/catalogue.js."
+  );
+  if (!writingToDefault) {
+    result.corrections.forEach(function (c) {
+      console.log("  " + c.id + " (" + c.decision + "): " + (c.note || "no correction text supplied"));
+    });
+  }
+}
+if (result.skipped) {
+  console.log(
+    result.skipped +
+      " row" +
+      (result.skipped === 1 ? " was" : "s were") +
+      " left unreviewed: no verdict, or marked not sure."
   );
 }
