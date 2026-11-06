@@ -55,10 +55,10 @@ _________________________________________________________________________
 
 _________________________________________________________________________
 
-## What to watch while they work
+## Before you start
 
-The form has lines for these. Write what they did, not what you think they
-felt.
+What to watch while they work, and what the form's lines are for. Write what
+they did, not what you think they felt.
 
 - Did they start without being told which button to press?
 - Did they understand "altitude zone", or guess?
@@ -74,7 +74,7 @@ felt.
 - Did anything look like an official government page?
 - Did they ask whether it was "real" or "approved"?
 
-## Before you start
+And before handing the phone over:
 
 - Load the app once while you have a signal, so it is stored for offline use.
 - Put the phone in the person's hand, not yours.
