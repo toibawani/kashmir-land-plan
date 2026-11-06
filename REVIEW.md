@@ -38,6 +38,13 @@ here hold more than one. If you serve a different part of it, write which
 ground you mean beside the line you are correcting: that answer is as useful
 as a correction.
 
+Each sheet has a prefilled CSV beside it (`review-sheets/Baramulla.csv` and so
+on) with the district, the entry id and the entry text already filled in, so
+only the verdict and the correction have to be typed afterwards. A verdict of
+`not sure`, or no verdict at all, records nothing: the app keeps saying that
+entry is unreviewed. `node tools/import-review.js <file.csv> --dry-run` prints
+exactly what would be recorded and writes nothing; drop the flag to record it.
+
 ## How to give your feedback
 
 Use whichever of these is easiest:

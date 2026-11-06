@@ -4143,7 +4143,9 @@
       select.innerHTML = langs
         .map(function (l) {
           var sel = l.code === MSG.get() ? " selected" : "";
-          return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(l.label) + "</option>";
+          // The label carries the unchecked caveat for a language no native
+          // speaker has read, so the warning is on the choice itself.
+          return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(MSG.optionLabel(l.code)) + "</option>";
         })
         .join("");
       select.addEventListener("change", function () {

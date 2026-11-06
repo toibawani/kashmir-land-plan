@@ -404,6 +404,204 @@ check("the formula text itself is kept as plain text", formulaRow.indexOf("HYPER
 FB.clear();
 check("clearing removes the answers", FB.count() === 0);
 
+console.log("prefilled district review sheets");
+
+var PACK_HEADER = csv.PACK_COLUMNS.join(",");
+var packContext = {
+  districts: {
+    Baramulla: {
+      beekeeping: "Beekeeping as an allied activity",
+      fodder_or_pasture: "Fodder crop or managed pasture",
+    },
+  },
+};
+
+function packResult(row) {
+  return csv.validate([PACK_HEADER.split(","), row], [], packContext);
+}
+
+var packRight = packResult([
+  "Baramulla",
+  "beekeeping",
+  "Beekeeping as an allied activity",
+  "right",
+  "",
+  "A Review Officer",
+  "District Agriculture Office",
+  "2026-11-05",
+]);
+check(
+  "a right tick records a review",
+  packRight.errors.length === 0 && packRight.records.beekeeping.reviewStatus === "reviewed",
+  packRight.errors.join("; ")
+);
+check(
+  "a right tick carries the office and the date",
+  packRight.records.beekeeping.office === "District Agriculture Office" &&
+    packRight.records.beekeeping.reviewedOn === "2026-11-05"
+);
+check("a right tick needs no correction", packRight.corrections.length === 0);
+
+var packFix = packResult([
+  "Baramulla",
+  "fodder_or_pasture",
+  "Fodder crop or managed pasture",
+  "wrong",
+  "Oats are the local second crop here, not mustard",
+  "A Review Officer",
+  "District Agriculture Office",
+  "2026-11-05",
+]);
+check(
+  "a wrong tick with a correction becomes a fix",
+  packFix.corrections.length === 1 && packFix.corrections[0].decision === "fix"
+);
+check("a wrong tick still records the review", Object.keys(packFix.records).length === 1);
+
+var packReject = packResult([
+  "Baramulla",
+  "fodder_or_pasture",
+  "Fodder crop or managed pasture",
+  "wrong",
+  "",
+  "A Review Officer",
+  "District Agriculture Office",
+  "2026-11-05",
+]);
+check(
+  "a wrong tick without a correction becomes a reject",
+  packReject.corrections.length === 1 && packReject.corrections[0].decision === "reject"
+);
+
+function packSkip(verdict, name) {
+  var result = packResult([
+    "Baramulla",
+    "beekeeping",
+    "Beekeeping as an allied activity",
+    verdict,
+    "",
+    "",
+    "",
+    "",
+  ]);
+  check(
+    name,
+    result.errors.length === 0 && Object.keys(result.records).length === 0 && result.skipped === 1,
+    result.errors.join("; ")
+  );
+}
+packSkip("not sure", "not sure records nothing and is not an error");
+packSkip("", "a blank verdict is skipped, not recorded");
+
+function packError(row, name) {
+  var result = packResult(row);
+  check(name, result.errors.length > 0 && Object.keys(result.records).length === 0, result.errors.join("; "));
+}
+
+packError(
+  ["Baramulla", "beekeeping", "A different line entirely", "right", "", "A", "Office", "2026-11-05"],
+  "a stale entry text is refused rather than guessed at"
+);
+packError(
+  ["Pulwama", "beekeeping", "Beekeeping as an allied activity", "right", "", "A", "Office", "2026-11-05"],
+  "an entry not on that district's sheet is refused"
+);
+packError(
+  ["Atlantis", "beekeeping", "Beekeeping as an allied activity", "right", "", "A", "Office", "2026-11-05"],
+  "an unknown district is refused"
+);
+packError(
+  ["Baramulla", "beekeeping", "Beekeeping as an allied activity", "maybe", "", "A", "Office", "2026-11-05"],
+  "an unknown verdict is refused"
+);
+packError(
+  ["Baramulla", "beekeeping", "Beekeeping as an allied activity", "right", "", "", "Office", "2026-11-05"],
+  "a tick with no reviewer name is refused"
+);
+packError(
+  ["Baramulla", "beekeeping", "Beekeeping as an allied activity", "wrong", "=cmd", "A", "Office", "2026-11-05"],
+  "a formula-shaped correction is refused"
+);
+
+var committedSheet = csv.parseCsv(
+  fs.readFileSync(path.join(root, "review-sheets", "Baramulla.csv"), "utf8")
+);
+check(
+  "the committed district CSV uses the documented columns",
+  committedSheet[0].join(",") === PACK_HEADER
+);
+check(
+  "the committed district CSV has one row per activity",
+  committedSheet.length === 7,
+  String(committedSheet.length)
+);
+/** The entries the generator would list for a district, from the live data. */
+function districtEntries(name) {
+  var zone = R.catalogueZoneFor(R.defaultAltitude(name));
+  var map = {};
+  if (!zone) return map;
+  ACT.ids
+    .map(function (id) {
+      return ACT.ALL[id];
+    })
+    .forEach(function (a) {
+      if (a.zones.indexOf(zone.id) === -1) return;
+      if (a.districtsOnly && a.districtsOnly.indexOf(name) === -1) return;
+      map[a.id] = a.title;
+    });
+  return map;
+}
+
+var blankImport = csv.validate(committedSheet, [], {
+  districts: { Baramulla: districtEntries("Baramulla") },
+});
+check(
+  "an unmarked committed sheet imports as nothing, with no error",
+  blankImport.errors.length === 0 &&
+    Object.keys(blankImport.records).length === 0 &&
+    blankImport.skipped === committedSheet.length - 1,
+  blankImport.errors.join("; ")
+);
+
+console.log("field test answers, summarised");
+
+var summaryTools = require(path.join(root, "tools", "feedback-summary.js"));
+check("the summary reads the same header the page exports", summaryTools.header().join(",") === FB.CSV_HEADER.join(","));
+
+var summary = summaryTools.summarise(
+  [FB.CSV_HEADER].concat([
+    ["2026-11-05T10:00:00Z", "Baramulla", "valley", "ur", "Yes", "Beekeeping note", "Maybe"],
+    ["2026-11-05T10:05:00Z", "Baramulla", "valley", "ur", "No", "", "No"],
+    ["2026-11-05T10:10:00Z", "Pulwama", "valley", "hi", "A little", "", "Yes"],
+    ["2026-11-05T10:15:00Z", "", "", "", "", "Only free text", ""],
+    ["2026-11-05T10:20:00Z", "", "", "", "", "", ""],
+  ])
+);
+check("every answered row is counted", summary.total === 4, String(summary.total));
+check("the empty row is ignored", summary.skipped === 1, String(summary.skipped));
+check(
+  "the useful counts follow the options",
+  summary.useful.Yes === 1 && summary.useful.No === 1 && summary.useful["A little"] === 1
+);
+check("an unanswered closed question is counted as unanswered", summary.useful["(no answer)"] === 1);
+check("the free text is kept with its district and language", summary.freeText.length === 2 && summary.freeText[0].district === "Baramulla");
+check("the free text wording survives", summary.freeText.some(function (t) { return t.text === "Only free text"; }));
+check("answers are counted by language", summary.byLanguage.ur === 2 && summary.byLanguage.hi === 1);
+check("answers are counted by district", summary.byDistrict.Baramulla === 2 && summary.byDistrict.Pulwama === 1);
+
+console.log("honest language labels");
+
+["en", "hi", "ur"].forEach(function (code) {
+  var label = MSG.optionLabel(code);
+  var marked = /जाँच|جانچ|pending/i.test(label);
+  check(
+    "the " + code + " menu label carries the caveat exactly when the language is unreviewed",
+    marked === !MSG.reviewed(code),
+    label
+  );
+});
+check("the English option is just its own name", MSG.optionLabel("en") === "English", MSG.optionLabel("en"));
+
 console.log("");
 
 if (failures.length) {

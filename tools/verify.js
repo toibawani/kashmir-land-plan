@@ -209,6 +209,10 @@ if (!failures.length && sandbox.window.MLMP_CATALOGUE && sandbox.window.MLMP_ACT
     if (!text) return false;
     if (/[\[\]<>]/.test(text)) return true;
     if (/^(name|your name|designation|role|tbd|tba|test|officer|x+)$/i.test(text)) return true;
+    // The fake sample CSV in review-sheets/samples/ names its reviewer
+    // "TEST ONLY Fake Reviewer". If one of those ever reaches the real
+    // catalogue, the build has to stop, not print a signature nobody gave.
+    if (/^test\b/i.test(text)) return true;
     return text.length < 3;
   }
 
@@ -783,6 +787,46 @@ if (catalogue && SOURCES) {
       }
     });
   });
+}
+
+/* ---- 11. An unchecked language must say so where it is chosen ---- */
+
+// The page notice only appears after the reader has already switched language,
+// which is too late to be the only warning. Every unreviewed language is marked
+// in the menu label itself, from the same `reviewed` flag, so setting that flag
+// to true is the only way to remove the caveat.
+var msgSandbox = { window: {} };
+try {
+  new vm.Script(fs.readFileSync(path.join(root, "js", "messages.js"), "utf8"), {
+    filename: "js/messages.js",
+  }).runInNewContext(msgSandbox);
+} catch (err) {
+  failures.push("js/messages.js could not be loaded: " + err.message);
+}
+var MESSAGES = msgSandbox.window.MLMP_MESSAGES;
+
+if (MESSAGES) {
+  MESSAGES.available().forEach(function (lang) {
+    var label = MESSAGES.optionLabel(lang.code);
+    var note = (MESSAGES.dict(lang.code) || {})["lang.uncheckedShort"] || "";
+    if (!note) {
+      failures.push("js/messages.js has no lang.uncheckedShort string for " + lang.code);
+    } else if (!lang.reviewed && label.indexOf(note) === -1) {
+      failures.push(
+        'The language menu offers ' + lang.code + ' as "' + label + '" without saying the translation is unchecked'
+      );
+    } else if (lang.reviewed && label.indexOf(note) !== -1) {
+      failures.push(
+        "The language menu still marks " + lang.code + " as unchecked although it is marked reviewed"
+      );
+    }
+  });
+
+  if (appCode.indexOf("MSG.optionLabel") === -1) {
+    failures.push(
+      "js/app.js builds the language menu without MSG.optionLabel, so the unchecked caveat never reaches the menu"
+    );
+  }
 }
 
 /* ---- Report ---- */

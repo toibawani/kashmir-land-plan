@@ -1,0 +1,8 @@
+district,entry_id,entry_text,verdict,correction,reviewer_name,office,date
+"Rajouri","beekeeping","Beekeeping as an allied activity","","","","",""
+"Rajouri","fodder_or_pasture","Fodder crop or managed pasture","","","","",""
+"Rajouri","intercrop_or_improve","Improve what you already grow, or add an intercrop","","","","",""
+"Rajouri","kitchen_garden","Kitchen garden and mixed vegetables","","","","",""
+"Rajouri","protected_cultivation","Protected cultivation: polyhouse, mushroom or nursery","","","","",""
+"Rajouri","orchard_subtrop","Sub-tropical fruit trees","","","","",""
+"Rajouri","orchard_temp","Temperate fruit and nut trees","","","","",""
