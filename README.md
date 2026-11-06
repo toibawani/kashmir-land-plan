@@ -49,7 +49,7 @@ Captured from the running app at a phone viewport on the sample journey.
 
 ```sh
 npm start     # http://127.0.0.1:8080, no install, no dependencies
-npm test      # lint, build check, 172 self-tests, 131 logic checks, translation check
+npm test      # lint, build check, self-tests, logic checks, translation and pack checks
 npm run build # the pre-flight check on its own
 ```
 
@@ -62,7 +62,15 @@ Rebuilding the screenshots needs the server and a headless Chrome:
 ```sh
 npm run screenshots   # Chrome on --remote-debugging-port=9333
 npm run phone-check    # the same, at 360px, checking width and tap targets
-npm run review-sheets  # the printable review sheets for officers
+npm run review-sheets  # the printable review sheets and prefilled CSVs
+```
+
+After a visit, or after a field test:
+
+```sh
+node tools/import-review.js review-sheets/Baramulla.csv --dry-run  # print, write nothing
+node tools/import-review.js review-sheets/Baramulla.csv            # record it
+npm run feedback-summary field-test-answers.csv                   # counts, write nothing
 ```
 
 ## Honest status
@@ -72,12 +80,18 @@ Nothing here is signed off by anyone. Specifically:
 1. **The catalogue is unreviewed.** Every screen that shows a suggestion says so.
    The review process, the printable per-district sheets and the CSV importer are
    in `REVIEW.md`; the fields stay empty until an officer actually replies.
-2. **The Hindi and Urdu strings are unreviewed.** They are marked
-   `reviewed: false`, the interface shows a notice while you read them, and
-   `TRANSLATION_CHECK.md` lists every string for a native speaker.
-3. **No farmer has used it yet.** `FIELD_TEST.md` has a two-minute script and an
-   observation checklist for the first session; the three questions after the
-   visit card store answers on the device only.
+2. **The Hindi and Urdu strings are unreviewed.** Both are marked
+   `reviewed: false` in `js/messages.js`. The language menu marks the choice
+   itself ("हिन्दी — मूल वक्ता की जाँच बाकी"), a notice stays on screen while
+   either language is selected, and the About screen says so too.
+   `TRANSLATION_CHECK.md` lists every string for a native speaker. The marker
+   and the notice are driven by that one flag, so they can only be removed by
+   setting `reviewed: true` for a language a person has actually read.
+3. **No farmer has used it yet.** `FIELD_TEST.md` has a two-minute script, a
+   one-page printable observation form (age group, farming or not, where they
+   stopped, where they hesitated, what they asked, what they said about the
+   visit card, and no names), and a way to read the exported answers back. The
+   three questions after the visit card store answers on the device only.
 4. **Not tested on a real low-end phone.** It was checked in a browser at 360px
    and in Lighthouse, not in a hand, in the sun.
 
@@ -99,8 +113,9 @@ later is one object, not a code change. The Urdu layout is right to left, chosen
 per language rather than per page.
 
 Checks: `tools/verify.js` (references, offline cache, review rules, contrast,
-event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (131
-checks), `tools/translation-check.js` (key parity and a review list),
+event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (161
+checks, including the review CSV formats and the field-test summary),
+`tools/translation-check.js` (key parity and a review list),
 `tools/lint.js` (no console output, no `eval`, no secrets, no insecure links),
 `tools/phone-check.js` (360px layout and tap targets). Lighthouse on the local
 server: performance 92, accessibility 100, best practices 100, PWA 100; the
