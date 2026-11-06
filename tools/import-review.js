@@ -40,6 +40,7 @@ var fs = require("fs");
 var path = require("path");
 var vm = require("vm");
 var csv = require("./lib/review-csv.js");
+var PACK = require("./lib/pack-version.js");
 
 var root = path.resolve(__dirname, "..");
 var reviewsFile = path.join(root, "js", "reviews.js");
@@ -104,7 +105,7 @@ function loadContext() {
     districts[name] = entries;
   });
 
-  return { ids: ids, districts: districts };
+  return { ids: ids, districts: districts, sheetVersion: PACK.SHEET_VERSION };
 }
 
 /** Read the current records so an import adds instead of wiping. */
@@ -261,6 +262,16 @@ if (stat.size > MAX_FILE_BYTES) fail("That file is larger than 1 MB, so it is no
 var context = loadContext();
 var text = fs.readFileSync(filePath, "utf8");
 var rows = csv.parseCsv(text);
+var isPack =
+  rows.length > 0 &&
+  rows[0].map(function (cell) {
+    return String(cell).trim();
+  }).indexOf("entry_id") !== -1;
+
+// Say which sheet this is before anything is refused, so the message that
+// follows can point at the version rather than at the officer's ticks.
+if (isPack) console.log("Sheet version: " + PACK.SHEET_VERSION + " (current)");
+
 var result = csv.validate(rows, context.ids, context);
 
 if (result.errors.length) {
