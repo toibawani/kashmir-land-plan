@@ -170,9 +170,9 @@ a measurement confirms it, not that work was attempted.
 | 1 | A village name can be found | **Not done.** `js/villages.js` does not exist; no verified list was obtained. Publishers and the reconciliation rule are in NEEDS_SOURCES.md. |
 | 2 | No village claims agronomy | Holds only because there are no village rows. |
 | 3 | Every number is traceable | **Partial.** Enforced for the land panel (build check 11e). Other screens still rely on the catalogue's own source field, which is not a build check. |
-| 4 | Survives 360px | **Partial.** Measured in a browser at 360×740: card 112px collapsed / 1,879px open, 9 chips all 44px on 4 lines, no page overflow, caveat above the detail. 320px was not tested. |
+| 4 | Survives 360px | **Holds at 320 and 360.** At 360×740 the card is 112px collapsed, 9 chips of 44px on 4 lines, no page overflow. At 320 the page is 320px wide with no overflow, chips 44px, summary 53px, copy button 44×144px, heading not clipped. |
 | 5 | Offline is indistinguishable | **Not re-run.** The cache moved to `mlmp-v28`; no install-and-reload-with-radio-off test after the panel and copy button landed. |
-| 6 | Accessibility | **Partial.** Static checks (names, labels, alt) and a keyboard walk (30 controls, 0 unnamed, 0 positive tabindex, 0 duplicates) pass. No axe run; `:focus-visible` pixels could not be confirmed under automation. |
+| 6 | Accessibility | **Partial.** Static checks, a keyboard walk (30 controls, 0 unnamed, 0 positive tabindex, 0 duplicates) and an axe-core 4.10.2 run (WCAG 2.0/2.1 A and AA) pass: one serious violation found — an unnamed progress bar — and fixed. Colour contrast was reported as needing manual review. Focus rings exist in CSS for every control but their pixels were not confirmed under automation. |
 | 7 | Sheet is the artefact | Holds: 42 files, one page each, checked by `npm test`. |
 | 8 | Three languages, one label | **Partial.** Parity is enforced for `js/messages.js`; the land panel's copy has no `land.*` keys and is English only. |
 | 9 | CI is the referee | **Partial.** Provenance, payload and accessibility checks are in `npm test`. A clean-clone run and the offline suite were not repeated. |
@@ -188,9 +188,9 @@ a measurement confirms it, not that work was attempted.
 | 4. Frontend craft | Partial: payload measured and enforced, 360px measured; LCP was not re-measured. |
 | 5. Translation | Partial: parity test predates this work; the land copy is untranslated. |
 | 6. Verification as product | Done: checks 11e, 11f and `tools/budget.js` are in `npm test`. |
-| 7. Release v1.1.0 | Not done: `package.json` is 1.0.0, the only tag is v1.0.0. |
+| 7. Release v1.1.0 | Done: version 1.1.0, changelog section, 20 regenerated sheets (42 pack files current), annotated tag pushed, GitHub release published. |
 
-**Summary: two outcomes hold outright (2, vacuously, and 7), six are partial, two
-are not started (1 and 5), and three of the seven workstreams are untouched.** The
-machine-checkable half of the brief is largely in place; the data and release
-halves are not.
+**Summary: three outcomes hold outright (2 vacuously, 4, 7) and one workstream
+(6) is complete; six outcomes remain partial, and the village directory and the
+land translation are not started.** The machine-checkable half of the brief is in
+place and shipped in v1.1.0; the village-name half is still blocked on a data file.
