@@ -687,6 +687,24 @@ check(
   blankImport.errors.join("; ")
 );
 
+// A correction of spaces is not a correction: it has to become a plain reject,
+// so the app shows the line as wrong instead of as fixed with an empty note.
+var packBlankCorrection = packResult([
+  "Baramulla",
+  "fodder_or_pasture",
+  "Fodder crop or managed pasture",
+  "wrong",
+  "   ",
+  "A Review Officer",
+  "District Agriculture Office",
+  "2026-11-05",
+]);
+check(
+  "a wrong tick with only spaces in the correction becomes a reject",
+  packBlankCorrection.corrections.length === 1 && packBlankCorrection.corrections[0].decision === "reject",
+  JSON.stringify(packBlankCorrection.corrections[0] || {})
+);
+
 console.log("field test answers, summarised");
 
 var summaryTools = require(path.join(root, "tools", "feedback-summary.js"));
