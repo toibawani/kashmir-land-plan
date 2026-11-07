@@ -391,6 +391,40 @@ check(
   String(crlfRows.length)
 );
 
+var twice = csv.validate(
+  csv.parseCsv(
+    csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,") +
+      "\n" +
+      csvRow("kitchen_garden,accept,B Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,")
+  ),
+  CATALOGUE.ids
+);
+check(
+  "the same activity twice in one file is refused",
+  /more than once/.test(twice.errors.join(" ")) && Object.keys(twice.records).length === 0,
+  twice.errors.join("; ")
+);
+
+var longName = new Array(201).join("A");
+var capped = csv.validate(
+  csv.parseCsv(csvRow("kitchen_garden,accept," + longName + ",Office,Officer,2026-11-05,")),
+  CATALOGUE.ids
+);
+check(
+  "an over-long name is capped, not stored whole",
+  capped.records.kitchen_garden.reviewedBy.length === 80,
+  String((capped.records.kitchen_garden || {}).reviewedBy || "").length
+);
+
+var unknownColumn = csv.parseCsv(
+  "activity_id,decision,reviewer_name,office,designation,reviewed_on,note,extra\nkitchen_garden,accept,A,Office,Officer,2026-11-05,,"
+);
+check(
+  "an unknown column is refused rather than ignored",
+  /does not know/.test(csv.validate(unknownColumn, CATALOGUE.ids).errors.join(" ")),
+  csv.validate(unknownColumn, CATALOGUE.ids).errors.join("; ")
+);
+
 console.log("field-test answers");
 
 check("three questions are defined", FB.questions().length === 3);
