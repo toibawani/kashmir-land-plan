@@ -126,6 +126,9 @@ details and the one remaining cost are in `LIGHTHOUSE.md`.
 Deployment is GitHub Pages through `.github/workflows/pages.yml`, which runs
 `npm test` before it publishes anything.
 
+There is no backend and no key in this repository; what is still worth
+reporting, and how, is in `SECURITY.md`.
+
 ## Sources
 
 Regional background comes from the Farmer's Guide for Jammu and Kashmir, ICAR,
