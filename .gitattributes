@@ -1,0 +1,13 @@
+# Keep text as text on every machine. Without this, a Windows checkout turns
+# the shipped JavaScript into CRLF and a one-character diff touches every line.
+* text=auto eol=lf
+
+# Assets whose bytes must never be normalised.
+*.png binary
+*.ico binary
+*.pdf binary
+
+# The review pack is compared byte for byte by `npm run review-sheets --check`,
+# so its line endings are fixed here rather than left to the platform.
+review-sheets/*.csv text eol=lf
+review-sheets/*.html text eol=lf
