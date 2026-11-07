@@ -26,6 +26,9 @@ and each line comes out only when the data behind it changes:
    `reviewed: false`, the language menu says so beside the name, and a notice
    stays on screen while either is selected.
 
+The release is [v1.0.0](https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.0.0);
+what changed, and what was deliberately left out, is in `CHANGELOG.md`.
+
 It was also only checked in a browser at 360px and in Lighthouse, not in a
 hand, in the sun.
 
