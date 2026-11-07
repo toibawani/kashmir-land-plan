@@ -3242,3 +3242,17 @@ select:focus {
     gap: 0;
   }
 }
+
+/* Motion here is decoration: the progress bar eases, banners slide in, the
+   menu animates. A person who has told their phone to reduce motion still
+   needs every word, so the movement goes and the information stays. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
