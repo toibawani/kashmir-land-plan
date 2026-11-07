@@ -233,6 +233,50 @@ check(
   })
 );
 
+console.log("districts and their altitudes");
+
+/** The district list, whichever shape the module exports it in. */
+function districtNames() {
+  if (typeof R.names === "function") return R.names();
+  if (Array.isArray(R.names)) return R.names.slice();
+  return Object.keys(R.DISTRICTS || {});
+}
+
+// The list comes from the app, not from this test: writing the four ids out by
+// hand is exactly how an earlier version of this check missed `hills` and
+// reported six healthy districts as broken.
+var OFFERED_ALTITUDES = [""].concat(Object.keys(R.ALTITUDE_ZONES));
+check("the district list is not empty", districtNames().length > 0, String(districtNames().length));
+
+var badAltitudes = districtNames().filter(function (name) {
+  return OFFERED_ALTITUDES.indexOf(R.defaultAltitude(name)) === -1;
+});
+check(
+  "no district suggests an altitude the form does not offer",
+  badAltitudes.length === 0,
+  badAltitudes
+    .map(function (name) {
+      return name + "=" + R.defaultAltitude(name);
+    })
+    .join(", ")
+);
+
+check(
+  "a district that suggests an altitude gets a zone the catalogue knows",
+  districtNames().every(function (name) {
+    var altitude = R.defaultAltitude(name);
+    return !altitude || !!R.altitudeZone(altitude);
+  })
+);
+
+check(
+  "every altitude the form offers has a label and a band",
+  Object.keys(R.ALTITUDE_ZONES).every(function (id) {
+    var a = R.ALTITUDE_ZONES[id];
+    return a.label && a.band && a.summary;
+  })
+);
+
 console.log("review wording");
 
 var raw = { reviewStatus: "reviewed" };
