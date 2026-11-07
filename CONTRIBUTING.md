@@ -39,6 +39,9 @@ check fails a `reviewed` flag with no name or no date on purpose.
   ```
 
   `npm run build` runs the pre-flight check alone and exits non-zero on any problem.
+
+- **Match the tool versions.** `.nvmrc` holds the Node version CI uses, and
+  `.editorconfig` holds the spacing and line endings `npm run lint` enforces.
 - **Add a test when you change behaviour.** `tools/selftest.js` runs in Node with no browser and no
   network, and it already covers the review wording, the catalogue shape, the scheme wording, the
   generated questions, the saved plans, the speech chunker, the QR encoder, the offline guidance,
