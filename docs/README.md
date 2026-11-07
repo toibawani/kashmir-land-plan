@@ -1,10 +1,11 @@
 # The documents
 
-Nine files explain this project, each for a different reader. Start with the one
+Ten files explain this project, each for a different reader. Start with the one
 that matches why you are here.
 
 | If you are | Read |
 | --- | --- |
+| Wanting the whole job, not one change | [MASTER-BRIEF.md](MASTER-BRIEF.md): the brief that defines what "done" means |
 | A farmer, or showing the app to one | the app itself; the [README](../README.md) for what it does and does not claim |
 | An agriculture officer with a sheet in hand | [REVIEW.md](../REVIEW.md): what a tick means and how it is recorded |
 | Running the first field test | [FIELD_TEST.md](../FIELD_TEST.md): the script and the one-page form |
