@@ -205,6 +205,33 @@ CATALOGUE.ids.forEach(function (id) {
   });
 });
 
+console.log("catalogue shape");
+
+check("no activity id appears twice", CATALOGUE.ids.length === new Set(CATALOGUE.ids).size);
+check(
+  "every activity has a title, a reason and a risk",
+  CATALOGUE.ids.every(function (id) {
+    var a = CATALOGUE.activities[id];
+    return String(a.title || "").trim() && String(a.why || "").trim() && (a.risks || []).length > 0;
+  })
+);
+check(
+  "every title is distinct, so a sheet cannot show the same line twice",
+  new Set(
+    CATALOGUE.ids.map(function (id) {
+      return CATALOGUE.activities[id].title;
+    })
+  ).size === CATALOGUE.ids.length
+);
+check(
+  "every activity names only catalogue zones",
+  CATALOGUE.ids.every(function (id) {
+    return CATALOGUE.activities[id].zones.every(function (zone) {
+      return !!R.ZONES[zone];
+    });
+  })
+);
+
 console.log("review wording");
 
 var raw = { reviewStatus: "reviewed" };
