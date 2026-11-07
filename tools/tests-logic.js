@@ -89,6 +89,7 @@ var MSG = sandbox.window.MLMP_MESSAGES;
 var SHARE = sandbox.window.MLMP_SHARE;
 var VISIT = sandbox.window.MLMP_VISIT;
 var FB = sandbox.window.MLMP_FEEDBACK;
+var PLANS = sandbox.window.MLMP_PLANS;
 
 console.log("altitude zones");
 
@@ -362,6 +363,23 @@ var urShare = SHARE.build({
 });
 check("the share message can be built in Urdu", urShare.indexOf(MSG.dict("ur")["share.options"]) !== -1);
 check("the share message still carries the reference", urShare.indexOf("MLMP-TEST") !== -1);
+
+console.log("the card and the share message over-claim nothing");
+
+var cardLines = VISIT.documents({ soil: "none" })
+  .concat(VISIT.documents({ soil: "done" }))
+  .concat(VISIT.soilChecks({ soil: "none" }))
+  .concat(VISIT.soilChecks({ soil: "done" }));
+var claimTools = require("../tools/claims.js");
+check(
+  "no line on the office card states an amount, deadline or rule",
+  cardLines.every(function (line) {
+    return claimTools.findClaims(line).length === 0;
+  }),
+  cardLines.filter(function (line) {
+    return claimTools.findClaims(line).length > 0;
+  })[0]
+);
 
 console.log("review csv import");
 
