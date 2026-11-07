@@ -3403,3 +3403,12 @@ select:focus {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* The chips and the copy button changed border and colour on focus, which is
+   visible but weaker than the ring every other control gets. Keyboard focus
+   should look the same wherever it lands. */
+.land-chip:focus-visible,
+.land-copy:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
