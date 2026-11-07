@@ -147,3 +147,28 @@ an answer:
 - **How success is measured.** No analytics, no accounts and no telemetry, so no
   usage figure can be reported from this repo. Anyone asking for one is asking
   for a decision that has not been made.
+
+---
+
+## 7. The printed sheet and the app carry the same version
+
+An officer marks a sheet today; the catalogue changes next week; the ticks come
+back a month later. Without a marker, those ticks are indistinguishable from
+current ones, and the entry text comparison alone refuses a reply that was
+perfectly correct when it was written.
+
+The sheet version is the release tag plus the first seven characters of a SHA-1
+over `js/regions.js`, `js/catalogue.js` and `js/activities.js`: for this release,
+`v1.0.0 · catalogue d20337e`. It is printed in the footer of every page, written
+into every CSV row, and checked once per file by the importer before any verdict
+is read. A mismatch is refused with an instruction to reprint, not merged
+partially, because a half-imported file looks reviewed where it is not.
+
+**What this gives up.** A stale sheet has to be re-marked. That is a real cost
+to an officer who already spent time on it, and it is why the version is on the
+page rather than only in the filename: they can see the sheet is old when it is
+handed back.
+
+**What would change it.** If re-marking turns out to be the reason replies stop
+coming back, the honest fix is a reprint with the previous answers prefilled,
+not quietly accepting an old file.
