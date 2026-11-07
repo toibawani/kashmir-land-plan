@@ -10,6 +10,10 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.1.0] - 2026-11-07
+
 ### Added
 
 - The Union Territory's land use on the district card — forest, net area sown and
