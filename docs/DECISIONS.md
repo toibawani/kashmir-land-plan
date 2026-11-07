@@ -190,3 +190,28 @@ page count.
 **What would change it.** A field test returning Letter paper, or a request from
 the office that will actually print it. The fix is a second page-height token,
 not a redesign of the sheet.
+
+---
+
+## 9. Land knowledge stops at the district, and says so
+
+The request behind this app is village-level land knowledge: what grows on this
+plot, what the soil is, what the neighbours sow. That information exists, but it
+is held per village in the revenue record and in the agriculture office's own
+notes, not in a public dataset that can be shipped in a static folder. The
+alternatives were to invent plausible village detail, or to stop at the district.
+
+The app stops at the district. Each of the twenty districts carries the zones it
+spans, height and rainfall bands, soils, field crops and fruit from named
+documents, with links to the documents. The About screen states the village
+position plainly: the counts come from the Directorate of Economics and
+Statistics, and the record itself is the jamabandi held by the patwari.
+
+**What this gives up.** A farmer cannot look up their own village and see a
+tailored answer. The panel says so above the detail, so nobody mistakes a zone
+description for a survey of their field.
+
+**What would change it.** A sourced, redistributable village dataset — a state
+village directory with land use, or an agriculture department export. Until one
+exists, adding village rows would be fiction with a citation-shaped hole next to
+it.
