@@ -1006,6 +1006,55 @@ if (!LAND) {
   });
 }
 
+/* ---- 11e. Every figure the land panel prints must have a source ---- */
+
+// The panel prints altitudes, rainfall, district counts and UT land use. Each
+// group traces to a registered document, so a copied number cannot arrive
+// without the citation that makes it checkable. This fails if a figure group
+// loses its source, or if the panel stops showing one of them.
+if (LAND) {
+  var adminFields = ["area", "population", "blocks", "tehsils", "villages"];
+  LAND.districts().forEach(function (name) {
+    var a = LAND.admin(name);
+    if (!a) {
+      failures.push("js/land.js has no official counts for " + name);
+      return;
+    }
+    adminFields.forEach(function (key) {
+      if (typeof a[key] !== "number" || !(a[key] > 0)) {
+        failures.push("js/land.js gives " + name + "." + key + " no positive number, so the panel would print a blank");
+      }
+    });
+  });
+
+  var landSources = LAND.sourceIds();
+  ["ut_glance", "jammu_hort_zones", "jammu_hort_districts", "icar_jammu_plan", "cgwb_profiles", "fsi_cover"].forEach(function (id) {
+    if (landSources.indexOf(id) === -1) {
+      failures.push("js/land.js no longer lists " + id + " among its sources, so a figure on the panel lost its citation");
+    }
+    if (!SOURCES.byId(id)) {
+      failures.push("js/sources.js has no entry for " + id + ", which js/land.js cites");
+    }
+  });
+
+  var use = LAND.coverage().landUse;
+  if (!use) {
+    failures.push("js/land.js no longer carries the UT land-use figures");
+  } else if (landSources.indexOf(use.sourceId) === -1) {
+    failures.push("the land-use figures cite " + use.sourceId + ", which js/land.js does not list");
+  }
+
+  var panelText = "";
+  try {
+    panelText = fs.readFileSync(path.join(root, "js", "landpanel.js"), "utf8");
+  } catch (_) {}
+  ["LAND.admin(", "coverage().landUse", "LAND.statement()"].forEach(function (needle) {
+    if (panelText.indexOf(needle) === -1) {
+      failures.push("js/landpanel.js no longer renders " + needle + ", so a sourced figure or the caveat vanished from the screen");
+    }
+  });
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
