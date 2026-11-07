@@ -61,3 +61,32 @@ A source has to be a public document someone can open, read, and point at the
 sentence it supports. A department page that only names a programme is not
 enough for a cost figure. A range from another state is not enough for a J&K
 figure. When in doubt, the row stays.
+
+## The village directory: names, tehsils and halqas
+
+**What is missing.** A citable list of the revenue villages in each district, with
+the tehsil and patwar halqa each falls under, in a form that can be shipped in a
+static folder. Without it the app can say a district has 394 revenue villages
+(Anantnag) but cannot let a farmer find theirs.
+
+**Why it is not there yet.** The counts are published; the *list* is published
+per district, in formats that differ by district — NIC district pages, the Census
+2011 village directory, and the LGD village directory. None of those was obtained
+as a verified, machine-readable file during this pass, and transcribing 6,832
+names by hand from page images would produce plausible-looking errors, which is
+the exact failure this project exists to avoid. A one-district sample would be
+worse than none: it would look like coverage that is not there.
+
+**Who publishes it.**
+
+- Office of the Registrar General & Census Commissioner: Census 2011 Village
+  Directory, district tables with village name, tehsil and CD block.
+- Ministry of Panchayati Raj: Local Government Directory (LGD), village codes and
+  parent tehsil/district.
+- J&K Revenue Department: the jamabandi and the village list held by each tehsil.
+
+**What shipping it requires.** Import one district at a time, reconcile the row
+count to `LAND.admin(name).villages`, ship only reconciled districts, and show an
+explicit "list not held here" state for the rest. Names and parents only: no
+crop, soil or irrigation attribute may be attached to a village row, because no
+public dataset carries that at village level.
