@@ -284,11 +284,10 @@
   function nearby(name, limit) {
     var division = divisionOf(name);
     if (!division) return [];
-    return DIVISIONS[division]
-      .filter(function (other) {
-        return other !== name;
-      })
-      .slice(0, limit || 5);
+    var others = DIVISIONS[division].filter(function (other) {
+      return other !== name;
+    });
+    return limit ? others.slice(0, limit) : others;
   }
 
   function totals() {

@@ -406,10 +406,10 @@ check(
   })
 );
 check(
-  "every district has at least one district beside it to look at",
+  "the panel offers every other district in the division, not a sample",
   LAND.districts().every(function (name) {
-    return LAND.nearby(name).length >= 4;
-  })
+    return LAND.nearby(name).length === LAND.districts().length / 2 - 1;
+  }) && LAND.nearby("Anantnag", 3).length === 3
 );
 
 console.log("review wording");
