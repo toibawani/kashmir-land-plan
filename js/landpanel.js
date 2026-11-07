@@ -92,6 +92,21 @@
       parts.push("</dl>");
     }
 
+    var use = LAND.coverage().landUse;
+    if (use) {
+      parts.push("<h3>Across the Union Territory</h3>");
+      parts.push('<dl class="land-facts land-use">');
+      [
+        ["Under forest", use.forestShare],
+        ["Net area sown", use.sownShare],
+        ["Irrigated", use.irrigatedShare],
+      ].forEach(function (row) {
+        parts.push("<dt>" + esc(row[0]) + "</dt><dd>" + esc(row[1]) + "</dd>");
+      });
+      parts.push("</dl>");
+      parts.push('<p class="option-note">These are the Union Territory figures, not your district\'s and not your field\'s.</p>');
+    }
+
     parts.push("<p><strong>The district's fruit:</strong> " + esc(profile.fruit) + "</p>");
     if (profile.note) parts.push("<p>" + esc(profile.note) + "</p>");
     parts.push(
