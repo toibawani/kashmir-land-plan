@@ -215,3 +215,8 @@ description for a survey of their field.
 village directory with land use, or an agriculture department export. Until one
 exists, adding village rows would be fiction with a citation-shaped hole next to
 it.
+
+**On "nearby".** The panel lists the other districts of the same division, not
+the ones that share a border. Division membership is printed in the official
+table; adjacency would have to be asserted from memory, and a wrong neighbour is
+worse than no neighbour. The wording says "same division" for that reason.
