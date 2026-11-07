@@ -66,5 +66,9 @@ review sheet or a field test.
 ### Fixed
 
 - A rendered sheet could say `page 1 of 2` and still print a third page.
+- A check of the district altitude defaults was written against three of the four
+  offered altitudes and reported six districts as broken. The form offers
+  `hills` as well; the data was right and the check was wrong. The finding is
+  withdrawn and the check now reads its list from `regions.js`.
 
 [1.0.0]: https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.0.0

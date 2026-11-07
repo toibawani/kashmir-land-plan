@@ -6,7 +6,6 @@ issue: what breaks, for whom, and what a fix would have to keep.
 - [`001-scannable-visit-card.md`](001-scannable-visit-card.md): Feature: scannable visit card (QR code)
 - [`002-offline-guidance.md`](002-offline-guidance.md): Feature: offline guidance panel
 - [`003-print-one-page.md`](003-print-one-page.md): Improvement: visit card prints on one clean page
-- [`004-district-altitude-default.md`](004-district-altitude-default.md): Some districts suggest an altitude the app does not offer
 
 An issue here is a known gap, not a promise. `NEEDS_SOURCES.md` holds the
 missing figures and `REVIEW.md` the missing officer review.
