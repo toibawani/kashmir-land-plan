@@ -174,7 +174,7 @@ a measurement confirms it, not that work was attempted.
 | 5 | Offline is indistinguishable | **Not re-run.** The cache moved to `mlmp-v28`; no install-and-reload-with-radio-off test after the panel and copy button landed. |
 | 6 | Accessibility | **Partial.** Static checks, a keyboard walk (30 controls, 0 unnamed, 0 positive tabindex, 0 duplicates) and an axe-core 4.10.2 run (WCAG 2.0/2.1 A and AA) pass: one serious violation found — an unnamed progress bar — and fixed. Colour contrast was reported as needing manual review. Focus rings exist in CSS for every control but their pixels were not confirmed under automation. |
 | 7 | Sheet is the artefact | Holds: 42 files, one page each, checked by `npm test`. |
-| 8 | Three languages, one label | **Partial.** Parity is enforced for `js/messages.js`; the land panel's copy has no `land.*` keys and is English only. |
+| 8 | Three languages, one label | **Partial.** Parity is enforced for `js/messages.js`, and the land card's interface now uses 26 `land.*` keys in all three languages. The district prose and the caveat are still English, deliberately, pending a native reviewer. |
 | 9 | CI is the referee | **Holds for the suite.** `npm test` passes from a fresh clone with no dependencies, in about two seconds, and that run caught a real defect: the sheet generator wrote CRLF while git stores LF, so every clone failed the pack check until both sides were LF. Provenance, payload and accessibility checks are enforced. The network-off offline test is still not run; the cache audit is only a proxy. |
 | 10 | A stranger can contribute | **Partly proven.** A fresh clone reaches a green suite with `npm test` and serves the app on port 8080. The pull-request and review path was not walked. |
 

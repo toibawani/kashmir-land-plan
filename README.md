@@ -83,7 +83,13 @@ paste into a message to the agriculture office.
 The download is held to a measured budget: `tools/budget.js` fails the build if
 the referenced JavaScript, CSS or HTML grows past the size recorded in
 [LIGHTHOUSE.md](LIGHTHOUSE.md), so weight stays a decision rather than a drift.
-At the time of writing a first visit is 137 KB gzipped. A district with no
+At the time of writing a first visit is 139 KB gzipped.
+
+The card's labels, headings, buttons and count sentence are translated into Hindi
+and Urdu and switch with the language selector. The district sentences themselves
+— zones, soils, crops and the caveat — remain English until a native speaker
+checks them, because a rewritten caveat that weakens the warning would be worse
+than an English one. `TRANSLATION_CHECK.md` lists all 26 new strings. A district with no
 district-specific source says so rather than borrowing the zone description.
 
 ## What it does not do

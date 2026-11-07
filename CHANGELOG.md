@@ -10,7 +10,13 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- The land card's interface in Hindi and Urdu: headings, fact labels, the copy
+  button, the same-division heading and the village counts sentence come from the
+  shared dictionary and re-render when the language changes. The district prose
+  and the caveat stay in English on purpose, and the review sheet lists all 26
+  new strings for a native speaker.
 
 ## [1.1.0] - 2026-11-07
 
