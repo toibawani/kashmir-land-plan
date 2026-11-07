@@ -1,5 +1,6 @@
 {
   "name": "My Land, My Plan",
+  "id": "./",
   "short_name": "My Land Plan",
   "description": "An offline-first J&K land planning app: prepare practical options and office-visit questions without inventing scheme eligibility or crop guarantees.",
   "lang": "en",
@@ -10,7 +11,10 @@
   "orientation": "portrait-primary",
   "background_color": "#f7f5f0",
   "theme_color": "#3d5a3d",
-  "categories": ["productivity", "education"],
+  "categories": [
+    "productivity",
+    "education"
+  ],
   "icons": [
     {
       "src": "icons/icon.svg",

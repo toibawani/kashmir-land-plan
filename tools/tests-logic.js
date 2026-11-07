@@ -89,6 +89,7 @@ var MSG = sandbox.window.MLMP_MESSAGES;
 var SHARE = sandbox.window.MLMP_SHARE;
 var VISIT = sandbox.window.MLMP_VISIT;
 var FB = sandbox.window.MLMP_FEEDBACK;
+var PLANS = sandbox.window.MLMP_PLANS;
 
 console.log("altitude zones");
 
@@ -204,6 +205,33 @@ CATALOGUE.ids.forEach(function (id) {
     }
   });
 });
+
+console.log("catalogue shape");
+
+check("no activity id appears twice", CATALOGUE.ids.length === new Set(CATALOGUE.ids).size);
+check(
+  "every activity has a title, a reason and a risk",
+  CATALOGUE.ids.every(function (id) {
+    var a = CATALOGUE.activities[id];
+    return String(a.title || "").trim() && String(a.why || "").trim() && (a.risks || []).length > 0;
+  })
+);
+check(
+  "every title is distinct, so a sheet cannot show the same line twice",
+  new Set(
+    CATALOGUE.ids.map(function (id) {
+      return CATALOGUE.activities[id].title;
+    })
+  ).size === CATALOGUE.ids.length
+);
+check(
+  "every activity names only catalogue zones",
+  CATALOGUE.ids.every(function (id) {
+    return CATALOGUE.activities[id].zones.every(function (zone) {
+      return !!R.ZONES[zone];
+    });
+  })
+);
 
 console.log("review wording");
 
@@ -336,6 +364,23 @@ var urShare = SHARE.build({
 check("the share message can be built in Urdu", urShare.indexOf(MSG.dict("ur")["share.options"]) !== -1);
 check("the share message still carries the reference", urShare.indexOf("MLMP-TEST") !== -1);
 
+console.log("the card and the share message over-claim nothing");
+
+var cardLines = VISIT.documents({ soil: "none" })
+  .concat(VISIT.documents({ soil: "done" }))
+  .concat(VISIT.soilChecks({ soil: "none" }))
+  .concat(VISIT.soilChecks({ soil: "done" }));
+var claimTools = require("../tools/claims.js");
+check(
+  "no line on the office card states an amount, deadline or rule",
+  cardLines.every(function (line) {
+    return claimTools.findClaims(line).length === 0;
+  }),
+  cardLines.filter(function (line) {
+    return claimTools.findClaims(line).length > 0;
+  })[0]
+);
+
 console.log("review csv import");
 
 var HEADER = "activity_id,decision,reviewer_name,office,designation,reviewed_on,note";
@@ -369,6 +414,61 @@ rejectRow("kitchen_garden,accept,=cmd,Office,Officer,2026-11-05,", "a formula-sh
 
 var badHeader = csv.validate([["activity_id", "decision"], ["kitchen_garden", "accept"]], CATALOGUE.ids);
 check("a missing header column is refused", badHeader.errors.length > 0);
+
+// A sheet exported from Excel arrives with a byte-order mark and CRLF endings.
+// Both are ordinary, and neither may be mistaken for a broken file.
+var bomRows = csv.parseCsv(
+  "\uFEFF" +
+    csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,")
+);
+check("a byte-order mark does not hide the header", bomRows[0][0] === "activity_id", bomRows[0][0]);
+check("a file saved with a byte-order mark still imports", csv.validate(bomRows, CATALOGUE.ids).errors.length === 0);
+
+var crlfRows = csv.parseCsv(
+  csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,").replace(
+    /\n/g,
+    "\r\n"
+  )
+);
+check(
+  "windows line endings import like unix ones",
+  csv.validate(crlfRows, CATALOGUE.ids).errors.length === 0 && crlfRows.length === 2,
+  String(crlfRows.length)
+);
+
+var twice = csv.validate(
+  csv.parseCsv(
+    csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,") +
+      "\n" +
+      csvRow("kitchen_garden,accept,B Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,")
+  ),
+  CATALOGUE.ids
+);
+check(
+  "the same activity twice in one file is refused",
+  /more than once/.test(twice.errors.join(" ")) && Object.keys(twice.records).length === 0,
+  twice.errors.join("; ")
+);
+
+var longName = new Array(201).join("A");
+var capped = csv.validate(
+  csv.parseCsv(csvRow("kitchen_garden,accept," + longName + ",Office,Officer,2026-11-05,")),
+  CATALOGUE.ids
+);
+check(
+  "an over-long name is capped, not stored whole",
+  capped.records.kitchen_garden.reviewedBy.length === 80,
+  String((capped.records.kitchen_garden || {}).reviewedBy || "").length
+);
+
+var unknownColumn = csv.parseCsv(
+  "activity_id,decision,reviewer_name,office,designation,reviewed_on,note,extra\nkitchen_garden,accept,A,Office,Officer,2026-11-05,,"
+);
+check(
+  "an unknown column is refused rather than ignored",
+  /does not know/.test(csv.validate(unknownColumn, CATALOGUE.ids).errors.join(" ")),
+  csv.validate(unknownColumn, CATALOGUE.ids).errors.join("; ")
+);
 
 console.log("field-test answers");
 
@@ -630,6 +730,24 @@ check(
     Object.keys(blankImport.records).length === 0 &&
     blankImport.skipped === committedSheet.length - 1,
   blankImport.errors.join("; ")
+);
+
+// A correction of spaces is not a correction: it has to become a plain reject,
+// so the app shows the line as wrong instead of as fixed with an empty note.
+var packBlankCorrection = packResult([
+  "Baramulla",
+  "fodder_or_pasture",
+  "Fodder crop or managed pasture",
+  "wrong",
+  "   ",
+  "A Review Officer",
+  "District Agriculture Office",
+  "2026-11-05",
+]);
+check(
+  "a wrong tick with only spaces in the correction becomes a reject",
+  packBlankCorrection.corrections.length === 1 && packBlankCorrection.corrections[0].decision === "reject",
+  JSON.stringify(packBlankCorrection.corrections[0] || {})
 );
 
 console.log("field test answers, summarised");

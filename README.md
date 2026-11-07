@@ -26,6 +26,9 @@ and each line comes out only when the data behind it changes:
    `reviewed: false`, the language menu says so beside the name, and a notice
    stays on screen while either is selected.
 
+The release is [v1.0.0](https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.0.0);
+what changed, and what was deliberately left out, is in `CHANGELOG.md`.
+
 It was also only checked in a browser at 360px and in Lighthouse, not in a
 hand, in the sun.
 
@@ -111,7 +114,7 @@ later is one object, not a code change. The Urdu layout is right to left, chosen
 per language rather than per page.
 
 Checks: `tools/verify.js` (references, offline cache, review rules, contrast,
-event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (167
+event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (179
 checks, including the review CSV formats, the sheet version and the field-test
 summary),
 `tools/translation-check.js` (key parity and a review list),
@@ -122,6 +125,11 @@ details and the one remaining cost are in `LIGHTHOUSE.md`.
 
 Deployment is GitHub Pages through `.github/workflows/pages.yml`, which runs
 `npm test` before it publishes anything.
+
+Which document answers which question is mapped in [`docs/README.md`](docs/README.md).
+
+There is no backend and no key in this repository; what is still worth
+reporting, and how, is in `SECURITY.md`.
 
 ## Sources
 

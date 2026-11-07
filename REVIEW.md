@@ -150,3 +150,23 @@ fields.
   all.
 - The questions the app generates stay the farmer's questions to ask.
   A review does not turn them into approved advice.
+
+### What the page itself carries
+
+Every page of every district sheet ends with the district, `page 1 of 2`, and the
+sheet version (`v1.0.0 · catalogue d20337e`). If a sheet is copied, faxed or
+photographed one page at a time, the page still says which district it belongs to
+and which catalogue it came from. When a reply comes back, that version is what
+the importer checks first: a sheet printed from a different catalogue is refused
+with a request to reprint and mark the new copy, because the ticks may be about
+lines the app no longer shows.
+
+### Before you record anything
+
+1. Run the import with `--dry-run` first. It prints what it would record and
+   writes nothing, which is the version to read over the phone with the officer.
+2. Check the sheet version line it prints against the paper in front of you.
+   They must match. If they do not, reprint and mark the new copy.
+3. Only then run it again without `--dry-run`. A file with any error records
+   nothing at all, so a refusal is safe to retry; a partial import is not
+   something to repair by hand.

@@ -77,6 +77,17 @@ function checkJs(file) {
   eachMatch(text, /(^|\n)\t/g, function (m, line) {
     fail(file, line, "is indented with a tab; the project uses spaces");
   });
+
+  // `document.write` and a string passed to `setTimeout` both turn a text
+  // value into executable markup, which is the shape of most injection bugs a
+  // file like this could grow. Nothing here needs either.
+  eachMatch(text, /document\.write(ln)?\s*\(/g, function (m, line) {
+    fail(file, line, "writes into the document while it is parsing");
+  });
+
+  eachMatch(text, /set(Timeout|Interval)\s*\(\s*["']/g, function (m, line) {
+    fail(file, line, "passes a string to " + m[1] + ", which executes it");
+  });
 }
 
 function checkCss(file) {

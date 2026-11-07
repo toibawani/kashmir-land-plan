@@ -147,3 +147,46 @@ an answer:
 - **How success is measured.** No analytics, no accounts and no telemetry, so no
   usage figure can be reported from this repo. Anyone asking for one is asking
   for a decision that has not been made.
+
+---
+
+## 7. The printed sheet and the app carry the same version
+
+An officer marks a sheet today; the catalogue changes next week; the ticks come
+back a month later. Without a marker, those ticks are indistinguishable from
+current ones, and the entry text comparison alone refuses a reply that was
+perfectly correct when it was written.
+
+The sheet version is the release tag plus the first seven characters of a SHA-1
+over `js/regions.js`, `js/catalogue.js` and `js/activities.js`: for this release,
+`v1.0.0 · catalogue d20337e`. It is printed in the footer of every page, written
+into every CSV row, and checked once per file by the importer before any verdict
+is read. A mismatch is refused with an instruction to reprint, not merged
+partially, because a half-imported file looks reviewed where it is not.
+
+**What this gives up.** A stale sheet has to be re-marked. That is a real cost
+to an officer who already spent time on it, and it is why the version is on the
+page rather than only in the filename: they can see the sheet is old when it is
+handed back.
+
+**What would change it.** If re-marking turns out to be the reason replies stop
+coming back, the honest fix is a reprint with the previous answers prefilled,
+not quietly accepting an old file.
+
+---
+
+## 8. The printable sheet is A4 and nothing else
+
+Every district sheet is laid out for A4 at 258 mm of usable height, with the
+page count decided by the generator so the footer can say `page 1 of 2` truthfully.
+Indian government offices print A4 and farmers photograph what they are handed,
+so A4 is the paper that will actually be used.
+
+**What this gives up.** US Letter stretches the fixed-height pages and the last
+row can spill. A printer that shrinks to fit is common enough that this is a
+nuisance rather than a failure, and the footer would then be wrong about the
+page count.
+
+**What would change it.** A field test returning Letter paper, or a request from
+the office that will actually print it. The fix is a second page-height token,
+not a redesign of the sheet.

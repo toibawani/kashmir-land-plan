@@ -1,0 +1,18 @@
+# The documents
+
+Nine files explain this project, each for a different reader. Start with the one
+that matches why you are here.
+
+| If you are | Read |
+| --- | --- |
+| A farmer, or showing the app to one | the app itself; the [README](../README.md) for what it does and does not claim |
+| An agriculture officer with a sheet in hand | [REVIEW.md](../REVIEW.md): what a tick means and how it is recorded |
+| Running the first field test | [FIELD_TEST.md](../FIELD_TEST.md): the script and the one-page form |
+| Checking a Hindi or Urdu translation | [TRANSLATION_CHECK.md](../TRANSLATION_CHECK.md): every string, side by side |
+| Asking why a figure is missing | [NEEDS_SOURCES.md](../NEEDS_SOURCES.md): each gap and who could close it |
+| Wondering why the app is built this way | [DECISIONS.md](DECISIONS.md): the trade-off behind each choice |
+| Reviewing a change | [CONTRIBUTING.md](../CONTRIBUTING.md), then [SECURITY.md](../SECURITY.md) |
+| Looking at performance | [LIGHTHOUSE.md](../LIGHTHOUSE.md): scores, dates and what is left |
+| Looking for what changed | [CHANGELOG.md](../CHANGELOG.md) |
+
+[`issues/`](../issues/README.md) holds the known gaps, which are not promises.

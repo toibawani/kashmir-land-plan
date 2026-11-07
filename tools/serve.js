@@ -49,6 +49,8 @@ function send(res, status, body, type) {
     "Content-Type": type || "text/plain; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
     "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
   });
   res.end(body);
 }
@@ -101,6 +103,8 @@ http
             "Content-Length": zipped.length,
             "Vary": "Accept-Encoding",
             "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
           });
           res.end(req.method === "HEAD" ? undefined : zipped);
         });
@@ -112,6 +116,8 @@ http
         "Content-Length": body.length,
         "Vary": "Accept-Encoding",
         "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
       });
       res.end(req.method === "HEAD" ? undefined : body);
     });
