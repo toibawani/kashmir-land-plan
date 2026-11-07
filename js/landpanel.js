@@ -76,6 +76,22 @@
       parts.push("</dl>");
     });
 
+    var a = LAND.admin(profile.name);
+    if (a) {
+      parts.push('<h3>At a glance</h3>');
+      parts.push('<dl class="land-facts land-admin">');
+      [
+        ["Area", a.area.toLocaleString("en-IN") + " sq km"],
+        ["Population", a.population.toLocaleString("en-IN") + " (2011 census)"],
+        ["Blocks", a.blocks],
+        ["Tehsils", a.tehsils],
+        ["Revenue villages", a.villages],
+      ].forEach(function (row) {
+        parts.push("<dt>" + esc(row[0]) + "</dt><dd>" + esc(row[1]) + "</dd>");
+      });
+      parts.push("</dl>");
+    }
+
     parts.push("<p><strong>The district's fruit:</strong> " + esc(profile.fruit) + "</p>");
     if (profile.note) parts.push("<p>" + esc(profile.note) + "</p>");
     parts.push(
@@ -85,6 +101,18 @@
           : "No district-specific survey is recorded here, so this is the zone description the sources support.") +
         "</p>"
     );
+    var division = LAND.divisionOf(profile.name);
+    var others = LAND.nearby(profile.name);
+    if (division && others.length) {
+      parts.push('<h3>Other districts in the ' + esc(division) + " division</h3>");
+      parts.push('<p class="option-note">Same division, not necessarily the same ground: pick one to see its land.</p>');
+      parts.push('<div class="land-chips">');
+      others.forEach(function (name) {
+        parts.push('<button type="button" class="land-chip" data-district="' + esc(name) + '">' + esc(name) + "</button>");
+      });
+      parts.push("</div>");
+    }
+
     parts.push(sourceLinks());
 
     host.innerHTML = parts.join("");
@@ -127,6 +155,18 @@
     select.addEventListener("change", function () {
       renderDistrict(select.value);
     });
+
+    var host = document.getElementById("land-preview");
+    if (host) {
+      host.addEventListener("click", function (event) {
+        var chip = event.target.closest ? event.target.closest("button[data-district]") : null;
+        if (!chip) return;
+        select.value = chip.getAttribute("data-district");
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+        var heading = host.querySelector("h2");
+        if (heading) heading.focus();
+      });
+    }
     renderDistrict(select.value);
   });
 })();
