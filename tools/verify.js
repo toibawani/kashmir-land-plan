@@ -1055,6 +1055,58 @@ if (LAND) {
   });
 }
 
+/* ---- 11f. Every control must have a name, and every image its alt ---- */
+
+// A screen reader announces a control by its accessible name. A button whose
+// only child is an icon, or an input with a placeholder instead of a label, is
+// announced as nothing useful. This is a static check on the shipped page; it
+// does not replace a real audit, but it stops the common regression landing.
+var buttonRe = /<button\b([^>]*)>([\s\S]*?)<\/button>/gi;
+var buttonMatch;
+while ((buttonMatch = buttonRe.exec(html)) !== null) {
+  var attrs = buttonMatch[1] || "";
+  var inner = buttonMatch[2]
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  var labelled = /aria-label="[^"]+"/.test(attrs) || /aria-labelledby="[^"]+"/.test(attrs);
+  if (!inner && !labelled) {
+    failures.push('index.html has a button with no readable text and no aria-label, so it is announced as just "button"');
+  }
+}
+
+var labelFor = [];
+var forRe = /<label\b[^>]*\bfor="([^"]+)"/gi;
+var forMatch;
+while ((forMatch = forRe.exec(html)) !== null) labelFor.push(forMatch[1]);
+
+var controlRe = /<(input|select|textarea)\b([^>]*)>/gi;
+var controlMatch;
+while ((controlMatch = controlRe.exec(html)) !== null) {
+  var tag = controlMatch[1].toLowerCase();
+  var cattrs = controlMatch[2] || "";
+  var type = (cattrs.match(/\btype="([^"]+)"/) || [])[1] || "";
+  if (tag === "input" && /^(hidden|submit|button|reset)$/i.test(type)) continue;
+  var id = (cattrs.match(/\bid="([^"]+)"/) || [])[1] || "";
+  var named = /aria-label="[^"]+"/.test(cattrs) || /aria-labelledby="[^"]+"/.test(cattrs);
+  var before = html.slice(0, controlMatch.index);
+  var wrapped = before.lastIndexOf("<label") > before.lastIndexOf("</label>");
+  if (!named && !wrapped && (!id || labelFor.indexOf(id) === -1)) {
+    failures.push(
+      "index.html has a " + tag + (id ? " #" + id : "") + " with no <label for>, no wrapping label and no aria-label, so its purpose is not announced"
+    );
+  }
+}
+
+var imgRe = /<img\b([^>]*)>/gi;
+var imgMatch;
+while ((imgMatch = imgRe.exec(html)) !== null) {
+  if (!/\balt="/.test(imgMatch[1])) {
+    failures.push("index.html has an <img> without alt text");
+  }
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
