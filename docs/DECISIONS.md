@@ -172,3 +172,21 @@ handed back.
 **What would change it.** If re-marking turns out to be the reason replies stop
 coming back, the honest fix is a reprint with the previous answers prefilled,
 not quietly accepting an old file.
+
+---
+
+## 8. The printable sheet is A4 and nothing else
+
+Every district sheet is laid out for A4 at 258 mm of usable height, with the
+page count decided by the generator so the footer can say `page 1 of 2` truthfully.
+Indian government offices print A4 and farmers photograph what they are handed,
+so A4 is the paper that will actually be used.
+
+**What this gives up.** US Letter stretches the fixed-height pages and the last
+row can spill. A printer that shrinks to fit is common enough that this is a
+nuisance rather than a failure, and the footer would then be wrong about the
+page count.
+
+**What would change it.** A field test returning Letter paper, or a request from
+the office that will actually print it. The fix is a second page-height token,
+not a redesign of the sheet.
