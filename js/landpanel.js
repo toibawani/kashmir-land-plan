@@ -14,8 +14,19 @@
 
   var LAND = window.MLMP_LAND;
   var SOURCES = window.MLMP_SOURCES;
+  var MSG = window.MLMP_MESSAGES;
 
   if (!LAND) return;
+
+  /* Interface labels come from the shared dictionary, so the land card speaks
+     the language the reader chose. The district prose — zones, soils, crops and
+     the caveat — stays in English and is not passed off as translated, the same
+     policy the catalogue's option text follows: rewriting agronomy without a
+     native reviewer would be worse than leaving it in one language. */
+  function t(key, vars) {
+    if (MSG && MSG.t) return MSG.t(key, vars);
+    return "";
+  }
 
   function esc(value) {
     return String(value == null ? "" : value)
@@ -44,30 +55,39 @@
       })
       .filter(Boolean);
     if (!items.length) return "";
-    return '<details class="land-sources"><summary>Where this comes from</summary><ul>' + items.join("") + "</ul></details>";
+    return (
+      '<details class="land-sources"><summary>' +
+      esc(t("land.sources")) +
+      "</summary><ul>" +
+      items.join("") +
+      "</ul></details>"
+    );
   }
 
   /* A plain-text version of what is on screen, so a farmer can paste it into a
      message to the agriculture office. Nothing is added that is not visible
      above, and the caveat travels with it. */
   function summaryText(profile) {
-    var lines = ["Land in " + profile.name, LAND.statement(), ""];
+    var lines = [t("land.title", { district: profile.name }), LAND.statement(), ""];
     profile.zones.forEach(function (zone) {
       lines.push(zone.label);
-      lines.push("  Height: " + zone.altitude);
-      lines.push("  Rain: " + zone.rain);
-      lines.push("  Soils: " + zone.soils);
-      lines.push("  Field crops: " + zone.field);
-      lines.push("  Fruit: " + zone.fruit);
+      lines.push("  " + t("land.height") + ": " + zone.altitude);
+      lines.push("  " + t("land.rain") + ": " + zone.rain);
+      lines.push("  " + t("land.soils") + ": " + zone.soils);
+      lines.push("  " + t("land.crops") + ": " + zone.field);
+      lines.push("  " + t("land.fruit") + ": " + zone.fruit);
     });
     var a = LAND.admin(profile.name);
     if (a) {
       lines.push(
-        "Area " + a.area + " sq km; population " + a.population + " (2011); " +
-          a.blocks + " blocks; " + a.tehsils + " tehsils; " + a.villages + " revenue villages."
+        t("land.area") + " " + a.area + " sq km; " +
+          t("land.population") + " " + a.population + " (2011); " +
+          t("land.blocks") + " " + a.blocks + "; " +
+          t("land.tehsils") + " " + a.tehsils + "; " +
+          t("land.villages") + " " + a.villages + "."
       );
     }
-    lines.push("Fruit the sources name: " + profile.fruit);
+    lines.push(t("land.fruit") + ": " + profile.fruit);
     if (SOURCES) {
       var cited = LAND.sourceIds()
         .map(function (id) {
@@ -75,7 +95,7 @@
           return s ? s.short + " " + s.url : "";
         })
         .filter(Boolean);
-      if (cited.length) lines.push("", "Sources:", cited.join("\n"));
+      if (cited.length) lines.push("", t("land.sources") + ":", cited.join("\n"));
     }
     return lines.join("\n");
   }
@@ -93,18 +113,18 @@
     }
 
     var parts = [];
-    parts.push("<h2>Land in " + esc(profile.name) + "</h2>");
+    parts.push("<h2>" + esc(t("land.title", { district: profile.name })) + "</h2>");
     parts.push('<p class="land-caveat">' + esc(LAND.statement()) + "</p>");
 
     profile.zones.forEach(function (zone) {
       parts.push("<h3>" + esc(zone.label) + "</h3>");
-      parts.push("<dl class=\"land-facts\">");
+      parts.push('<dl class="land-facts">');
       [
-        ["Height", zone.altitude],
-        ["Rain", zone.rain],
-        ["Soils", zone.soils],
-        ["Field crops", zone.field],
-        ["Fruit", zone.fruit],
+        [t("land.height"), zone.altitude],
+        [t("land.rain"), zone.rain],
+        [t("land.soils"), zone.soils],
+        [t("land.crops"), zone.field],
+        [t("land.fruit"), zone.fruit],
       ].forEach(function (row) {
         parts.push("<dt>" + esc(row[0]) + "</dt><dd>" + esc(row[1]) + "</dd>");
       });
@@ -113,14 +133,14 @@
 
     var a = LAND.admin(profile.name);
     if (a) {
-      parts.push('<h3>At a glance</h3>');
+      parts.push("<h3>" + esc(t("land.glance")) + "</h3>");
       parts.push('<dl class="land-facts land-admin">');
       [
-        ["Area", a.area.toLocaleString("en-IN") + " sq km"],
-        ["Population", a.population.toLocaleString("en-IN") + " (2011 census)"],
-        ["Blocks", a.blocks],
-        ["Tehsils", a.tehsils],
-        ["Revenue villages", a.villages],
+        [t("land.area"), a.area.toLocaleString("en-IN") + " sq km"],
+        [t("land.population"), a.population.toLocaleString("en-IN") + " (2011)"],
+        [t("land.blocks"), a.blocks],
+        [t("land.tehsils"), a.tehsils],
+        [t("land.villages"), a.villages],
       ].forEach(function (row) {
         parts.push("<dt>" + esc(row[0]) + "</dt><dd>" + esc(row[1]) + "</dd>");
       });
@@ -129,12 +149,12 @@
 
     var use = LAND.coverage().landUse;
     if (use) {
-      parts.push("<h3>Across the Union Territory</h3>");
+      parts.push("<h3>" + esc(t("land.utTitle")) + "</h3>");
       parts.push('<dl class="land-facts land-use">');
       [
-        ["Under forest", use.forestShare],
-        ["Net area sown", use.sownShare],
-        ["Irrigated", use.irrigatedShare],
+        [t("land.forest"), use.forestShare],
+        [t("land.sown"), use.sownShare],
+        [t("land.irrigated"), use.irrigatedShare],
       ].forEach(function (row) {
         parts.push("<dt>" + esc(row[0]) + "</dt><dd>" + esc(row[1]) + "</dd>");
       });
@@ -142,7 +162,7 @@
       parts.push('<p class="option-note">These are the Union Territory figures, not your district\'s and not your field\'s.</p>');
     }
 
-    parts.push("<p><strong>The district's fruit:</strong> " + esc(profile.fruit) + "</p>");
+    parts.push("<p><strong>" + esc(t("land.fruit")) + ":</strong> " + esc(profile.fruit) + "</p>");
     if (profile.note) parts.push("<p>" + esc(profile.note) + "</p>");
     parts.push(
       '<p class="option-note">' +
@@ -151,19 +171,24 @@
           : "No district-specific survey is recorded here, so this is the zone description the sources support.") +
         "</p>"
     );
+
     var division = LAND.divisionOf(profile.name);
     var others = LAND.nearby(profile.name);
     if (division && others.length) {
-      parts.push('<h3>Other districts in the ' + esc(division) + " division</h3>");
+      parts.push(
+        "<h3>" + esc(t("land.nearby", { division: t("land.division." + division) })) + "</h3>"
+      );
       parts.push('<p class="option-note">Same division, not necessarily the same ground: pick one to see its land.</p>');
       parts.push('<div class="land-chips">');
-      others.forEach(function (name) {
-        parts.push('<button type="button" class="land-chip" data-district="' + esc(name) + '">' + esc(name) + "</button>");
+      others.forEach(function (other) {
+        parts.push(
+          '<button type="button" class="land-chip" data-district="' + esc(other) + '">' + esc(other) + "</button>"
+        );
       });
       parts.push("</div>");
     }
 
-    parts.push('<button type="button" class="land-copy" data-copy="1">Copy these details</button>');
+    parts.push('<button type="button" class="land-copy" data-copy="1">' + esc(t("land.copy")) + "</button>");
     parts.push(sourceLinks());
 
     // In the form this is reference material sitting between the district picker
@@ -175,9 +200,9 @@
     host.innerHTML =
       '<details class="land-details"' +
       open +
-      '><summary class="land-summary">Land in ' +
-      esc(profile.name) +
-      ": what the published sources say</summary>" +
+      '><summary class="land-summary">' +
+      esc(t("land.summary", { district: profile.name })) +
+      "</summary>" +
       parts.join("") +
       "</details>";
     var details = host.querySelector("details");
@@ -193,14 +218,11 @@
     var host = document.getElementById("about-village");
     if (!host) return;
     var c = LAND.coverage();
-    var counts =
-      "The Union Territory has " +
-      c.totalVillages.toLocaleString("en-IN") +
-      " villages in the 2011 census, " +
-      c.revenueVillages.toLocaleString("en-IN") +
-      " revenue villages and " +
-      c.patwarHalqas.toLocaleString("en-IN") +
-      " patwar halqas.";
+    var counts = t("land.villageCounts", {
+      villages: c.totalVillages.toLocaleString("en-IN"),
+      revenue: c.revenueVillages.toLocaleString("en-IN"),
+      halqas: c.patwarHalqas.toLocaleString("en-IN"),
+    });
     var source = SOURCES && SOURCES.byId(c.sourceId);
     host.innerHTML =
       "<p>" +
@@ -209,12 +231,20 @@
       "</p><p>" +
       esc(LAND.statement()) +
       "</p><ul>" +
-      c.lines.map(function (line) {
-        return "<li>" + esc(line) + "</li>";
-      }).join("") +
+      c.lines
+        .map(function (line) {
+          return "<li>" + esc(line) + "</li>";
+        })
+        .join("") +
       "</ul>" +
       (source
-        ? '<p class="option-note">Village counts: <a href="' + esc(source.url) + '" target="_blank" rel="noopener noreferrer">' + esc(source.name) + "</a>.</p>"
+        ? '<p class="option-note">' +
+          esc(t("land.villageSource")) +
+          ' <a href="' +
+          esc(source.url) +
+          '" target="_blank" rel="noopener noreferrer">' +
+          esc(source.name) +
+          "</a>.</p>"
         : "");
   }
 
@@ -225,6 +255,14 @@
     select.addEventListener("change", function () {
       renderDistrict(select.value);
     });
+
+    var langSelect = document.getElementById("lang-select");
+    if (langSelect) {
+      langSelect.addEventListener("change", function () {
+        renderVillage();
+        renderDistrict(select.value);
+      });
+    }
 
     var host = document.getElementById("land-preview");
     if (host) {
@@ -237,17 +275,17 @@
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(
               function () {
-                copy.textContent = "Copied";
+                copy.textContent = t("land.copied");
                 setTimeout(function () {
-                  copy.textContent = "Copy these details";
+                  copy.textContent = t("land.copy");
                 }, 2000);
               },
               function () {
-                copy.textContent = "Select the text above to copy";
+                copy.textContent = t("land.copyManual");
               }
             );
           } else {
-            copy.textContent = "Select the text above to copy";
+            copy.textContent = t("land.copyManual");
           }
           return;
         }
