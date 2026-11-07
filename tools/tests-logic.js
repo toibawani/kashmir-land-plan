@@ -336,6 +336,38 @@ check(
   !!SOURCES.byId(LAND.coverage().sourceId)
 );
 
+check(
+  "the village counts are real counts, not placeholders",
+  [LAND.coverage().totalVillages, LAND.coverage().revenueVillages, LAND.coverage().patwarHalqas].every(
+    function (n) {
+      return typeof n === "number" && n > 100;
+    }
+  )
+);
+check(
+  "every zone fact is filled in, so no panel row is blank",
+  Object.keys(LAND.ZONES).every(function (id) {
+    var z = LAND.ZONES[id];
+    return z.label && z.altitude && z.rain && z.soils && z.field && z.fruit;
+  })
+);
+check(
+  "every district names its fruit",
+  LAND.districts().every(function (name) {
+    return String(LAND.forDistrict(name).fruit || "").trim().length > 20;
+  })
+);
+check(
+  "at least a third of the districts have their own documented line",
+  LAND.districts().filter(function (name) {
+    return LAND.forDistrict(name).specific;
+  }).length >= 7
+);
+check(
+  "the caveat says this is published information, not a record",
+  /published information/i.test(LAND.statement()) && /not a record/i.test(LAND.statement())
+);
+
 console.log("review wording");
 
 var raw = { reviewStatus: "reviewed" };
