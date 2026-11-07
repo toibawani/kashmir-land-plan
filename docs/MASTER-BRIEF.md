@@ -162,22 +162,35 @@ screen has a source a sceptical farmer could check.
 
 ## Status against this brief
 
-Written 7 November 2026, against the tree it describes. Statuses are what was
-checked, not what was attempted.
+Checked against the tree on 7 November 2026. "Done" means a check enforces it or
+a measurement confirms it, not that work was attempted.
 
 | # | Outcome | Status |
 | --- | --- | --- |
-| 1 | A village name can be found | **Not done.** No verified village list was obtained; the gap and its publishers are in NEEDS_SOURCES.md. |
-| 2 | No village claims agronomy | Holds: no village rows exist to claim anything. |
-| 3 | Every number is traceable | Done for the land panel (build check 11e). Other screens still rely on the catalogue's own source field. |
-| 4 | Survives 360px | Partly checked before this round; the new rows were not viewed at 360px or 320px. |
-| 5 | Offline is indistinguishable | Not re-run after the land panel and copy button landed. |
-| 6 | Accessibility | Static checks landed (names, labels, alt). No axe run, no keyboard walk-through this round. |
+| 1 | A village name can be found | **Not done.** `js/villages.js` does not exist; no verified list was obtained. Publishers and the reconciliation rule are in NEEDS_SOURCES.md. |
+| 2 | No village claims agronomy | Holds only because there are no village rows. |
+| 3 | Every number is traceable | **Partial.** Enforced for the land panel (build check 11e). Other screens still rely on the catalogue's own source field, which is not a build check. |
+| 4 | Survives 360px | **Partial.** Measured in a browser at 360×740: card 112px collapsed / 1,879px open, 9 chips all 44px on 4 lines, no page overflow, caveat above the detail. 320px was not tested. |
+| 5 | Offline is indistinguishable | **Not re-run.** The cache moved to `mlmp-v28`; no install-and-reload-with-radio-off test after the panel and copy button landed. |
+| 6 | Accessibility | **Partial.** Static checks (names, labels, alt) and a keyboard walk (30 controls, 0 unnamed, 0 positive tabindex, 0 duplicates) pass. No axe run; `:focus-visible` pixels could not be confirmed under automation. |
 | 7 | Sheet is the artefact | Holds: 42 files, one page each, checked by `npm test`. |
-| 8 | Three languages, one label | Parity is enforced by `tools/translation-check.js`; the new land copy is English only. |
-| 9 | CI is the referee | Stronger: provenance, payload and accessibility checks are in `npm test`. Clean-clone and offline-suite runs not repeated this round. |
-| 10 | A stranger can contribute | Unchanged; not re-walked. |
+| 8 | Three languages, one label | **Partial.** Parity is enforced for `js/messages.js`; the land panel's copy has no `land.*` keys and is English only. |
+| 9 | CI is the referee | **Partial.** Provenance, payload and accessibility checks are in `npm test`. A clean-clone run and the offline suite were not repeated. |
+| 10 | A stranger can contribute | **Unchanged.** Not re-walked. |
 
-The honest summary: the machine-checkable outcomes improved, the human ones
-(360px rendering, keyboard paths, a clean-clone run) were not re-tested, and the
-largest outcome — the village directory — is still blocked on a data file.
+### Workstreams
+
+| Workstream | State |
+| --- | --- |
+| 1. Village directory | Not started: blocked on a verified data file. |
+| 2. Tehsil narrowing | Not started: the counts are shown, the names are not sourced. |
+| 3. Catalogue depth | Not started this round. |
+| 4. Frontend craft | Partial: payload measured and enforced, 360px measured; LCP was not re-measured. |
+| 5. Translation | Partial: parity test predates this work; the land copy is untranslated. |
+| 6. Verification as product | Done: checks 11e, 11f and `tools/budget.js` are in `npm test`. |
+| 7. Release v1.1.0 | Not done: `package.json` is 1.0.0, the only tag is v1.0.0. |
+
+**Summary: two outcomes hold outright (2, vacuously, and 7), six are partial, two
+are not started (1 and 5), and three of the seven workstreams are untouched.** The
+machine-checkable half of the brief is largely in place; the data and release
+halves are not.
