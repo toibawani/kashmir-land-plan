@@ -12,8 +12,7 @@ node_modules/
 dist/
 *.log
 
-# Python, for the two helper scripts (tools/make-icons.py, and the
-# one-off review sheet generator at the root)
+# Python, for the icon generator in tools/
 
 __pycache__/
 *.py[cod]
@@ -29,6 +28,10 @@ venv/
 .env
 .env.local
 .env.*.local
+
+# The folder the Pages workflow assembles before it publishes
+
+_site/
 
 # Scratch and archives
 
