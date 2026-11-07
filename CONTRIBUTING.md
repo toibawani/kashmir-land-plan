@@ -34,7 +34,8 @@ check fails a `reviewed` flag with no name or no date on purpose.
 - **Run the checks before you push.**
 
   ```sh
-  npm test    # the pre-flight check, then 165 behavioural checks
+  npm test    # lint, pre-flight check, 172 self-tests, 167 logic checks,
+              # the translation check and the review-pack check
   ```
 
   `npm run build` runs the pre-flight check alone and exits non-zero on any problem.
