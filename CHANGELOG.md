@@ -12,6 +12,16 @@ should not, because the catalogue is still unreviewed.
 
 ### Added
 
+- A district land reference (`js/land.js`): the zones each district spans, height
+  and rainfall bands, soils, field crops and fruit, each tied to a registered
+  source, shown under the district picker and cited with its documents.
+- A plain answer to the village question on the About screen: 6,314 villages in
+  the 2011 census, 6,832 revenue villages, 1,646 patwar halqas, and the statement
+  that this app holds a record of none of them and the jamabandi is where to look.
+- Six new registered sources, from the J&K Directorate of Economics and
+  Statistics, the Horticulture Department, ICAR, CGWB and the Forest Survey of India.
+- A build check that scans the land copy for money, deadline and eligibility
+  claims while allowing measured figures such as altitude bands.
 - A build check that every screen has a heading and every `data-i18n` key in the
   page exists in `js/messages.js`.
 - A build check that each manifest icon exists and is the size the manifest
