@@ -80,6 +80,8 @@
     return lines.join("\n");
   }
 
+  var landOpen = false;
+
   function renderDistrict(name) {
     var host = document.getElementById("land-preview");
     if (!host) return;
@@ -164,7 +166,26 @@
     parts.push('<button type="button" class="land-copy" data-copy="1">Copy these details</button>');
     parts.push(sourceLinks());
 
-    host.innerHTML = parts.join("");
+    // In the form this is reference material sitting between the district picker
+    // and Continue, so it starts folded: a farmer reads it when they want it and
+    // keeps the form short otherwise. On About it is the subject of the page, so
+    // it stays open.
+    var collapsible = host.id === "land-preview";
+    var open = collapsible ? (landOpen ? " open" : "") : " open";
+    host.innerHTML =
+      '<details class="land-details"' +
+      open +
+      '><summary class="land-summary">Land in ' +
+      esc(profile.name) +
+      ": what the published sources say</summary>" +
+      parts.join("") +
+      "</details>";
+    var details = host.querySelector("details");
+    if (details) {
+      details.addEventListener("toggle", function () {
+        landOpen = details.open;
+      });
+    }
     host.hidden = false;
   }
 
@@ -233,6 +254,7 @@
         var chip = event.target.closest ? event.target.closest("button[data-district]") : null;
         if (!chip) return;
         select.value = chip.getAttribute("data-district");
+        landOpen = true;
         select.dispatchEvent(new Event("change", { bubbles: true }));
         var heading = host.querySelector("h2");
         if (heading) heading.focus();
