@@ -154,6 +154,66 @@
     },
   };
 
+  /*
+   * The 2024-25 official district table: area in square kilometres, population
+   * at the 2011 census, community development blocks, tehsils and revenue
+   * villages. Copied from the source named in `SOURCE_IDS`, not estimated. The
+   * division totals are checked against these rows by the test suite, so a
+   * transposed number fails the build rather than reaching a screen.
+   */
+  var ADMIN = {
+    Anantnag: { area: 3574, population: 1078692, blocks: 16, tehsils: 12, villages: 394 },
+    Bandipora: { area: 345, population: 392232, blocks: 12, tehsils: 7, villages: 124 },
+    Baramulla: { area: 4243, population: 1008039, blocks: 26, tehsils: 18, villages: 543 },
+    Budgam: { area: 1361, population: 753745, blocks: 17, tehsils: 9, villages: 503 },
+    Doda: { area: 8912, population: 409936, blocks: 17, tehsils: 17, villages: 400 },
+    Ganderbal: { area: 259, population: 297446, blocks: 7, tehsils: 6, villages: 136 },
+    Jammu: { area: 2342, population: 1529958, blocks: 20, tehsils: 21, villages: 915 },
+    Kathua: { area: 2502, population: 616435, blocks: 19, tehsils: 11, villages: 533 },
+    Kishtwar: { area: 1644, population: 230696, blocks: 13, tehsils: 11, villages: 156 },
+    Kulgam: { area: 410, population: 424483, blocks: 11, tehsils: 7, villages: 273 },
+    Kupwara: { area: 2379, population: 870354, blocks: 24, tehsils: 16, villages: 380 },
+    Poonch: { area: 1674, population: 476835, blocks: 11, tehsils: 6, villages: 178 },
+    Pulwama: { area: 1086, population: 560440, blocks: 11, tehsils: 8, villages: 348 },
+    Rajouri: { area: 2630, population: 642415, blocks: 19, tehsils: 13, villages: 390 },
+    Ramban: { area: 148, population: 283713, blocks: 11, tehsils: 8, villages: 148 },
+    Reasi: { area: 1719, population: 314667, blocks: 12, tehsils: 9, villages: 259 },
+    Samba: { area: 904, population: 318898, blocks: 9, tehsils: 6, villages: 382 },
+    Shopian: { area: 312, population: 266215, blocks: 9, tehsils: 7, villages: 237 },
+    Srinagar: { area: 1979, population: 1236829, blocks: 4, tehsils: 7, villages: 137 },
+    Udhampur: { area: 2637, population: 554985, blocks: 17, tehsils: 8, villages: 396 },
+  };
+
+  /* The two divisions, which is the smallest honest "nearby" grouping: a
+     district is listed beside the others in its own division, because that is
+     a fact of the administrative map rather than a guess about travel time. */
+  var DIVISIONS = {
+    Kashmir: [
+      "Anantnag",
+      "Bandipora",
+      "Baramulla",
+      "Budgam",
+      "Ganderbal",
+      "Kulgam",
+      "Kupwara",
+      "Pulwama",
+      "Shopian",
+      "Srinagar",
+    ],
+    Jammu: [
+      "Doda",
+      "Jammu",
+      "Kathua",
+      "Kishtwar",
+      "Poonch",
+      "Rajouri",
+      "Ramban",
+      "Reasi",
+      "Samba",
+      "Udhampur",
+    ],
+  };
+
   function zoneFacts(id) {
     return ZONES[id] || null;
   }
@@ -191,6 +251,12 @@
       patwarHalqas: 1646,
       sourceId: "ut_glance",
       heading: "Village-level land records are not held here",
+      landUse: {
+        forestShare: "About 15 per cent of the reported area is under forest.",
+        sownShare: "Net area sown is under a fifth of the geographical area.",
+        irrigatedShare: "Just over two fifths of the net sown area is irrigated.",
+        sourceId: "ut_glance",
+      },
       lines: [
         "The land record for a village is kept by the patwari for that patwar halqa, and the jamabandi is the record to ask for.",
         "Take the khasra number of the plot, or enough detail for the patwari to find it, and ask for the current jamabandi entry.",
@@ -204,12 +270,48 @@
     return STATEMENT;
   }
 
+  function admin(name) {
+    return ADMIN[name] || null;
+  }
+
+  function divisionOf(name) {
+    if (DIVISIONS.Kashmir.indexOf(name) !== -1) return "Kashmir";
+    if (DIVISIONS.Jammu.indexOf(name) !== -1) return "Jammu";
+    return "";
+  }
+
+  /** Other districts in the same division, for "what is around here". */
+  function nearby(name, limit) {
+    var division = divisionOf(name);
+    if (!division) return [];
+    return DIVISIONS[division]
+      .filter(function (other) {
+        return other !== name;
+      })
+      .slice(0, limit || 5);
+  }
+
+  function totals() {
+    var sum = { area: 0, population: 0, blocks: 0, tehsils: 0, villages: 0 };
+    Object.keys(ADMIN).forEach(function (name) {
+      Object.keys(sum).forEach(function (key) {
+        sum[key] += ADMIN[name][key];
+      });
+    });
+    return sum;
+  }
+
   window.MLMP_LAND = {
     STATEMENT: STATEMENT,
     ZONES: ZONES,
     zoneFacts: zoneFacts,
     forDistrict: forDistrict,
     districts: districts,
+    DIVISIONS: DIVISIONS,
+    admin: admin,
+    divisionOf: divisionOf,
+    nearby: nearby,
+    totals: totals,
     coverage: coverage,
     statement: statement,
     sourceIds: function () {
