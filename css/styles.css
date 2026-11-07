@@ -3256,3 +3256,80 @@ select:focus {
     scroll-behavior: auto !important;
   }
 }
+
+/* The district land reference. It is background, not advice, so it reads as a
+   quiet data card: no accent border, no call to action, and the caveat sits
+   above the detail rather than under it. */
+.land-card {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  margin: var(--space-4) 0 var(--space-5);
+}
+
+.land-card h2 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.land-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.land-card p {
+  margin: 0 0 var(--space-3);
+  font-size: 0.92rem;
+}
+
+.land-caveat {
+  border-left: 3px solid var(--color-border);
+  padding-left: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.land-facts {
+  display: grid;
+  grid-template-columns: minmax(6rem, 8rem) 1fr;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.land-facts dt {
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.land-facts dd {
+  margin: 0;
+}
+
+.land-card ul {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.1rem;
+  font-size: 0.92rem;
+}
+
+.land-sources {
+  margin-top: var(--space-3);
+  font-size: 0.85rem;
+}
+
+.land-sources summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+@media print {
+  .land-card {
+    break-inside: avoid;
+  }
+}
