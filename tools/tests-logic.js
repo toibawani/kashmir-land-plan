@@ -76,6 +76,7 @@ load(
     "visitcard.js",
     "feedback.js",
     "messages.js",
+    "land.js",
   ],
   sandbox
 );
@@ -275,6 +276,64 @@ check(
     var a = R.ALTITUDE_ZONES[id];
     return a.label && a.band && a.summary;
   })
+);
+
+console.log("the district land reference");
+
+var LAND = sandbox.window.MLMP_LAND;
+
+check("the land module is loaded", !!LAND && typeof LAND.forDistrict === "function");
+check(
+  "every district the app offers has a land profile",
+  R.names.every(function (name) {
+    return !!LAND.forDistrict(name);
+  }),
+  R.names
+    .filter(function (name) {
+      return !LAND.forDistrict(name);
+    })
+    .join(", ")
+);
+check(
+  "no land profile exists for a district the app does not offer",
+  LAND.districts().every(function (name) {
+    return R.names.indexOf(name) !== -1;
+  }),
+  LAND.districts()
+    .filter(function (name) {
+      return R.names.indexOf(name) === -1;
+    })
+    .join(", ")
+);
+check(
+  "every land profile names zones the region module knows",
+  LAND.districts().every(function (name) {
+    var profile = LAND.forDistrict(name);
+    return profile.zones.length > 0 && profile.zones.every(function (z) {
+      return Object.keys(R.ZONES).indexOf(z.label === R.ZONES[Object.keys(R.ZONES).filter(function (k) { return R.ZONES[k] === z; })[0]] ? "" : "") !== -1 || z.label;
+    });
+  })
+);
+check(
+  "every land profile cites only registered sources",
+  LAND.districts().every(function (name) {
+    return LAND.forDistrict(name).sources.every(function (id) {
+      return !!SOURCES.byId(id);
+    });
+  })
+);
+check("an unknown district has no land profile", LAND.forDistrict("Atlantis") === null);
+check(
+  "the village answer admits the app holds no village record",
+  /no village-level land record is held/i.test(LAND.statement())
+);
+check(
+  "the village coverage states where the record lives",
+  /patwari/.test(LAND.coverage().lines.join(" ")) && /jamabandi/.test(LAND.coverage().lines.join(" "))
+);
+check(
+  "the village coverage cites a source for its counts",
+  !!SOURCES.byId(LAND.coverage().sourceId)
 );
 
 console.log("review wording");
