@@ -924,6 +924,88 @@ if (MESSAGES) {
   }
 }
 
+/* ---- 11d. The land copy must stay sourced and claim-free ---- */
+
+// js/land.js describes soils, rainfall bands and the crops a district is known
+// for. A figure is legitimate there in a way it never is in a scheme entry: an
+// altitude band is a measurement, not a promise. So this scans the copy for the
+// money, deadline and eligibility rules in `claims.BANNED`, and leaves altitudes
+// and village counts alone. It also pins the caveat, because the sentence that
+// must never be dropped is the one saying this is district information and not a
+// village record.
+var landSandbox = { window: {} };
+try {
+  new vm.Script(fs.readFileSync(path.join(root, "js", "land.js"), "utf8"), {
+    filename: "js/land.js",
+  }).runInNewContext(landSandbox);
+} catch (err) {
+  failures.push("js/land.js could not be loaded: " + err.message);
+}
+
+var LAND = landSandbox.window.MLMP_LAND;
+if (!LAND) {
+  failures.push("js/land.js no longer defines MLMP_LAND, so the district panel has no data");
+} else {
+  var landCopy = [];
+  function collect(node, trail, out) {
+    if (typeof node === "string") {
+      out.push({ where: trail, text: node });
+      return out;
+    }
+    if (Array.isArray(node)) {
+      node.forEach(function (child, i) {
+        collect(child, trail + "[" + i + "]", out);
+      });
+      return out;
+    }
+    if (node && typeof node === "object") {
+      Object.keys(node).forEach(function (key) {
+        if (["url", "id", "short", "sourceId", "sourceIds"].indexOf(key) !== -1) return;
+        collect(node[key], trail + "." + key, out);
+      });
+    }
+    return out;
+  }
+
+  collect(LAND.ZONES, "js/land.js zone", landCopy);
+  LAND.districts().forEach(function (name) {
+    var profile = LAND.forDistrict(name);
+    collect(profile.fruit, "js/land.js " + name + ".fruit", landCopy);
+    if (profile.note) collect(profile.note, "js/land.js " + name + ".note", landCopy);
+  });
+
+  landCopy.forEach(function (item) {
+    claims.BANNED.forEach(function (rule) {
+      if (rule.unless && rule.unless.test(item.text)) return;
+      var hit = rule.re.exec(item.text);
+      if (hit) {
+        failures.push(item.where + " makes a claim this app cannot back: " + rule.name + ' ("' + hit[0] + '")');
+      }
+    });
+  });
+
+  if (!/no village-level land record is held/i.test(LAND.statement())) {
+    failures.push(
+      "js/land.js no longer says plainly that no village-level land record is held, which is the sentence the panel depends on"
+    );
+  }
+
+  var panelCode = "";
+  try {
+    panelCode = fs.readFileSync(path.join(root, "js", "landpanel.js"), "utf8");
+  } catch (_) {
+    failures.push("js/landpanel.js is missing, so the land reference has nowhere to render");
+  }
+  if (panelCode.indexOf("LAND.statement()") === -1) {
+    failures.push("js/landpanel.js no longer shows the district-not-village caveat");
+  }
+  ["land-preview", "about-village"].forEach(function (id) {
+    if (pageIds.indexOf(id) === -1) {
+      failures.push("index.html no longer contains #" + id + ", so the land reference has nowhere to appear");
+    }
+  });
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
