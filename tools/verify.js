@@ -890,6 +890,40 @@ if (!exists(manifestFile)) {
   }
 }
 
+/* ---- 11b. Every screen must announce itself ---- */
+
+// A heading on every screen is how a screen reader user knows the page
+// changed, and how anyone scanning the page finds their place. A new screen
+// added without one is invisible to the first and confusing to the second, so
+// the markup is checked rather than trusted.
+var screenBlocks = html.split(/<section\s+id="screen-/).slice(1);
+screenBlocks.forEach(function (chunk) {
+  var id = (chunk.match(/^([\w-]+)"/) || [])[1] || "(unknown)";
+  var body = chunk.split(/<section\s+id="screen-/)[0];
+  if (!/<h1[\s>]|<h2[\s>]/.test(body)) {
+    failures.push('The "' + id + '" screen has no h1 or h2, so a screen reader has nothing to announce when it opens');
+  }
+});
+
+/* ---- 11c. Every data-i18n key must exist in the messages ---- */
+
+// `data-i18n` is translated at load. A key that is not in the dictionary shows
+// the English fallback in its place and looks translated, so a typo survives
+// review. Checking the page against `MSG.keys()` catches it here instead.
+if (MESSAGES) {
+  var i18nRe = /data-i18n="([^"]+)"/g;
+  var i18nMatch;
+  var seenKeys = [];
+  while ((i18nMatch = i18nRe.exec(html)) !== null) {
+    var key = i18nMatch[1];
+    if (seenKeys.indexOf(key) !== -1) continue;
+    seenKeys.push(key);
+    if (MESSAGES.keys().indexOf(key) === -1) {
+      failures.push('index.html uses data-i18n="' + key + '", which is not a key in js/messages.js');
+    }
+  }
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
