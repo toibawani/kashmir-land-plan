@@ -8,6 +8,29 @@ moves for a correction that does not touch the catalogue; the minor number moves
 when a screen or the sheet format changes; the major number has not moved and
 should not, because the catalogue is still unreviewed.
 
+## [Unreleased]
+
+### Added
+
+- A build check that every screen has a heading and every `data-i18n` key in the
+  page exists in `js/messages.js`.
+- A build check that each manifest icon exists and is the size the manifest
+  claims, read from the PNG header.
+- Lint rules against `document.write` and string-evaluated timers.
+- Tests for a CSV saved by Excel (byte-order mark and CRLF endings), duplicate
+  rows, unknown columns, an over-long reviewer name, and a correction that is
+  only spaces.
+- `CHANGELOG.md`, `SECURITY.md`, an editorconfig, issue templates and an index
+  of the open issues.
+
+### Changed
+
+- Reduced motion is honoured: the app keeps every word and drops the movement.
+- Form controls stay light in a browser set to dark mode.
+- The installed app has a stable manifest id, and the service worker cache name
+  moves to `mlmp-v20` so this round replaces the last one.
+- The local server sends a referrer policy and a permissions policy.
+
 ## [1.0.0] - 2026-11-07
 
 The first frozen release. From here, edits come from real feedback: a marked
