@@ -126,6 +126,8 @@ details and the one remaining cost are in `LIGHTHOUSE.md`.
 Deployment is GitHub Pages through `.github/workflows/pages.yml`, which runs
 `npm test` before it publishes anything.
 
+Which document answers which question is mapped in [`docs/README.md`](docs/README.md).
+
 There is no backend and no key in this repository; what is still worth
 reporting, and how, is in `SECURITY.md`.
 
