@@ -150,3 +150,13 @@ fields.
   all.
 - The questions the app generates stay the farmer's questions to ask.
   A review does not turn them into approved advice.
+
+### What the page itself carries
+
+Every page of every district sheet ends with the district, `page 1 of 2`, and the
+sheet version (`v1.0.0 · catalogue d20337e`). If a sheet is copied, faxed or
+photographed one page at a time, the page still says which district it belongs to
+and which catalogue it came from. When a reply comes back, that version is what
+the importer checks first: a sheet printed from a different catalogue is refused
+with a request to reprint and mark the new copy, because the ticks may be about
+lines the app no longer shows.
