@@ -12,6 +12,16 @@ should not, because the catalogue is still unreviewed.
 
 ### Added
 
+- The Union Territory's land use on the district card — forest, net area sown and
+  irrigated share — labelled as UT figures rather than district ones.
+- A **Copy these details** button that puts the visible card, its caveat and its
+  source links into plain text for a message to the office.
+- A provenance check: every figure the land panel prints must trace to a
+  registered source, and the panel must still render it.
+- A payload budget (`tools/budget.js`) enforced by `npm test`, with the measured
+  sizes recorded in LIGHTHOUSE.md.
+- Static accessibility checks: every button must have readable text or a label,
+  every control a `<label>` or `aria-label`, every image an `alt`.
 - The official 2024-25 district table in the land panel: area, 2011 population,
   blocks, tehsils and revenue villages for each of the twenty districts, with the
   sums checked against the published division and UT totals.
