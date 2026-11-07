@@ -20,6 +20,9 @@ should not, because the catalogue is still unreviewed.
 - Tests for a CSV saved by Excel (byte-order mark and CRLF endings), duplicate
   rows, unknown columns, an over-long reviewer name, and a correction that is
   only spaces.
+- A test that no line on the office visit card states an amount, deadline or
+  rule.
+- `docs/README.md`, a map of which document answers which question.
 - `CHANGELOG.md`, `SECURITY.md`, an editorconfig, issue templates and an index
   of the open issues.
 
