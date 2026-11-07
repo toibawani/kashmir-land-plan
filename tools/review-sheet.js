@@ -388,7 +388,7 @@ function packCsv(district) {
         .join(",")
     );
   });
-  return lines.join("\r\n") + "\r\n";
+  return lines.join("\n") + "\n";
 }
 
 /** The pack cover: the conversation the maintainer is asking for, in words. */
