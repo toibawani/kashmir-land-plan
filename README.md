@@ -63,7 +63,16 @@ does instead is say that the village record is the jamabandi kept by the patwari
 and that the khasra number is what to ask for.
 
 The panel states this above the detail, not under it: published information
-about the district, not a record of your village or plot. A district with no
+about the district, not a record of your village or plot. Each district also carries the
+official counts from the 2024-25 district table — area, 2011 population, blocks,
+tehsils and revenue villages — and the districts of its own division are one tap
+away, so a farmer near a border can read the next district across without
+starting over.
+
+Those counts are not trusted on my word: the test suite adds all twenty rows and
+fails the build unless they equal the published totals (42,241 sq km,
+1,22,67,013 people, 285 blocks, 207 tehsils, 6,832 revenue villages). That check
+caught a transposed area while this was being written. A district with no
 district-specific source says so rather than borrowing the zone description.
 
 ## What it does not do
