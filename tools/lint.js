@@ -77,7 +77,6 @@ function checkJs(file) {
   eachMatch(text, /(^|\n)\t/g, function (m, line) {
     fail(file, line, "is indented with a tab; the project uses spaces");
   });
-}
 
   // `document.write` and a string passed to `setTimeout` both turn a text
   // value into executable markup, which is the shape of most injection bugs a
