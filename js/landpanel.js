@@ -47,6 +47,39 @@
     return '<details class="land-sources"><summary>Where this comes from</summary><ul>' + items.join("") + "</ul></details>";
   }
 
+  /* A plain-text version of what is on screen, so a farmer can paste it into a
+     message to the agriculture office. Nothing is added that is not visible
+     above, and the caveat travels with it. */
+  function summaryText(profile) {
+    var lines = ["Land in " + profile.name, LAND.statement(), ""];
+    profile.zones.forEach(function (zone) {
+      lines.push(zone.label);
+      lines.push("  Height: " + zone.altitude);
+      lines.push("  Rain: " + zone.rain);
+      lines.push("  Soils: " + zone.soils);
+      lines.push("  Field crops: " + zone.field);
+      lines.push("  Fruit: " + zone.fruit);
+    });
+    var a = LAND.admin(profile.name);
+    if (a) {
+      lines.push(
+        "Area " + a.area + " sq km; population " + a.population + " (2011); " +
+          a.blocks + " blocks; " + a.tehsils + " tehsils; " + a.villages + " revenue villages."
+      );
+    }
+    lines.push("Fruit the sources name: " + profile.fruit);
+    if (SOURCES) {
+      var cited = LAND.sourceIds()
+        .map(function (id) {
+          var s = SOURCES.byId(id);
+          return s ? s.short + " " + s.url : "";
+        })
+        .filter(Boolean);
+      if (cited.length) lines.push("", "Sources:", cited.join("\n"));
+    }
+    return lines.join("\n");
+  }
+
   function renderDistrict(name) {
     var host = document.getElementById("land-preview");
     if (!host) return;
@@ -128,6 +161,7 @@
       parts.push("</div>");
     }
 
+    parts.push('<button type="button" class="land-copy" data-copy="1">Copy these details</button>');
     parts.push(sourceLinks());
 
     host.innerHTML = parts.join("");
@@ -174,6 +208,28 @@
     var host = document.getElementById("land-preview");
     if (host) {
       host.addEventListener("click", function (event) {
+        var copy = event.target.closest ? event.target.closest("button[data-copy]") : null;
+        if (copy) {
+          var current = LAND.forDistrict(select.value);
+          if (!current) return;
+          var text = summaryText(current);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+              function () {
+                copy.textContent = "Copied";
+                setTimeout(function () {
+                  copy.textContent = "Copy these details";
+                }, 2000);
+              },
+              function () {
+                copy.textContent = "Select the text above to copy";
+              }
+            );
+          } else {
+            copy.textContent = "Select the text above to copy";
+          }
+          return;
+        }
         var chip = event.target.closest ? event.target.closest("button[data-district]") : null;
         if (!chip) return;
         select.value = chip.getAttribute("data-district");

@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v23";
+var CACHE_VERSION = "mlmp-v24";
 var CORE_CACHE = CACHE_VERSION + "-core";
 var FONT_CACHE = CACHE_VERSION + "-fonts";
 
