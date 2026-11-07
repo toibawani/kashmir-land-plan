@@ -176,7 +176,7 @@
     Poonch: { area: 1674, population: 476835, blocks: 11, tehsils: 6, villages: 178 },
     Pulwama: { area: 1086, population: 560440, blocks: 11, tehsils: 8, villages: 348 },
     Rajouri: { area: 2630, population: 642415, blocks: 19, tehsils: 13, villages: 390 },
-    Ramban: { area: 148, population: 283713, blocks: 11, tehsils: 8, villages: 148 },
+    Ramban: { area: 1329, population: 283713, blocks: 11, tehsils: 8, villages: 148 },
     Reasi: { area: 1719, population: 314667, blocks: 12, tehsils: 9, villages: 259 },
     Samba: { area: 904, population: 318898, blocks: 9, tehsils: 6, villages: 382 },
     Shopian: { area: 312, population: 266215, blocks: 9, tehsils: 7, villages: 237 },

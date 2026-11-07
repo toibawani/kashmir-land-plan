@@ -368,6 +368,50 @@ check(
   /published information/i.test(LAND.statement()) && /not a record/i.test(LAND.statement())
 );
 
+check(
+  "every district has the official counts",
+  LAND.districts().every(function (name) {
+    var a = LAND.admin(name);
+    return a && a.area > 0 && a.population > 0 && a.blocks > 0 && a.tehsils > 0 && a.villages > 0;
+  })
+);
+var landTotals = LAND.totals();
+check("the district areas add up to the published total", landTotals.area === 42241, String(landTotals.area));
+check("the district populations add up to the census total", landTotals.population === 12267013, String(landTotals.population));
+check("the district blocks add up to the published total", landTotals.blocks === 285, String(landTotals.blocks));
+check("the district tehsils add up to the published total", landTotals.tehsils === 207, String(landTotals.tehsils));
+check("the district revenue villages add up to the published total", landTotals.villages === 6832, String(landTotals.villages));
+check(
+  "each division total matches the published figure",
+  LAND.DIVISIONS.Kashmir.reduce(function (n, name) {
+    return n + LAND.admin(name).villages;
+  }, 0) === 3075 &&
+    LAND.DIVISIONS.Jammu.reduce(function (n, name) {
+      return n + LAND.admin(name).villages;
+    }, 0) === 3757
+);
+check(
+  "the two divisions cover every district exactly once",
+  LAND.DIVISIONS.Kashmir.concat(LAND.DIVISIONS.Jammu).length === LAND.districts().length &&
+    LAND.districts().every(function (name) {
+      return LAND.divisionOf(name) !== "";
+    })
+);
+check(
+  "nearby districts are in the same division and never the district itself",
+  LAND.districts().every(function (name) {
+    return LAND.nearby(name).every(function (other) {
+      return other !== name && LAND.divisionOf(other) === LAND.divisionOf(name);
+    });
+  })
+);
+check(
+  "every district has at least one district beside it to look at",
+  LAND.districts().every(function (name) {
+    return LAND.nearby(name).length >= 4;
+  })
+);
+
 console.log("review wording");
 
 var raw = { reviewStatus: "reviewed" };
