@@ -114,7 +114,7 @@ later is one object, not a code change. The Urdu layout is right to left, chosen
 per language rather than per page.
 
 Checks: `tools/verify.js` (references, offline cache, review rules, contrast,
-event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (178
+event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (179
 checks, including the review CSV formats, the sheet version and the field-test
 summary),
 `tools/translation-check.js` (key parity and a review list),
