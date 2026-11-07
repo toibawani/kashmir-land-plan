@@ -1,8 +1,8 @@
-district,entry_id,entry_text,verdict,correction,reviewer_name,office,date
-"Srinagar","beekeeping","Beekeeping as an allied activity","","","","",""
-"Srinagar","fodder_or_pasture","Fodder crop or managed pasture","","","","",""
-"Srinagar","intercrop_or_improve","Improve what you already grow, or add an intercrop","","","","",""
-"Srinagar","kitchen_garden","Kitchen garden and mixed vegetables","","","","",""
-"Srinagar","protected_cultivation","Protected cultivation: polyhouse, mushroom or nursery","","","","",""
-"Srinagar","saffron_karewa","Saffron on suitable upland","","","","",""
-"Srinagar","orchard_temp","Temperate fruit and nut trees","","","","",""
+district,entry_id,entry_text,verdict,correction,reviewer_name,office,date,sheet_version
+"Srinagar","beekeeping","Beekeeping as an allied activity","","","","","","v1.0.0 · catalogue d20337e"
+"Srinagar","fodder_or_pasture","Fodder crop or managed pasture","","","","","","v1.0.0 · catalogue d20337e"
+"Srinagar","intercrop_or_improve","Improve what you already grow, or add an intercrop","","","","","","v1.0.0 · catalogue d20337e"
+"Srinagar","kitchen_garden","Kitchen garden and mixed vegetables","","","","","","v1.0.0 · catalogue d20337e"
+"Srinagar","protected_cultivation","Protected cultivation: polyhouse, mushroom or nursery","","","","","","v1.0.0 · catalogue d20337e"
+"Srinagar","saffron_karewa","Saffron on suitable upland","","","","","","v1.0.0 · catalogue d20337e"
+"Srinagar","orchard_temp","Temperate fruit and nut trees","","","","","","v1.0.0 · catalogue d20337e"

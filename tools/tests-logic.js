@@ -407,7 +407,9 @@ check("clearing removes the answers", FB.count() === 0);
 console.log("prefilled district review sheets");
 
 var PACK_HEADER = csv.PACK_COLUMNS.join(",");
+var PACKV = require(path.join(root, "tools", "lib", "pack-version.js"));
 var packContext = {
+  sheetVersion: PACKV.SHEET_VERSION,
   districts: {
     Baramulla: {
       beekeeping: "Beekeeping as an allied activity",
@@ -416,8 +418,16 @@ var packContext = {
   },
 };
 
-function packResult(row) {
-  return csv.validate([PACK_HEADER.split(","), row], [], packContext);
+/** A row of the eight officer columns; the sheet version is appended here. */
+function packResult(row, sheetVersion) {
+  return csv.validate(
+    [
+      PACK_HEADER.split(","),
+      row.concat([sheetVersion === undefined ? PACKV.SHEET_VERSION : sheetVersion]),
+    ],
+    [],
+    packContext
+  );
 }
 
 var packRight = packResult([
@@ -523,6 +533,56 @@ packError(
   "a formula-shaped correction is refused"
 );
 
+var stalePack = packResult(
+  ["Baramulla", "beekeeping", "Beekeeping as an allied activity", "right", "", "A", "Office", "2026-11-05"],
+  "v0.9.0 · catalogue 0000000"
+);
+check(
+  "a sheet printed from a different catalogue is refused",
+  stalePack.errors.length === 1 && Object.keys(stalePack.records).length === 0,
+  stalePack.errors.join("; ")
+);
+check(
+  "the refusal tells the officer to reprint the sheet",
+  /reprint the sheet/i.test(stalePack.errors.join(" ")),
+  stalePack.errors.join("; ")
+);
+check(
+  "the refusal names both versions, so a maintainer can see which is which",
+  stalePack.errors.join(" ").indexOf("v0.9.0 · catalogue 0000000") !== -1 &&
+    stalePack.errors.join(" ").indexOf(PACKV.SHEET_VERSION) !== -1,
+  stalePack.errors.join("; ")
+);
+
+var noVersion = packResult(
+  ["Baramulla", "beekeeping", "Beekeeping as an allied activity", "right", "", "A", "Office", "2026-11-05"],
+  ""
+);
+check(
+  "a sheet with no version at all is refused",
+  noVersion.errors.length === 1 && /no sheet version/i.test(noVersion.errors[0]),
+  noVersion.errors.join("; ")
+);
+
+var mixedVersions = csv.validate(
+  [
+    PACK_HEADER.split(","),
+    ["Baramulla", "beekeeping", "Beekeeping as an allied activity", "not sure", "", "", "", ""].concat([
+      PACKV.SHEET_VERSION,
+    ]),
+    ["Baramulla", "fodder_or_pasture", "Fodder crop or managed pasture", "not sure", "", "", "", ""].concat([
+      "v0.9.0 · catalogue 0000000",
+    ]),
+  ],
+  [],
+  packContext
+);
+check(
+  "a file stitched from two printouts is refused",
+  mixedVersions.errors.length === 1 && /more than one sheet version/.test(mixedVersions.errors[0]),
+  mixedVersions.errors.join("; ")
+);
+
 var committedSheet = csv.parseCsv(
   fs.readFileSync(path.join(root, "review-sheets", "Baramulla.csv"), "utf8")
 );
@@ -552,7 +612,16 @@ function districtEntries(name) {
   return map;
 }
 
+check(
+  "every committed sheet row carries the current sheet version",
+  committedSheet.slice(1).every(function (row) {
+    return row[row.length - 1] === PACKV.SHEET_VERSION;
+  }),
+  committedSheet.length > 1 ? committedSheet[1][committedSheet[1].length - 1] : "no rows"
+);
+
 var blankImport = csv.validate(committedSheet, [], {
+  sheetVersion: PACKV.SHEET_VERSION,
   districts: { Baramulla: districtEntries("Baramulla") },
 });
 check(

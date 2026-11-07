@@ -49,6 +49,14 @@ function load(files) {
 var win = load(["regions.js", "catalogue.js", "activities.js"]);
 var REGIONS = win.MLMP_REGIONS;
 var ACT = win.MLMP_ACTIVITIES;
+var PACK = require("./lib/pack-version.js");
+
+/**
+ * Every printed page carries this: the release and a digest of the catalogue
+ * text it was made from. It is also a column in every prefilled CSV, and the
+ * importer refuses a file whose version no longer matches.
+ */
+var SHEET_VERSION = PACK.SHEET_VERSION;
 
 /** The prefilled CSV columns. Kept in one place: the importer reads them. */
 var PACK_COLUMNS = [
@@ -60,6 +68,7 @@ var PACK_COLUMNS = [
   "reviewer_name",
   "office",
   "date",
+  "sheet_version",
 ];
 
 function esc(text) {
@@ -93,6 +102,77 @@ function activitiesFor(district) {
     .sort(function (a, b) {
       return a.title.localeCompare(b.title);
     });
+}
+
+/**
+ * Page budgets in millimetres: A4 is 297mm tall with 14mm margins, so 269mm of
+ * paper. The page is filled by estimate and then checked by rendering, because
+ * Chromium cannot print "page X of Y" in a margin box: the only honest page
+ * number is one this file decides and lays out itself.
+ */
+var PAGE_MM = 258;
+var FOOTER_MM = 9;
+var TABLE_HEAD_MM = 9;
+var HOW_TO_MM = 58;
+var FIRST_HEAD_MM = 92;
+
+/** Rough line count for a cell, from the column widths in STYLE below. */
+function estimatedLines(text, perLine) {
+  var length = String(text == null ? "" : text).trim().length;
+  if (!length) return 0;
+  return Math.max(1, Math.ceil(length / perLine));
+}
+
+/** A row's height in millimetres, deliberately on the generous side. */
+function rowHeight(title, note, risk) {
+  return (
+    3.2 +
+    estimatedLines(title, 45) * 4.4 +
+    estimatedLines(note, 52) * 4.0 +
+    estimatedLines("Main risk: " + risk, 58) * 3.6
+  );
+}
+
+/**
+ * Split rows into pages: the first page carries the header block, every page
+ * carries the table head and the footer, and the last page carries "How to
+ * reply".
+ */
+function planPages(heights) {
+  var pages = [];
+  var current = [];
+  var used = 0;
+  heights.forEach(function (height) {
+    var cap =
+      pages.length === 0
+        ? PAGE_MM - FOOTER_MM - FIRST_HEAD_MM - TABLE_HEAD_MM
+        : PAGE_MM - FOOTER_MM - TABLE_HEAD_MM - HOW_TO_MM;
+    if (current.length && used + height > cap) {
+      pages.push(current);
+      current = [];
+      used = 0;
+    }
+    current.push(height);
+    used += height;
+  });
+  pages.push(current);
+  return pages;
+}
+
+/** The line at the foot of every printed page. */
+function footer(district, number, total) {
+  return (
+    '<div class="pgfoot">\n' +
+    "<span>" +
+    esc(district) +
+    "</span>\n<span>page " +
+    number +
+    " of " +
+    total +
+    "</span>\n<span>sheet " +
+    esc(SHEET_VERSION) +
+    "</span>\n</div>\n"
+  );
 }
 
 /**
@@ -135,27 +215,36 @@ var STYLE =
   ".pack .group{border-top:1px solid #c9c4b4;padding-top:5px;margin-top:12px;}" +
   ".pack .zone{font-size:9.5pt;color:#4a4a42;margin:2px 0 6px;}" +
   ".pack a{color:#1e241e;}" +
+  ".pg{display:flex;flex-direction:column;height:" +
+  PAGE_MM +
+  "mm;break-after:page;page-break-after:always;}" +
+  ".pg:last-of-type{break-after:auto;page-break-after:auto;}" +
+  ".pgfoot{margin-top:auto;display:flex;justify-content:space-between;gap:10px;" +
+  "border-top:1px solid #c9c4b4;padding-top:3px;font-size:8pt;color:#4d4d44;}" +
+  ".pgfoot span:first-child{font-weight:bold;color:#1e241e;}" +
   "@page{size:A4;margin:14mm;}" +
   "@media print{body{padding:0;}" +
   "th{background:#eee9dc !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}" +
   ".pack a{text-decoration:none;color:#1e241e;}.no-print{display:none;}}" +
-  "section.sheet{break-before:page;}section.sheet:first-of-type{break-before:auto;}";
+  "section.sheet{break-before:page;page-break-before:always;}" +
+  "section.sheet:first-of-type{break-before:auto;page-break-before:auto;}";
 
 /** The body of one district sheet, reused by the single sheet and print-all. */
-function sheetBody(district) {
+function sheetSections(district) {
   var zone = REGIONS.zoneFor(district) || {};
   var altitudeId = REGIONS.defaultAltitude(district);
   var altitude = REGIONS.altitudeZone(altitudeId) || {};
   var info = REGIONS.district(district) || {};
   var list = activitiesFor(district);
 
-  var rows = list
-    .map(function (a, i) {
-      var note =
-        (a.districtNotes && a.districtNotes[district]) ||
-        (a.zoneNotes && a.zoneNotes[zone.id]) ||
-        "";
-      return (
+  var rows = list.map(function (a, i) {
+    var note =
+      (a.districtNotes && a.districtNotes[district]) ||
+      (a.zoneNotes && a.zoneNotes[zone.id]) ||
+      "";
+    return {
+      height: rowHeight(a.title, note, a.mainRisk),
+      html:
         "<tr>" +
         '<td class="num">' +
         (i + 1) +
@@ -171,24 +260,23 @@ function sheetBody(district) {
         '<td class="box">&#9744;</td>' +
         '<td class="box">&#9744;</td>' +
         '<td class="notes"></td>' +
-        "</tr>"
-      );
-    })
-    .join("");
+        "</tr>",
+    };
+  });
 
-  var table = list.length
-    ? "<table>\n<thead><tr>" +
-      '<th class="num">No.</th><th class="what">What the app shows</th>' +
-      '<th class="tickbox">Right</th><th class="tickbox">Wrong</th><th class="tickbox">Not&nbsp;sure</th>' +
-      '<th class="notes">Correction or note</th>' +
-      "</tr></thead>\n<tbody>" +
-      rows +
-      "</tbody>\n</table>\n"
-    : '<p class="assumed"><strong>The app shows no options for this ground on purpose.</strong> ' +
-      "The catalogue has no data it can stand behind here, so there is nothing to tick " +
-      "except whether that gap is real. Write below if it is not.</p>\n";
+  var tableHead =
+    "<table>\n<thead><tr>" +
+    '<th class="num">No.</th><th class="what">What the app shows</th>' +
+    '<th class="tickbox">Right</th><th class="tickbox">Wrong</th><th class="tickbox">Not&nbsp;sure</th>' +
+    '<th class="notes">Correction or note</th>' +
+    "</tr></thead>\n<tbody>";
 
-  return (
+  var emptyNote =
+    '<p class="assumed"><strong>The app shows no options for this ground on purpose.</strong> ' +
+    "The catalogue has no data it can stand behind here, so there is nothing to tick " +
+    "except whether that gap is real. Write below if it is not.</p>\n";
+
+  var head =
     "<h1>Catalogue review sheet: " +
     esc(district) +
     "</h1>\n" +
@@ -217,8 +305,9 @@ function sheetBody(district) {
     "line is correct for your district. <strong>Wrong</strong> means it should be removed " +
     "or rewritten: write why, and what should replace it. <strong>Not sure</strong> leaves " +
     "it unreviewed, which is a useful answer too.</p>\n" +
-    "<h2>What the app would show for this district</h2>\n" +
-    table +
+    "<h2>What the app would show for this district</h2>\n";
+
+  var howTo =
     '<div class="how">\n<h2>How to reply</h2>\n<ol>' +
     "<li>Write your name, designation, office, the date and your signature at the top.</li>" +
     "<li>Tick right, wrong or not sure beside each activity.</li>" +
@@ -229,8 +318,41 @@ function sheetBody(district) {
     "<p>A line with no tick stays unreviewed, and the app keeps saying so. The app never " +
     "prints an amount, deadline, eligibility rule or yield promise; if a figure comes up, " +
     "it is recorded as a question for the office, not as advice on screen.</p>\n" +
-    "</div>\n"
+    "</div>\n";
+
+  var plan = planPages(
+    rows.map(function (row) {
+      return row.height;
+    })
   );
+  var at = 0;
+
+  return plan
+    .map(function (heights, index) {
+      var slice = rows.slice(at, at + heights.length);
+      at += heights.length;
+      var body = "";
+      if (!list.length) body = emptyNote;
+      else if (slice.length) {
+        body =
+          tableHead +
+          slice
+            .map(function (row) {
+              return row.html;
+            })
+            .join("") +
+          "</tbody>\n</table>\n";
+      }
+      return (
+        '<section class="pg">\n' +
+        (index === 0 ? head : "") +
+        body +
+        (index === plan.length - 1 ? howTo : "") +
+        footer(district, index + 1, plan.length) +
+        "</section>\n"
+      );
+    })
+    .join("");
 }
 
 function page(district) {
@@ -243,8 +365,8 @@ function page(district) {
     "</title>\n<style>" +
     STYLE +
     "</style>\n</head>\n<body>\n" +
-    sheetBody(district) +
-    '<p class="maintainer">For the maintainer, not the officer: the prefilled rows are in ' +
+    sheetSections(district) +
+    '<p class="maintainer no-print">For the maintainer, not the officer: the prefilled rows are in ' +
     "<code>" +
     esc(district) +
     ".csv</code>, and a filled sheet imports with " +
@@ -261,7 +383,7 @@ function packCsv(district) {
   var lines = [PACK_COLUMNS.join(",")];
   activitiesFor(district).forEach(function (a) {
     lines.push(
-      [district, a.id, a.title, "", "", "", "", ""]
+      [district, a.id, a.title, "", "", "", "", "", SHEET_VERSION]
         .map(csvCell)
         .join(",")
     );
@@ -371,7 +493,11 @@ function cover(districts) {
     "<h2>District sheets</h2>\n" +
     groups +
     '\n<div class="maintainer">\n<p><strong>For the maintainer, not the officer.</strong> ' +
-    "Regenerate this pack after any catalogue change with <code>npm run review-sheets</code>; " +
+    "This pack is sheet version <code>" +
+    esc(SHEET_VERSION) +
+    "</code>. It is printed in each page footer and in every prefilled CSV, and the importer " +
+    "refuses a file printed from a different version. Regenerate this pack after any catalogue " +
+    "change with <code>npm run review-sheets</code>; " +
     "the build fails if the pack does not match the catalogue. A filled sheet's CSV has the " +
     "columns <code>" +
     PACK_COLUMNS.join(", ") +
@@ -387,7 +513,7 @@ function cover(districts) {
 function printAll(districts) {
   var sections = districts
     .map(function (name) {
-      return '<section class="sheet">\n' + sheetBody(name) + "</section>\n";
+      return '<section class="sheet">\n' + sheetSections(name) + "</section>\n";
     })
     .join("");
 
