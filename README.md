@@ -51,6 +51,21 @@ if one appears.
 - Speaks English, Hindi and Urdu, with the Urdu screen laid out right to left.
 - Keeps everything on the device. No accounts, no analytics, no backend.
 
+## Land, district by district
+
+The form shows what the published sources say about the district you pick: the
+agro-climatic zones it spans, the height and rainfall bands, the soils, the field
+crops and the fruit, each with the document behind it. The About screen answers
+the village question plainly: the 2011 census counted 6,314 villages in the
+Union Territory, and there are 6,832 revenue villages across 1,646 patwar
+halqas. This app holds a record of none of them and will not invent one; what it
+does instead is say that the village record is the jamabandi kept by the patwari,
+and that the khasra number is what to ask for.
+
+The panel states this above the detail, not under it: published information
+about the district, not a record of your village or plot. A district with no
+district-specific source says so rather than borrowing the zone description.
+
 ## What it does not do
 
 - It does not decide whether a scheme applies to you, or what it pays.
