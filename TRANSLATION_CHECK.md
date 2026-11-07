@@ -126,6 +126,32 @@ Every string the app shows on the critical path, in the three languages it offer
 | `common.liveWeather` | Live weather | लाइव मौसम | لائیو موسم |
 | `common.askOfficer` | Ask the officer | अधिकारी से पूछें | افسر سے پوچھیں |
 | `common.roughEstimate` | Rough estimate, confirm locally | अनुमानित, स्थानीय रूप से पुष्टि करें | اندازہ، مقامی طور پر تصدیق کریں |
+| `land.title` | Land in {district} | {district} की ज़मीन | {district} کی زمین |
+| `land.summary` | Land in {district}: what the published sources say | {district}: प्रकाशित स्रोत क्या कहते हैं | {district}: شائع شدہ ذرائع کیا کہتے ہیں |
+| `land.height` | Height | ऊँचाई | اونچائی |
+| `land.rain` | Rain | वर्षा | بارش |
+| `land.soils` | Soils | मिट्टी | مٹی |
+| `land.crops` | Field crops | खेत की फ़सलें | کھیت کی فصلیں |
+| `land.fruit` | Fruit | फल | پھل |
+| `land.glance` | At a glance | एक नज़र में | ایک نظر میں |
+| `land.area` | Area | क्षेत्रफल | رقبہ |
+| `land.population` | Population | जनसंख्या | آبادی |
+| `land.blocks` | Blocks | ब्लॉक | بلاک |
+| `land.tehsils` | Tehsils | तहसीलें | تحصیلیں |
+| `land.villages` | Revenue villages | राजस्व गाँव | ریونیو گاؤں |
+| `land.utTitle` | Across the Union Territory | पूरे केंद्र शासित प्रदेश में | پورے مرکز کے زیر انتظام علاقے میں |
+| `land.forest` | Under forest | वन क्षेत्र | جنگلات |
+| `land.sown` | Net area sown | शुद्ध बोया गया क्षेत्र | خالص بویا گیا رقبہ |
+| `land.irrigated` | Irrigated | सिंचित | آبپاش |
+| `land.nearby` | Other districts in the {division} division | {division} संभाग के अन्य ज़िले | {division} ڈویژن کے دیگر اضلاع |
+| `land.division.Kashmir` | Kashmir | कश्मीर | کشمیر |
+| `land.division.Jammu` | Jammu | जम्मू | جموں |
+| `land.copy` | Copy these details | ये विवरण कॉपी करें | یہ تفصیل کاپی کریں |
+| `land.copied` | Copied | कॉपी हो गया | کاپی ہو گئی |
+| `land.copyManual` | Select the text above to copy | कॉपी करने के लिए ऊपर का पाठ चुनें | کاپی کرنے کے لیے اوپر کا متن منتخب کریں |
+| `land.sources` | Where this comes from | यह जानकारी कहाँ से है | یہ معلومات کہاں سے ہیں |
+| `land.villageCounts` | The Union Territory has {villages} villages in the 2011 census, {revenue} revenue villages and {halqas} patwar halqas. | 2011 की जनगणना में केंद्र शासित प्रदेश में {villages} गाँव, {revenue} राजस्व गाँव और {halqas} पटवार हल्के हैं। | 2011 کی مردم شماری میں مرکز کے زیر انتظام علاقے میں {villages} گاؤں، {revenue} ریونیو گاؤں اور {halqas} پٹوار حلقے ہیں۔ |
+| `land.villageSource` | Village counts: | गाँवों की गिनती: | گاؤں کی گنتی: |
 
 ## Direction
 
