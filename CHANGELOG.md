@@ -12,6 +12,11 @@ should not, because the catalogue is still unreviewed.
 
 ### Added
 
+- The official 2024-25 district table in the land panel: area, 2011 population,
+  blocks, tehsils and revenue villages for each of the twenty districts, with the
+  sums checked against the published division and UT totals.
+- Same-division districts as tappable chips under the land card, each switching
+  the district without leaving the form.
 - A district land reference (`js/land.js`): the zones each district spans, height
   and rainfall bands, soils, field crops and fruit, each tied to a registered
   source, shown under the district picker and cited with its documents.
