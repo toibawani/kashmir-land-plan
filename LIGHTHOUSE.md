@@ -45,3 +45,20 @@ them, would close it; neither was done in this pass.
 
 The 360px audit (`npm run phone-check`) is separate and checks layout width and
 tap targets on every screen, which Lighthouse only samples on the home screen.
+
+## The payload, measured
+
+`npm test` now enforces these numbers (`tools/budget.js`). They are gzip -9
+sizes of the files `index.html` references, measured on 7 November 2026:
+
+| Part | Size | Budget |
+| --- | --- | --- |
+| JavaScript (22 files) | 111.0 KB | 119.9 KB |
+| CSS (1 file) | 14.9 KB | 16.1 KB |
+| index.html | 11.1 KB | 12.0 KB |
+| **Total first visit** | **137.1 KB** | |
+
+The budgets are the measured size plus eight per cent, so a feature may not
+quietly grow the download. Raising one means editing the number here and in
+`tools/budget.js` with the reason. Images and the catalogue's data are excluded,
+because they are loaded after the first paint or not at all.
