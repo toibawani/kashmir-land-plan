@@ -220,3 +220,15 @@ it.
 the ones that share a border. Division membership is printed in the official
 table; adjacency would have to be asserted from memory, and a wrong neighbour is
 worse than no neighbour. The wording says "same division" for that reason.
+
+**On village names, for now.** The counts are in, the names are not. Importing a
+single district's list would have made the feature look finished while covering
+one twentieth of the Union Territory, so the panel states the counts and the
+office that holds the record instead. The import waits for a verified,
+machine-readable list whose row count reconciles to the official table — the
+same rule the district table is already held to.
+
+**On provenance as a test.** A comment saying "cite your sources" changes
+nothing. The build now fails if a figure group loses its registered source, if
+the panel stops rendering one, or if a district row has a blank where a number
+should be. The rule is only real when it can fail.
