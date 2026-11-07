@@ -51,6 +51,7 @@ function send(res, status, body, type) {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
+    "Cache-Control": "no-cache",
   });
   res.end(body);
 }
@@ -105,6 +106,7 @@ http
             "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
+    "Cache-Control": "no-cache",
           });
           res.end(req.method === "HEAD" ? undefined : zipped);
         });
@@ -118,6 +120,7 @@ http
         "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "geolocation=(), camera=(), microphone=(), payment=()",
+    "Cache-Control": "no-cache",
       });
       res.end(req.method === "HEAD" ? undefined : body);
     });
