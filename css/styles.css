@@ -3412,3 +3412,10 @@ select:focus {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+/* The skip link is the first thing a keyboard user needs, so it gets the ring
+   whether or not the browser decides the focus came from the keyboard. */
+.skip-link:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
