@@ -72,7 +72,18 @@ starting over.
 Those counts are not trusted on my word: the test suite adds all twenty rows and
 fails the build unless they equal the published totals (42,241 sq km,
 1,22,67,013 people, 285 blocks, 207 tehsils, 6,832 revenue villages). That check
-caught a transposed area while this was being written. A district with no
+caught a transposed area while this was being written.
+
+Below the district detail the card carries the Union Territory's own land use —
+forest, net area sown, irrigated share — labelled as UT figures so they are
+never mistaken for the district's or the field's. And a **Copy these details**
+button puts the visible card, caveat and source links into plain text, ready to
+paste into a message to the agriculture office.
+
+The download is held to a measured budget: `tools/budget.js` fails the build if
+the referenced JavaScript, CSS or HTML grows past the size recorded in
+[LIGHTHOUSE.md](LIGHTHOUSE.md), so weight stays a decision rather than a drift.
+At the time of writing a first visit is 137 KB gzipped. A district with no
 district-specific source says so rather than borrowing the zone description.
 
 ## What it does not do
