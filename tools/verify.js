@@ -829,6 +829,67 @@ if (MESSAGES) {
   }
 }
 
+/* ---- 7b. The manifest must describe icons that exist ---- */
+
+// A manifest that names a missing icon, or declares a size the file does not
+// have, is the difference between an install prompt on a farmer's phone and a
+// silent refusal to install. The PNG dimensions are read from the file header
+// rather than trusted, because the two drift apart when an icon is regenerated
+// and only one of the two places is updated.
+function isPng(buf) {
+  var signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (buf.length < 24) return false;
+  for (var i = 0; i < signature.length; i += 1) {
+    if (buf[i] !== signature[i]) return false;
+  }
+  return true;
+}
+
+var manifestFile = path.join(root, "manifest.webmanifest");
+if (!exists(manifestFile)) {
+  failures.push("manifest.webmanifest is missing, so the app cannot be installed");
+} else {
+  var manifest = null;
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestFile, "utf8"));
+  } catch (err) {
+    failures.push("manifest.webmanifest is not valid JSON: " + err.message);
+  }
+  if (manifest) {
+    ["name", "short_name", "start_url", "display", "theme_color", "background_color"].forEach(function (field) {
+      if (!manifest[field]) failures.push("manifest.webmanifest has no " + field + ", which the install prompt needs");
+    });
+    (manifest.icons || []).forEach(function (icon) {
+      var iconPath = path.join(root, icon.src || "");
+      if (!icon.src || !exists(iconPath)) {
+        failures.push("manifest.webmanifest names " + (icon.src || "(nothing)") + " but it is not on disk");
+        return;
+      }
+      var declared = /^(\d+)x(\d+)$/.exec(String(icon.sizes || ""));
+      if (!declared) {
+        // "any" is legitimate for the SVG. Nothing to measure.
+        if (String(icon.sizes) !== "any") {
+          failures.push("manifest.webmanifest gives " + icon.src + ' the sizes value "' + icon.sizes + '", which is neither WxH nor "any"');
+        }
+        return;
+      }
+      if (!/\.png$/i.test(icon.src)) return;
+      var buf = fs.readFileSync(iconPath);
+      if (!isPng(buf)) {
+        failures.push("manifest.webmanifest names " + icon.src + " as a PNG but the file is not one");
+        return;
+      }
+      var width = buf.readUInt32BE(16);
+      var height = buf.readUInt32BE(20);
+      if (width !== Number(declared[1]) || height !== Number(declared[2])) {
+        failures.push(
+          "manifest.webmanifest declares " + icon.src + " as " + icon.sizes + " but the file is " + width + "x" + height
+        );
+      }
+    });
+  }
+}
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
