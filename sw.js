@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v24";
+var CACHE_VERSION = "mlmp-v25";
 var CORE_CACHE = CACHE_VERSION + "-core";
 var FONT_CACHE = CACHE_VERSION + "-fonts";
 
@@ -156,7 +156,11 @@ function networkFirstAsset(request) {
 }
 
 function networkFirstPage(request) {
-  return fetch(request)
+  // `no-store` bypasses the browser's own HTTP cache as well as the service
+  // worker. Without it a page cached before the last deploy can be served as if
+  // it were current, and the app looks like it ignored the update. The network
+  // is still the first choice; the stored copy remains the offline fallback.
+  return fetch(request, { cache: "no-store" })
     .then(function (response) {
       if (response && response.ok) {
         var copy = response.clone();
