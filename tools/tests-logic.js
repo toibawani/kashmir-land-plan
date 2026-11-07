@@ -370,6 +370,27 @@ rejectRow("kitchen_garden,accept,=cmd,Office,Officer,2026-11-05,", "a formula-sh
 var badHeader = csv.validate([["activity_id", "decision"], ["kitchen_garden", "accept"]], CATALOGUE.ids);
 check("a missing header column is refused", badHeader.errors.length > 0);
 
+// A sheet exported from Excel arrives with a byte-order mark and CRLF endings.
+// Both are ordinary, and neither may be mistaken for a broken file.
+var bomRows = csv.parseCsv(
+  "\uFEFF" +
+    csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,")
+);
+check("a byte-order mark does not hide the header", bomRows[0][0] === "activity_id", bomRows[0][0]);
+check("a file saved with a byte-order mark still imports", csv.validate(bomRows, CATALOGUE.ids).errors.length === 0);
+
+var crlfRows = csv.parseCsv(
+  csvRow("kitchen_garden,accept,A Review Officer,District Agriculture Office,Agriculture Extension Officer,2026-11-05,").replace(
+    /\n/g,
+    "\r\n"
+  )
+);
+check(
+  "windows line endings import like unix ones",
+  csv.validate(crlfRows, CATALOGUE.ids).errors.length === 0 && crlfRows.length === 2,
+  String(crlfRows.length)
+);
+
 console.log("field-test answers");
 
 check("three questions are defined", FB.questions().length === 3);
