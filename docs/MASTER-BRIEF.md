@@ -159,3 +159,25 @@ The ten outcomes hold, `npm test` is green on a clean clone, CI is green, the
 Pages deployment was opened in a browser at 360px and 1280px, offline reload
 works after install, the print sheet is one page, and every figure on every
 screen has a source a sceptical farmer could check.
+
+## Status against this brief
+
+Written 7 November 2026, against the tree it describes. Statuses are what was
+checked, not what was attempted.
+
+| # | Outcome | Status |
+| --- | --- | --- |
+| 1 | A village name can be found | **Not done.** No verified village list was obtained; the gap and its publishers are in NEEDS_SOURCES.md. |
+| 2 | No village claims agronomy | Holds: no village rows exist to claim anything. |
+| 3 | Every number is traceable | Done for the land panel (build check 11e). Other screens still rely on the catalogue's own source field. |
+| 4 | Survives 360px | Partly checked before this round; the new rows were not viewed at 360px or 320px. |
+| 5 | Offline is indistinguishable | Not re-run after the land panel and copy button landed. |
+| 6 | Accessibility | Static checks landed (names, labels, alt). No axe run, no keyboard walk-through this round. |
+| 7 | Sheet is the artefact | Holds: 42 files, one page each, checked by `npm test`. |
+| 8 | Three languages, one label | Parity is enforced by `tools/translation-check.js`; the new land copy is English only. |
+| 9 | CI is the referee | Stronger: provenance, payload and accessibility checks are in `npm test`. Clean-clone and offline-suite runs not repeated this round. |
+| 10 | A stranger can contribute | Unchanged; not re-walked. |
+
+The honest summary: the machine-checkable outcomes improved, the human ones
+(360px rendering, keyboard paths, a clean-clone run) were not re-tested, and the
+largest outcome — the village directory — is still blocked on a data file.
