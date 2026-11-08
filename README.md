@@ -92,7 +92,7 @@ The card's labels, headings, buttons and count sentence are translated into Hind
 and Urdu and switch with the language selector. The district sentences themselves
 — zones, soils, crops and the caveat — remain English until a native speaker
 checks them, because a rewritten caveat that weakens the warning would be worse
-than an English one. `TRANSLATION_CHECK.md` lists all 26 new strings. A district with no
+than an English one. `TRANSLATION_CHECK.md` lists every land string. A district with no
 district-specific source says so rather than borrowing the zone description.
 
 ## What it does not do

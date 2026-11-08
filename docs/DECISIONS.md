@@ -250,8 +250,8 @@ to protect. Without a named reviewer, rewriting it is a risk with no upside.
 
 **What it costs:** an Urdu reader gets a half-English card: translated chrome
 around English agronomy. That is visibly incomplete, which is the honest state
-of the work, and `TRANSLATION_CHECK.md` lists the 26 interface strings waiting
-for a reviewer in the same table as the rest.
+of the work, and `TRANSLATION_CHECK.md` lists every land string waiting for a reviewer in the
+same table as the rest.
 
 **What would change it:** a fluent speaker, named and dated, who reads the
 district sentences and the caveat. Then the prose moves into `messages.js` the
