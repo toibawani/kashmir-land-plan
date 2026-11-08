@@ -3443,3 +3443,20 @@ select:focus {
 .land-actions > button {
   min-height: 44px;
 }
+
+/* Tehsil names are reference text, not controls, so they wrap as small chips
+   rather than a list that pushes the card down a screen. */
+.land-tehsils {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.land-tehsils li {
+  padding: 4px 9px;
+  border: 1px solid #cfd8cf;
+  border-radius: 999px;
+  font-size: 14px;
+}

@@ -147,6 +147,24 @@
       parts.push("</dl>");
     }
 
+    var TEH = window.MLMP_TEHSILS;
+    var tehsilNames = TEH ? TEH.forDistrict(profile.name) : [];
+    if (tehsilNames.length) {
+      parts.push("<h3>" + esc(t("land.tehsils")) + "</h3>");
+      parts.push(
+        '<ul class="land-tehsils">' +
+          tehsilNames.map(function (tehsil) { return "<li>" + esc(tehsil) + "</li>"; }).join("") +
+          "</ul>"
+      );
+      parts.push(
+        '<p class="option-note">From the district administration\'s own tehsil list, counted against the official table above.</p>'
+      );
+    } else {
+      parts.push(
+        '<p class="option-note">The names of this district\'s tehsils are not held here. The count above is from the official table; the tehsil office will tell you which one you are in.</p>'
+      );
+    }
+
     var use = LAND.coverage().landUse;
     if (use) {
       parts.push("<h3>" + esc(t("land.utTitle")) + "</h3>");
