@@ -1102,6 +1102,26 @@ check(
   TEHSIL_NAMES.covered().every(function (name) { return LAND.districts().indexOf(name) !== -1; })
 );
 
+
+var SRC = (function () {
+  var sandbox = { window: {} };
+  new (require("vm").Script)(
+    require("fs").readFileSync(require("path").join(root, "js", "sources.js"), "utf8")
+  ).runInNewContext(sandbox);
+  return sandbox.window.MLMP_SOURCES;
+})();
+check(
+  "every tehsil list cites a registered page",
+  TEHSIL_NAMES.covered().every(function (name) {
+    var source = SRC.byId(TEHSIL_NAMES.sourceId(name));
+    return !!source && /^https:\/\//.test(source.url);
+  })
+);
+check(
+  "a district with no citation reports none",
+  TEHSIL_NAMES.sourceId("Anantnag") === null
+);
+
 console.log("");
 
 if (failures.length) {

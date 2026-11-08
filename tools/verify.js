@@ -1377,11 +1377,11 @@ var TEHSILS = tehsilSandbox.window.MLMP_TEHSILS;
 if (!TEHSILS) {
   failures.push("js/tehsils.js no longer defines MLMP_TEHSILS");
 } else {
-  if (!SOURCES.byId(TEHSILS.sourceId())) {
-    failures.push("js/tehsils.js cites " + TEHSILS.sourceId() + ", which is not in js/sources.js");
-  }
   TEHSILS.covered().forEach(function (name) {
     var names = TEHSILS.forDistrict(name);
+    if (!SOURCES.byId(TEHSILS.sourceId(name))) {
+      failures.push("js/tehsils.js has no registered citation for " + name);
+    }
     if (names.length !== LAND.admin(name).tehsils) {
       failures.push(
         "js/tehsils.js gives " + name + " " + names.length + " names, but the official table says " + LAND.admin(name).tehsils
