@@ -1055,6 +1055,23 @@ if (LAND) {
   });
 }
 
+/* ---- 11g. The page must not reuse an id ---- */
+
+// A duplicated id makes `for=`, `aria-labelledby` and `#anchor` all resolve to
+// whichever element the browser met first, so a label can describe the wrong
+// field and a skip link can land halfway down the page. Browsers do not warn.
+var idSeen = {};
+var dupeRe = /\bid="([^"]+)"/g;
+var dupeMatch;
+while ((dupeMatch = dupeRe.exec(html)) !== null) {
+  if (idSeen[dupeMatch[1]]) {
+    failures.push(
+      'index.html uses id="' + dupeMatch[1] + '" more than once, so a label or anchor can point at the wrong element'
+    );
+  }
+  idSeen[dupeMatch[1]] = true;
+}
+
 /* ---- 11f. Every control must have a name, and every image its alt ---- */
 
 // A screen reader announces a control by its accessible name. A button whose
