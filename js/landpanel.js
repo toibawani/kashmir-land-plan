@@ -113,7 +113,7 @@
     }
 
     var parts = [];
-    parts.push("<h2>" + esc(t("land.title", { district: profile.name })) + "</h2>");
+    parts.push('<h2 tabindex="-1">' + esc(t("land.title", { district: profile.name })) + "</h2>");
     parts.push('<p class="land-caveat">' + esc(LAND.statement()) + "</p>");
 
     profile.zones.forEach(function (zone) {

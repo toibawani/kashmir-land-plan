@@ -3419,3 +3419,14 @@ select:focus {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
+
+/* Jumping to another district replaces the card, so focus moves to its heading
+   to tell a keyboard or screen-reader user that the content changed. A heading
+   is not focusable by default, hence tabindex="-1" in the panel; this is the
+   only rule that needs to show where the reader has landed. */
+#land-preview h2:focus,
+#about-village h2:focus {
+  outline: 3px solid #1f4d1f;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
