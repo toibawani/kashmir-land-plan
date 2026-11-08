@@ -1359,7 +1359,45 @@ if (!cacheVersion) {
   failures.push("sw.js CACHE_VERSION is \"" + cacheVersion + "\"; it should look like mlmp-v31");
 }
 
+/* ---- 11s. Tehsil names must reconcile to the official table ---- */
+
+// The rule for every district row applies to the tehsil names too: the number of
+// names must equal the official count, every name must be present, and the list
+// must cite a registered document. A list that is one short is not a rounding
+// error, it is a farmer sent to the wrong office.
+var tehsilSandbox = { window: {} };
+try {
+  new vm.Script(fs.readFileSync(path.join(root, "js", "tehsils.js"), "utf8"), {
+    filename: "js/tehsils.js",
+  }).runInNewContext(tehsilSandbox);
+} catch (err) {
+  failures.push("js/tehsils.js could not be loaded: " + err.message);
+}
+var TEHSILS = tehsilSandbox.window.MLMP_TEHSILS;
+if (!TEHSILS) {
+  failures.push("js/tehsils.js no longer defines MLMP_TEHSILS");
+} else {
+  if (!SOURCES.byId(TEHSILS.sourceId())) {
+    failures.push("js/tehsils.js cites " + TEHSILS.sourceId() + ", which is not in js/sources.js");
+  }
+  TEHSILS.covered().forEach(function (name) {
+    var names = TEHSILS.forDistrict(name);
+    if (names.length !== LAND.admin(name).tehsils) {
+      failures.push(
+        "js/tehsils.js gives " + name + " " + names.length + " names, but the official table says " + LAND.admin(name).tehsils
+      );
+    }
+    names.forEach(function (tehsil) {
+      if (!tehsil || !tehsil.trim()) {
+        failures.push("js/tehsils.js has a blank tehsil name for " + name);
+      }
+    });
+  });
+}
+
 /* ---- Report ---- */
+
+
 
 
 
