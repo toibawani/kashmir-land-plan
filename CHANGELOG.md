@@ -12,12 +12,32 @@ should not, because the catalogue is still unreviewed.
 
 Nothing yet.
 
+## [1.2.1] - 2026-11-08
+
+### Added
+
+- Tehsil names for six districts — Kupwara (16), Budgam (9), Srinagar (7),
+  Reasi (9), Kathua (11) and Poonch (6) — each counted against the official table
+  and cited to its own district page. Every other district says its names are not
+  held, and the build refuses a list that does not reconcile or carries no
+  citation.
+- `npm run offline`: drives Chrome over the DevTools protocol, switches the
+  browser offline, reloads and checks what rendered. It passes on `mlmp-v33`,
+  with five step controls, 36 headings, the About counts and the banner present
+  with no network.
+- `npm run offline -- --throttle`: the same run under 4x CPU and fast 3G, which
+  measures 612 ms to largest contentful paint against a 2.0 s target.
+
+### Fixed
+
+- `js/tehsils.js` shipped once without a script tag, so the card silently said no
+  names were held. A build check now refuses a data file that is loaded nowhere or
+  left out of the offline list.
+- The precache check was confirmed to fail when an entry is removed, rather than
+  passing against the list it was comparing.
+
 ## [1.2.0] - 2026-11-08
 
-- Tehsil names for six districts — Kupwara, Budgam, Srinagar, Reasi, Kathua and
-  Poonch — each cited to its own district page and counted against the official
-  table. Every other district says its names are not held, and build checks refuse
-  a list that does not reconcile or has no citation.
 
 ### Fixed
 
