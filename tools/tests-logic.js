@@ -1071,6 +1071,37 @@ check(
     })
 );
 
+
+console.log("tehsil names");
+
+var TEHSIL_NAMES = (function () {
+  var sandbox = { window: {} };
+  new (require("vm").Script)(
+    require("fs").readFileSync(require("path").join(root, "js", "tehsils.js"), "utf8")
+  ).runInNewContext(sandbox);
+  return sandbox.window.MLMP_TEHSILS;
+})();
+
+check("the tehsil file loads", !!TEHSIL_NAMES);
+TEHSIL_NAMES.covered().forEach(function (name) {
+  var names = TEHSIL_NAMES.forDistrict(name);
+  check(
+    "pin the tehsil names to the official count: " + name,
+    names.length === LAND.admin(name).tehsils,
+    names.length + " names vs " + LAND.admin(name).tehsils + " in the table"
+  );
+  check(
+    "every tehsil name is present and unique: " + name,
+    names.every(function (n) { return typeof n === "string" && n.trim().length > 2; }) &&
+      new Set(names).size === names.length
+  );
+});
+check("a district with no checked list holds no names", TEHSIL_NAMES.forDistrict("Anantnag").length === 0);
+check(
+  "every covered district is a district in js/land.js",
+  TEHSIL_NAMES.covered().every(function (name) { return LAND.districts().indexOf(name) !== -1; })
+);
+
 console.log("");
 
 if (failures.length) {
