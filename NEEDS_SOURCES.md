@@ -127,8 +127,10 @@ already shown from the official table (207 tehsils in the Union Territory).
 different layout, and several are scanned images. A list stitched from memory
 would look authoritative and be wrong in exactly the way this project refuses.
 
-**Progress, 8 November 2026.** Kupwara shipped: the district administration's page
-lists sixteen names, the official table gives sixteen, and `js/tehsils.js` holds
-them with the citation. The other nineteen show the count and say their tehsil
-names are not held here; none is filled in from memory. A build check refuses a
-list whose length does not equal the official count.
+**Progress, 8 November 2026.** Six districts ship: Kupwara (16), Budgam (9),
+Srinagar (7), Reasi (9), Kathua (11) and Poonch (6). Each page's list was counted
+against the official table and each district carries its own citation in
+`js/sources.js`. The other fourteen show the count and say their tehsil names are
+not held here; none is filled in from memory. A build check refuses a list whose
+length does not equal the official count, and another refuses a list with no
+registered source.

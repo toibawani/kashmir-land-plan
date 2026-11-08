@@ -14,9 +14,10 @@ Nothing yet.
 
 ## [1.2.0] - 2026-11-08
 
-- Kupwara's sixteen tehsil names, from the district administration's page and
-  counted against the official table; every other district says its names are not
-  held, and a build check refuses a list that does not reconcile.
+- Tehsil names for six districts — Kupwara, Budgam, Srinagar, Reasi, Kathua and
+  Poonch — each cited to its own district page and counted against the official
+  table. Every other district says its names are not held, and build checks refuse
+  a list that does not reconcile or has no citation.
 
 ### Fixed
 

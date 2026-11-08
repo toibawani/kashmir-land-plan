@@ -74,10 +74,10 @@ fails the build unless they equal the published totals (42,241 sq km,
 1,22,67,013 people, 285 blocks, 207 tehsils, 6,832 revenue villages). That check
 caught a transposed area while this was being written.
 
-Kupwara's card also lists its sixteen tehsils, taken from the district
-administration's own page and counted against the official figure. The other
-nineteen say plainly that their tehsil names are not held here rather than
-guessing at them.
+Six districts also list their tehsils — Kupwara, Budgam, Srinagar, Reasi, Kathua
+and Poonch — each from the district administration's own page, counted against the
+official figure and linked to that page. The other fourteen say plainly that their
+tehsil names are not held here rather than guessing at them.
 
 Below the district detail the card carries the Union Territory's own land use —
 forest, net area sown, irrigated share — labelled as UT figures so they are
