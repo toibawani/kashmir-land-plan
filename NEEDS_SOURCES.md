@@ -116,3 +116,19 @@ row.
 **Who could close it.** The Revenue Department, by publishing the SRO annexures
 as data rather than PDFs; or the district NIC pages, which already hold the
 halqa-level table for at least two districts.
+
+## Tehsil names per district
+
+**What is missing.** The names of the tehsils each district contains, so the land
+card can show a farmer which tehsil office holds their record. The counts are
+already shown from the official table (207 tehsils in the Union Territory).
+
+**Why it is slow.** Each district publishes its list on its own NIC page, in a
+different layout, and several are scanned images. A list stitched from memory
+would look authoritative and be wrong in exactly the way this project refuses.
+
+**Progress, 8 November 2026.** Kupwara shipped: the district administration's page
+lists sixteen names, the official table gives sixteen, and `js/tehsils.js` holds
+them with the citation. The other nineteen show the count and say their tehsil
+names are not held here; none is filled in from memory. A build check refuses a
+list whose length does not equal the official count.

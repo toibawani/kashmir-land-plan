@@ -14,6 +14,10 @@ Nothing yet.
 
 ## [1.2.0] - 2026-11-08
 
+- Kupwara's sixteen tehsil names, from the district administration's page and
+  counted against the official table; every other district says its names are not
+  held, and a build check refuses a list that does not reconcile.
+
 ### Fixed
 
 - The land card's district heading had no `tabindex`, so the focus move after a
