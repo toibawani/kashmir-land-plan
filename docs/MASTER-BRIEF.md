@@ -183,7 +183,7 @@ a measurement confirms it, not that work was attempted.
 | Workstream | State |
 | --- | --- |
 | 1. Village directory | Not started: the research of 8 November 2026 found no machine-readable revenue-village list, and Census/LGD lists count a different series (6,553 / 6,857 vs 6,832). Issue 004 has the sources and the closing conditions. |
-| 2. Tehsil narrowing | Partial: six districts ship names that reconcile to the official count and carry their own citation (Kupwara 16, Budgam 9, Srinagar 7, Reasi 9, Kathua 11, Poonch 6). The other fourteen show the count and say the names are not held. |
+| 2. Tehsil narrowing | Partial: thirteen districts ship names that reconcile to the official count and carry their own citation (Kupwara 16, Budgam 9, Srinagar 7, Reasi 9, Kathua 11, Poonch 6). The other seven show the count and say the names are not held. |
 | 3. Catalogue depth | Not started this round. |
 | 4. Frontend craft | Partial: payload is measured and enforced (140.4 KB), 320px and 360px are measured, and desktop LCP is 268 ms. The Moto G4 profile was not re-run. |
 | 5. Translation | Partial: the land interface, banner, skip link and menu labels are translated in three languages with placeholder parity enforced; the district prose, catalogue text and offline panel remain English. |

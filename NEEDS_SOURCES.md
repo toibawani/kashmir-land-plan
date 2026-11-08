@@ -130,7 +130,7 @@ would look authoritative and be wrong in exactly the way this project refuses.
 **Progress, 8 November 2026.** Six districts ship: Kupwara (16), Budgam (9),
 Srinagar (7), Reasi (9), Kathua (11) and Poonch (6). Each page's list was counted
 against the official table and each district carries its own citation in
-`js/sources.js`. The other fourteen show the count and say their tehsil names are
+`js/sources.js`. The other seven show the count and say their tehsil names are
 not held here; none is filled in from memory. A build check refuses a list whose
 length does not equal the official count, and another refuses a list with no
 registered source.

@@ -8,8 +8,12 @@
  * whose page lists a different number is left out rather than trimmed to fit,
  * because a farmer sent to the wrong tehsil office loses a day.
  *
- * Six districts have a published list that reconciles so far. The other fourteen are not "coming later" in the interface: the card says
- * plainly that their names are not held here, and shows the official count.
+ * Thirteen districts have a published list that reconciles. The other seven
+ * are not "coming later" in the interface: the card says plainly that their
+ * names are not held here, and shows the official count. Baramulla is one of
+ * them on purpose: its page lists eighteen names, but one cell is truncated to
+ * "Singh" and Rafiabad is absent, so a matching count would still send someone
+ * to the wrong office.
  *
  * Interface
  *   MLMP_TEHSILS.forDistrict(name)  the names, or an empty array
@@ -21,8 +25,22 @@
   "use strict";
 
   var TEHSILS = {
+    Anantnag: [
+      "Anantnag",
+      "Anantnag East (Mattan)",
+      "Bijbehara",
+      "Dooru",
+      "Kokernag",
+      "Larnoo",
+      "Pahalgam",
+      "Qazigund",
+      "Sallar",
+      "Shangus",
+      "Shahabad Bala",
+      "Srigufwara",
+    ],
     Budgam: [
-      "Budgam",
+"Budgam",
       "Beerwah",
       "Chadoora",
       "Khansahib",
@@ -32,8 +50,50 @@
       "Narbal",
       "Magam",
     ],
+    Doda: [
+      "Doda",
+      "Bhaderwah",
+      "Gundana",
+      "Bhalla",
+      "Thathri",
+      "Bhella",
+      "Kasthigarh",
+      "Assar",
+      "Mohalla",
+      "Gandoh",
+      "Phagsoo",
+      "Chilli Pingal",
+      "Kahara",
+      "Marmat",
+      "Bharat Bagla",
+      "Chirala",
+      "Bhagwah",
+    ],
+    Jammu: [
+      "Akhnoor",
+      "Arnia",
+      "Bahu",
+      "Bhalwal",
+      "Bishnah",
+      "Chowki Choura",
+      "Dansal",
+      "Jammu",
+      "Jammu North",
+      "Jammu South",
+      "Jammu West",
+      "Jourian",
+      "Kharah Balli",
+      "Khour",
+      "Maira Mandrian",
+      "Mandal",
+      "Marh",
+      "Nagrota",
+      "Pargwal",
+      "Ranbir Singh Pura",
+      "Suchetgarh",
+    ],
     Kathua: [
-      "Kathua",
+"Kathua",
       "Hiranagar",
       "Basohli",
       "Bani",
@@ -45,8 +105,30 @@
       "Mahanpur",
       "Lohai Malhar",
     ],
+    Kishtwar: [
+      "Kishtwar",
+      "Atholi (Paddar)",
+      "Chattroo",
+      "Marwah",
+      "Warwan",
+      "Dachhan",
+      "Drabshalla",
+      "Nagseni",
+      "Bonjwah",
+      "Machail",
+      "Mughal Maidan",
+    ],
+    Kulgam: [
+      "Kulgam",
+      "D H Pora",
+      "Devsar",
+      "Frisal",
+      "Yaripora",
+      "Qaimoh",
+      "Pahloo",
+    ],
     Kupwara: [
-      "Kupwara",
+"Kupwara",
       "Handwara",
       "Karnah",
       "Keran",
@@ -64,27 +146,60 @@
       "Kalamabad",
     ],
     Poonch: ["Haveli", "Mandi", "Surankote", "Mendhar", "Mankote", "Balakote"],
+    Rajouri: [
+      "Rajouri",
+      "Manjakote",
+      "Darhal",
+      "Thanamandi",
+      "Koteranka",
+      "Khawas",
+      "Teryath",
+      "Kalakote",
+      "Siot",
+      "Beripattan",
+      "Sunderbani",
+      "Nowshera",
+      "Qila Darhal",
+    ],
     Reasi: ["Reasi", "Pouni", "Mahore", "Throo", "Arnas", "Chassana", "Katra", "Bhamag", "Thakrakote"],
+    Shopian: [
+      "Shopian",
+      "Barbugh",
+      "Hermain",
+      "Keegam",
+      "Chitragam",
+      "Zainpora",
+      "Keller",
+    ],
     Srinagar: [
-      "Central Shalteng",
+"Central Shalteng",
       "Chanapora / Natipora",
       "Eidgah",
       "Khanyar",
       "Pantha chowk",
       "Srinagar North",
       "Srinagar South",
-    ],
+    ]
+
   };
 
   // Each district's list is cited to the page it came from. A district without
   // an entry here cannot be added: the build fails on an unregistered source.
   var SOURCE_BY_DISTRICT = {
+    Anantnag: "anantnag_tehsils",
     Budgam: "budgam_tehsils",
+    Doda: "doda_tehsils",
+    Jammu: "jammu_tehsils",
     Kathua: "kathua_tehsils",
+    Kishtwar: "kishtwar_tehsils",
+    Kulgam: "kulgam_tehsils",
     Kupwara: "kupwara_tehsils",
     Poonch: "poonch_tehsils",
+    Rajouri: "rajouri_tehsils",
     Reasi: "reasi_tehsils",
+    Shopian: "shopian_tehsils",
     Srinagar: "srinagar_tehsils",
+
   };
 
   function forDistrict(name) {

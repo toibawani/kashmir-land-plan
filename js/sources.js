@@ -139,6 +139,55 @@
       url: "https://srinagar.nic.in/tehsil/",
       usedFor: "The names of the seven tehsils of Srinagar district, counted against the official table.",
     },
+    anantnag_tehsils: {
+      id: "anantnag_tehsils",
+      short: "Anantnag tehsils",
+      name: "District Administration Anantnag, tehsils of the district",
+      url: "https://anantnag.nic.in/village-directory/",
+      usedFor: "The names of the twelve tehsils of Anantnag district, taken from the tehsil column of the district's village directory and counted against the official table.",
+    },
+    doda_tehsils: {
+      id: "doda_tehsils",
+      short: "Doda tehsils",
+      name: "District Administration Doda, tehsils of the district",
+      url: "https://doda.nic.in/tehsil/",
+      usedFor: "The names of the seventeen tehsils of Doda district, taken from the tehsildar designations the district publishes, and counted against the official table.",
+    },
+    jammu_tehsils: {
+      id: "jammu_tehsils",
+      short: "Jammu tehsils",
+      name: "District Administration Jammu, tehsils of the district",
+      url: "https://jammu.nic.in/tehsil/",
+      usedFor: "The names of the twenty-one tehsils of Jammu district, counted against the official table.",
+    },
+    kishtwar_tehsils: {
+      id: "kishtwar_tehsils",
+      short: "Kishtwar tehsils",
+      name: "District Administration Kishtwar, tehsils of the district",
+      url: "https://kishtwar.nic.in/tehsil/",
+      usedFor: "The names of the eleven tehsils of Kishtwar district, counted against the official table.",
+    },
+    kulgam_tehsils: {
+      id: "kulgam_tehsils",
+      short: "Kulgam tehsils",
+      name: "District Administration Kulgam, tehsils of the district",
+      url: "https://kulgam.nic.in/tehsil/",
+      usedFor: "The names of the seven tehsils of Kulgam district, counted against the official table.",
+    },
+    rajouri_tehsils: {
+      id: "rajouri_tehsils",
+      short: "Rajouri tehsils",
+      name: "District Administration Rajouri, tehsils of the district",
+      url: "https://rajouri.nic.in/tehsils/",
+      usedFor: "The names of the thirteen tehsils of Rajouri district, counted against the official table.",
+    },
+    shopian_tehsils: {
+      id: "shopian_tehsils",
+      short: "Shopian tehsils",
+      name: "District Administration Shopian, tehsils of the district",
+      url: "https://shopian.nic.in/tehsil/",
+      usedFor: "The names of the seven tehsils of Shopian district, taken from the tehsildar designations the district publishes, and counted against the official table.",
+    },
   };
 
   function byId(id) {

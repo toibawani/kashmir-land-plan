@@ -74,7 +74,7 @@ fails the build unless they equal the published totals (42,241 sq km,
 1,22,67,013 people, 285 blocks, 207 tehsils, 6,832 revenue villages). That check
 caught a transposed area while this was being written.
 
-Six districts also list their tehsils — Kupwara, Budgam, Srinagar, Reasi, Kathua
+Thirteen districts also list their tehsils — Kupwara, Budgam, Srinagar, Reasi, Kathua
 and Poonch — each from the district administration's own page, counted against the
 official figure and linked to that page. The other fourteen say plainly that their
 tehsil names are not held here rather than guessing at them.
