@@ -1271,7 +1271,26 @@ while ((imgBoxMatch = imgBoxRe.exec(html)) !== null) {
   }
 }
 
+/* ---- 11n. The README must name the version in package.json ---- */
+
+// The status section is the first thing a reader trusts. It still said v1.0.0
+// after v1.1.0 shipped, which makes the release notes look stale and the app
+// look unmaintained. The version string is the cheapest thing to check and the
+// most visible thing to get wrong.
+var pkg = {};
+try {
+  pkg = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
+} catch (err) {
+  failures.push("package.json is not valid JSON: " + err.message);
+}
+var readmeText = fs.readFileSync(path.join(root, "README.md"), "utf8");
+if (pkg.version && readmeText.indexOf("Version v" + pkg.version) === -1) {
+  failures.push("README.md does not name the shipped version v" + pkg.version + " from package.json");
+}
+
 /* ---- Report ---- */
+
+
 
 
 
