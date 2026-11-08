@@ -126,6 +126,7 @@ Every string the app shows on the critical path, in the three languages it offer
 | `common.liveWeather` | Live weather | लाइव मौसम | لائیو موسم |
 | `common.askOfficer` | Ask the officer | अधिकारी से पूछें | افسر سے پوچھیں |
 | `common.roughEstimate` | Rough estimate, confirm locally | अनुमानित, स्थानीय रूप से पुष्टि करें | اندازہ، مقامی طور پر تصدیق کریں |
+| `a11y.skip` | Skip to main content | मुख्य सामग्री पर जाएँ | مرکزی مواد پر جائیں |
 | `offline.banner` | You are offline. The land plan still works on this device. Weather needs a connection. | आप ऑफ़लाइन हैं। भूमि योजना इस डिवाइस पर काम करती रहेगी। मौसम के लिए इंटरनेट चाहिए। | آپ آف لائن ہیں۔ زمین کا منصوبہ اس ڈیوائس پر کام کرتا رہے گا۔ موسم کے لیے انٹرنیٹ درکار ہے۔ |
 | `land.title` | Land in {district} | {district} की ज़मीन | {district} کی زمین |
 | `land.summary` | Land in {district}: what the published sources say | {district}: प्रकाशित स्रोत क्या कहते हैं | {district}: شائع شدہ ذرائع کیا کہتے ہیں |
