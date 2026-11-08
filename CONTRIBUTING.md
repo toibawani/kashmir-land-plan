@@ -64,6 +64,28 @@ check fails a `reviewed` flag with no name or no date on purpose.
 - Never commit a `.env` file, a key, a token or a real farmer's details. This app has no secrets and
   should not grow any.
 
+## The path from clone to merged change
+
+1. `git clone` the repository, `cd` into it, and run `npm test`. There is
+   nothing to install: the tools use Node built-ins and the app has no build.
+2. `npm start`, then open `http://127.0.0.1:8080/` and walk the five steps once.
+   A change that passes the suite but breaks a screen is still a broken change.
+3. Make one change. If it changes behaviour, add the check that would have
+   caught the bug, in the same commit or the one before it.
+4. Run `npm test` again. If it fails, read the message: each one names the file
+   and what to fix. Do not edit the assertion.
+5. Commit with a Conventional Commit subject. Say why in the body when a reader
+   would otherwise ask.
+6. Push the branch and open a pull request against `main` using the template.
+   CI runs the same `npm test` on a clean checkout, which is the point: your
+   machine's state cannot make it pass.
+7. A reviewer reads the diff against the two rules at the top of this file
+   before the code. If a change adds a figure or a review, it needs a source or
+   a name and a date, and that is the whole review.
+
+No step requires an account on a service, a key, or a conversation with the
+maintainer first. If one does, that is a bug in this document.
+
 ## If you disagree with a decision
 
 Several choices here look like gaps: no backend, no figures, weather that will not cache. Each one
