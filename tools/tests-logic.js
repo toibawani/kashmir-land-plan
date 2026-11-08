@@ -1096,7 +1096,16 @@ TEHSIL_NAMES.covered().forEach(function (name) {
       new Set(names).size === names.length
   );
 });
-check("a district with no checked list holds no names", TEHSIL_NAMES.forDistrict("Anantnag").length === 0);
+// Baramulla is excluded on purpose: its page has the right number of rows but
+// truncates one to "Singh" and drops Rafiabad. A matching count is not the same
+// as names that are right, so it must keep saying it holds none.
+check("Baramulla holds no names, though its page lists eighteen rows", TEHSIL_NAMES.forDistrict("Baramulla").length === 0);
+check(
+  "every district without a list holds no names",
+  LAND.districts()
+    .filter(function (name) { return TEHSIL_NAMES.covered().indexOf(name) === -1; })
+    .every(function (name) { return TEHSIL_NAMES.forDistrict(name).length === 0; })
+);
 check(
   "every covered district is a district in js/land.js",
   TEHSIL_NAMES.covered().every(function (name) { return LAND.districts().indexOf(name) !== -1; })
@@ -1118,8 +1127,10 @@ check(
   })
 );
 check(
-  "a district with no citation reports none",
-  TEHSIL_NAMES.sourceId("Anantnag") === null
+  "every district without a list reports no citation",
+  LAND.districts()
+    .filter(function (name) { return TEHSIL_NAMES.covered().indexOf(name) === -1; })
+    .every(function (name) { return TEHSIL_NAMES.sourceId(name) === null; })
 );
 
 console.log("");
