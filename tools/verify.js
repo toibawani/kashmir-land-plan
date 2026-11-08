@@ -1347,7 +1347,21 @@ shippedAssets.forEach(function (asset) {
   }
 });
 
+/* ---- 11r. The cache name must be a version, not a wish ---- */
+
+// Bumping the cache name is what retires old assets. A typo here silently keeps
+// the previous shell, so the format is checked: `mlmp-v` and a number.
+var swSource = fs.readFileSync(path.join(root, "sw.js"), "utf8");
+var cacheVersion = (swSource.match(/CACHE_VERSION\s*=\s*"([^"]+)"/) || [])[1];
+if (!cacheVersion) {
+  failures.push("sw.js has no CACHE_VERSION, so an update cannot retire the old cache");
+} else if (!/^mlmp-v\d+$/.test(cacheVersion)) {
+  failures.push("sw.js CACHE_VERSION is \"" + cacheVersion + "\"; it should look like mlmp-v31");
+}
+
 /* ---- Report ---- */
+
+
 
 
 
