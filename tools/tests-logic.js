@@ -1127,6 +1127,12 @@ check(
   })
 );
 check(
+  "no district cites a page for names it does not hold",
+  LAND.districts().every(function (name) {
+    return !TEHSIL_NAMES.sourceId(name) || TEHSIL_NAMES.covered().indexOf(name) !== -1;
+  })
+);
+check(
   "every district without a list reports no citation",
   LAND.districts()
     .filter(function (name) { return TEHSIL_NAMES.covered().indexOf(name) === -1; })
