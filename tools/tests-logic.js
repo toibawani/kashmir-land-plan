@@ -1008,6 +1008,22 @@ check(
   JSON.stringify(LAND.DIVISIONS)
 );
 
+
+console.log("translation behaviour");
+
+check("an unknown key comes back as itself, never as blank", MSG.t("no.such.key") === "no.such.key", MSG.t("no.such.key"));
+check(
+  "a placeholder is replaced with the value given",
+  MSG.t("land.title", { district: "Kupwara" }).indexOf("Kupwara") !== -1,
+  MSG.t("land.title", { district: "Kupwara" })
+);
+check(
+  "every language has a direction",
+  ["en", "hi", "ur"].every(function (code) { return MSG.dir(code) === "ltr" || MSG.dir(code) === "rtl"; })
+);
+check("Urdu is right to left", MSG.dir("ur") === "rtl");
+check("Hindi is left to right", MSG.dir("hi") === "ltr");
+
 console.log("");
 
 if (failures.length) {
