@@ -93,3 +93,18 @@ This is a desktop, unthrottled number, and it is recorded as one. The brief asks
 for under 2.0 s on a Moto G4 profile; that profile has not been re-run since the
 land card's actions landed, so the honest statement is: the desktop figure is
 268 ms, the phone figure is unknown, and no claim is made about it.
+
+## The throttled profile, 8 November 2026
+
+`npm run offline -- --throttle` reloads the page with a 4x CPU slowdown and a
+fast-3G network (150 ms latency, 1.6 Mbps down), then reads LCP with a buffered
+observer:
+
+| Run | LCP |
+| --- | --- |
+| Desktop, unthrottled | 280 ms |
+| 4x CPU, fast 3G | **612 ms** |
+
+The brief's target is under 2.0 s on a Moto G4 profile. 612 ms is inside it, but
+this is Chrome's CPU and network emulation, not a physical Moto G4: the number is
+evidence that the page is not heavy, not proof of the field device.

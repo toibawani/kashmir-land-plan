@@ -29,9 +29,12 @@ caches: mlmp-v31-core, mlmp-v31-fonts
 service worker controlling: true
 steps rendered: 5, headings: 36
 About screen: The Union Territory has 6,314 villages in the 2011 census, 6...
-largest contentful paint (online, desktop, unthrottled): 268 ms
+largest contentful paint (online, desktop, unthrottled): 280 ms
 Offline check passed.
 ```
+
+With `--throttle` (4x CPU, fast 3G) the same run measures 612 ms to largest
+contentful paint.
 
 The shell reloaded with the network off, the stylesheet applied, every step
 control was present, the About screen rendered its sourced counts from the
