@@ -171,11 +171,11 @@ a measurement confirms it, not that work was attempted.
 | 2 | No village claims agronomy | Holds, and is now enforced in copy: the build pins the caveat sentence and refuses banned claims in the district text. There are still no village rows to which agronomy could be attached. |
 | 3 | Every number is traceable | **Partial.** Enforced for the land panel (build check 11e). Other screens still rely on the catalogue's own source field, which is not a build check. |
 | 4 | Survives 360px | **Holds at 320 and 360.** At 360×740 the card is 112px collapsed, 9 chips of 44px on 4 lines, no page overflow. At 320 the page is 320px wide with no overflow, chips 44px, summary 53px, copy button 44×144px, heading not clipped. |
-| 5 | Offline is indistinguishable | **Not re-run.** The cache moved to `mlmp-v28`; no install-and-reload-with-radio-off test after the panel and copy button landed. |
+| 5 | Offline is indistinguishable | **Holds for the emulated reload.** `tools/offline-check.js` drives Chrome over the DevTools protocol, waits for the worker to control the page, switches the browser offline, reloads and probes what rendered: 5 step controls, 36 headings, the About screen's sourced counts, the stylesheet and the banner all present on 8 November 2026. A real radio-off phone run and a throttled phone profile are still unproven. |
 | 6 | Accessibility | **Partial.** Static checks now cover duplicate ids, dangling `aria-*` references, dead in-page anchors, a single `h1`, a language attribute, title length, image dimensions and `rel=noopener` on new-tab links. A keyboard walk (30 controls, 0 unnamed) and an axe-core 4.10.2 run are clean apart from contrast, which still needs eyes. Focus rings exist but their pixels were not confirmed under automation. |
 | 7 | Sheet is the artefact | Holds: 42 files, one page each, checked by `npm test`. |
 | 8 | Three languages, one label | **Partial.** The land card's interface, the offline banner, the skip link, the language label and the menu label all come from `js/messages.js` in three languages, and the sheet lists them. The district prose and the caveat remain English pending a named reviewer; `TRANSLATION-REVIEW.md` says what that review has to cover. |
-| 9 | CI is the referee | **Holds for the suite.** `npm test` passes on a clean clone with no dependencies in about two seconds, and it has now caught four real defects: the CRLF sheet generator, a transposed district area, a README stuck on the previous version, and an unindexed document. The disconnected reload is still unrun; `docs/OFFLINE.md` separates what the cache audit proves from what it does not. |
+| 9 | CI is the referee | **Holds for the suite, with one tool outside it.** `npm test` passes on a clean clone in about two seconds and has caught four real defects. `npm run offline` is deliberately separate because it needs Chrome and a served app; it exits non-zero and names the failure. |
 | 10 | A stranger can contribute | **Almost.** A fresh clone reaches a green suite and serves the app; `CONTRIBUTING.md` now walks the commit, pull-request and CI path explicitly. No external contributor has done it yet, so the claim is a written path, not a witnessed one. |
 
 ### Workstreams
@@ -185,7 +185,7 @@ a measurement confirms it, not that work was attempted.
 | 1. Village directory | Not started: blocked on a verified data file. |
 | 2. Tehsil narrowing | Not started: the counts are shown, the names are not sourced. |
 | 3. Catalogue depth | Not started this round. |
-| 4. Frontend craft | Partial: payload measured and enforced, 360px measured; LCP was not re-measured. |
+| 4. Frontend craft | Partial: payload is measured and enforced (140.4 KB), 320px and 360px are measured, and desktop LCP is 268 ms. The Moto G4 profile was not re-run. |
 | 5. Translation | Partial: the land interface, banner, skip link and menu labels are translated in three languages with placeholder parity enforced; the district prose, catalogue text and offline panel remain English. |
 | 6. Verification as product | Done and growing: checks 11e-11o plus budget, translation parity and pack currency run in `npm test`, and `docs/CHECKS.md` maps each rule to its file. |
 | 7. Release v1.1.0 | Done: version 1.1.0, changelog section, 20 regenerated sheets (42 pack files current), annotated tag pushed, GitHub release published. |
