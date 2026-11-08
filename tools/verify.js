@@ -1186,5 +1186,44 @@ while ((anchorMatch = anchorRe.exec(html)) !== null) {
   }
 }
 
+/* ---- 11j. The manifest must not promise icons that are missing or mis-sized ---- */
+
+// An install prompt needs the 192 and 512 icons to exist at the sizes the
+// manifest claims. A missing file or a renamed export degrades installability
+// with no visible error, and a PNG that is really 180px wide is still declared
+// as 512x512 to the launcher.
+var manifestPath = path.join(root, "manifest.webmanifest");
+if (!fs.existsSync(manifestPath)) {
+  failures.push("manifest.webmanifest is missing, so the app cannot be installed");
+} else {
+  var manifest = {};
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  } catch (err) {
+    failures.push("manifest.webmanifest is not valid JSON: " + err.message);
+  }
+  (manifest.icons || []).forEach(function (icon) {
+    var iconFile = path.join(root, icon.src);
+    if (!fs.existsSync(iconFile)) {
+      failures.push("manifest.webmanifest lists " + icon.src + ", which is not in the folder");
+      return;
+    }
+    if (!/^\d+x\d+$/.test(icon.sizes || "")) return;
+    var buf = fs.readFileSync(iconFile);
+    if (buf.length > 24 && buf.toString("ascii", 1, 4) === "PNG") {
+      var declared = icon.sizes.split("x").map(Number);
+      var width = buf.readUInt32BE(16);
+      var height = buf.readUInt32BE(20);
+      if (width !== declared[0] || height !== declared[1]) {
+        failures.push(
+          "manifest.webmanifest says " + icon.src + " is " + icon.sizes + " but the file is " + width + "x" + height
+        );
+      }
+    }
+  });
+}
+
 /* ---- Report ---- */
+
+
 
