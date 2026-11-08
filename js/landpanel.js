@@ -156,8 +156,13 @@
           tehsilNames.map(function (tehsil) { return "<li>" + esc(tehsil) + "</li>"; }).join("") +
           "</ul>"
       );
+      var tehsilSource = SOURCES && TEH.sourceId ? SOURCES.byId(TEH.sourceId(profile.name)) : null;
       parts.push(
-        '<p class="option-note">From the district administration\'s own tehsil list, counted against the official table above.</p>'
+        '<p class="option-note">From the district administration\'s own tehsil list' +
+          (tehsilSource
+            ? ' (<a href="' + esc(tehsilSource.url) + '" target="_blank" rel="noopener noreferrer">' + esc(tehsilSource.short) + "</a>)"
+            : "") +
+          ", counted against the official table above.</p>"
       );
     } else {
       parts.push(
