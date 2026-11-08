@@ -97,6 +97,13 @@
       url: "https://rkvy.da.gov.in/static/download/pdf/Saffron_Mission.pdf",
       usedFor: "The place of the Pampore belt and the karewa uplands in saffron growing.",
     },
+    kupwara_tehsils: {
+      id: "kupwara_tehsils",
+      short: "Kupwara tehsils",
+      name: "District Administration Kupwara, tehsils of the district",
+      url: "https://kupwara.nic.in/tehsils/",
+      usedFor: "The names of the sixteen tehsils of Kupwara district, counted against the official table.",
+    },
   };
 
   function byId(id) {
