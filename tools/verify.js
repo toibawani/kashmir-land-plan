@@ -1330,7 +1330,26 @@ SOURCES.all().forEach(function (source) {
   }
 });
 
+/* ---- 11q. Every shipped script and stylesheet must be precached ---- */
+
+// Offline is the product. A new `js/*.js` or `css/*.css` file that nobody adds
+// to the worker's list loads online and fails on the first reload in a field,
+// which is the one place this app is meant to work.
+var shippedAssets = [];
+["js", "css"].forEach(function (dir) {
+  fs.readdirSync(path.join(root, dir)).forEach(function (file) {
+    if (/\.(js|css)$/.test(file)) shippedAssets.push(dir + "/" + file);
+  });
+});
+shippedAssets.forEach(function (asset) {
+  if (precache.indexOf(asset) === -1 && precache.indexOf("./" + asset) === -1) {
+    failures.push(asset + " is shipped but not in sw.js's precache list, so it is missing offline");
+  }
+});
+
 /* ---- Report ---- */
+
+
 
 
 
