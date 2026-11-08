@@ -62,3 +62,22 @@ The budgets are the measured size plus eight per cent, so a feature may not
 quietly grow the download. Raising one means editing the number here and in
 `tools/budget.js` with the reason. Images and the catalogue's data are excluded,
 because they are loaded after the first paint or not at all.
+
+## Measured again, 8 November 2026
+
+The land card gained three translated action buttons, the offline banner and the
+skip link moved into the dictionary, and the suite gained ten static checks. The
+payload after those changes, from `node tools/budget.js`:
+
+| Group | Gzipped | Budget |
+| --- | --- | --- |
+| JavaScript | 114.6 KB | 119.9 KB |
+| CSS | 15.2 KB | 16.1 KB |
+| HTML | 11.4 KB | 12.0 KB |
+| **Total** | **141.2 KB** | 148 KB |
+
+The remaining headroom is about 5 KB of JavaScript. Anything larger needs a
+decision recorded in `docs/DECISIONS.md`, not a budget bump.
+
+Still not re-measured: LCP on the Moto G4 profile. The last recorded run is
+above; the payload figure is current and the paint figure is not.
