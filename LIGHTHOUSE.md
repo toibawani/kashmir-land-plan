@@ -71,13 +71,14 @@ payload after those changes, from `node tools/budget.js`:
 
 | Group | Gzipped | Budget |
 | --- | --- | --- |
-| JavaScript | 114.6 KB | 119.9 KB |
-| CSS | 15.2 KB | 16.1 KB |
-| HTML | 11.4 KB | 12.0 KB |
-| **Total** | **141.2 KB** | 148 KB |
+| JavaScript | 113.9 KB | 119.9 KB |
+| CSS | 15.4 KB | 16.1 KB |
+| HTML | 11.2 KB | 12.0 KB |
+| **Total** | **140.4 KB** | 148 KB |
 
-The remaining headroom is about 5 KB of JavaScript. Anything larger needs a
-decision recorded in `docs/DECISIONS.md`, not a budget bump.
+That is the number the budget check enforces, not an estimate. The remaining
+JavaScript headroom is about 6.0 KB; anything larger needs a decision recorded
+in `docs/DECISIONS.md`, not a budget bump.
 
 Still not re-measured: LCP on the Moto G4 profile. The last recorded run is
 above; the payload figure is current and the paint figure is not.
