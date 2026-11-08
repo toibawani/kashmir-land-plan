@@ -1308,7 +1308,31 @@ if (fs.existsSync(docsDir)) {
     });
 }
 
+/* ---- 11p. Every registered source must be usable as a citation ---- */
+
+// A source is what makes a figure checkable. An entry with a dead host, a
+// missing `usedFor` or an id that does not match its key is a citation in
+// appearance only: the panel renders a link, and the reader who follows it
+// finds nothing to support the sentence.
+SOURCES.all().forEach(function (source) {
+  var where = "js/sources.js " + (source.id || "(no id)");
+  if (!source.id) failures.push("js/sources.js has an entry with no id");
+  if (!/^https:\/\//.test(source.url || "")) {
+    failures.push(where + " has no https URL, so the citation cannot be checked from the app");
+  }
+  ["short", "name", "usedFor"].forEach(function (field) {
+    if (!source[field] || String(source[field]).trim().length < 4) {
+      failures.push(where + " has no " + field + ", so the reader cannot tell what it supports");
+    }
+  });
+  if (SOURCES.byId(source.id) !== source) {
+    failures.push(where + " is not reachable by its own id");
+  }
+});
+
 /* ---- Report ---- */
+
+
 
 
 
