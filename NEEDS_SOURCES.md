@@ -90,3 +90,23 @@ count to `LAND.admin(name).villages`, ship only reconciled districts, and show a
 explicit "list not held here" state for the rest. Names and parents only: no
 crop, soil or irrigation attribute may be attached to a village row, because no
 public dataset carries that at village level.
+
+## Tehsil names per district
+
+**What is missing.** The names of the tehsils each district contains, so the land
+card can narrow to "the tehsil you picked is in these zones". The counts are
+already shown from the official table (207 tehsils in the Union Territory); the
+names are not in the app.
+
+**Why it is not there yet.** Each district publishes its tehsil list on its own
+NIC page, in a different layout, and several are scanned images. A list stitched
+from memory would look authoritative and be wrong in exactly the way this project
+refuses: a farmer sent to the wrong tehsil office loses a day.
+
+**Who publishes it.** The district NIC site's "Administration → Tehsils" page, the
+Revenue Department's tehsil list, and the Census 2011 district handbook.
+
+**What shipping it requires.** One district at a time, cited in `js/sources.js`
+with the date read, and a build check that the number of names equals
+`LAND.admin(district).tehsils`. A district whose list does not reconcile ships
+without names, not with a guess.
