@@ -1288,7 +1288,29 @@ if (pkg.version && readmeText.indexOf("Version v" + pkg.version) === -1) {
   failures.push("README.md does not name the shipped version v" + pkg.version + " from package.json");
 }
 
+/* ---- 11o. Every document must be reachable from the index ---- */
+
+// docs/ is where a reader goes to understand a decision, a check or a gap. A
+// file nobody links to is a file nobody reads, so the index is checked rather
+// than trusted.
+var docsDir = path.join(root, "docs");
+if (fs.existsSync(docsDir)) {
+  var docsIndexPath = path.join(docsDir, "README.md");
+  var docsIndex = fs.existsSync(docsIndexPath) ? fs.readFileSync(docsIndexPath, "utf8") : "";
+  fs.readdirSync(docsDir)
+    .filter(function (file) {
+      return /\.md$/.test(file) && file !== "README.md";
+    })
+    .forEach(function (file) {
+      if (docsIndex.indexOf(file) === -1) {
+        failures.push("docs/" + file + " is not listed in docs/README.md, so a reader will not find it");
+      }
+    });
+}
+
 /* ---- Report ---- */
+
+
 
 
 

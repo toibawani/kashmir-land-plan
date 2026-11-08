@@ -1,6 +1,6 @@
 # The documents
 
-Ten files explain this project, each for a different reader. Start with the one
+The files here explain this project, each for a different reader. Start with the one
 that matches why you are here.
 
 | If you are | Read |
@@ -15,5 +15,8 @@ that matches why you are here.
 | Reviewing a change | [CONTRIBUTING.md](../CONTRIBUTING.md), then [SECURITY.md](../SECURITY.md) |
 | Looking at performance | [LIGHTHOUSE.md](../LIGHTHOUSE.md): scores, dates and what is left |
 | Looking for what changed | [CHANGELOG.md](../CHANGELOG.md) |
+| Checking what the suite enforces | [CHECKS.md](CHECKS.md): every rule, and the file to open when it fails |
+| Proving the app works offline | [OFFLINE.md](OFFLINE.md): what is measured, what is not, and how to finish it |
+| Reviewing a Hindi or Urdu string | [TRANSLATION-REVIEW.md](TRANSLATION-REVIEW.md): what a reviewer checks and how a sign-off is recorded |
 
 [`issues/`](../issues/README.md) holds the known gaps, which are not promises.
