@@ -10,6 +10,10 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.0] - 2026-11-08
+
 ### Fixed
 
 - The land card's district heading had no `tabindex`, so the focus move after a
