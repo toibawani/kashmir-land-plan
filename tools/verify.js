@@ -1395,7 +1395,24 @@ if (!TEHSILS) {
   });
 }
 
+/* ---- 11t. Data files must actually be loaded and precached ---- */
+
+// js/tehsils.js shipped once without a script tag: the file existed, the panel
+// looked for it, and the card silently said no names were held. A data file that
+// nobody requests is worse than no file, because it looks like coverage.
+["js/tehsils.js"].forEach(function (asset) {
+  if (!fs.existsSync(path.join(root, asset))) return;
+  if (html.indexOf(asset) === -1) {
+    failures.push(asset + " exists but index.html never loads it, so the interface silently ignores it");
+  }
+  if (swSource.indexOf(asset) === -1) {
+    failures.push(asset + " exists but sw.js does not precache it, so it is missing offline");
+  }
+});
+
 /* ---- Report ---- */
+
+
 
 
 
