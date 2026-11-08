@@ -232,3 +232,27 @@ same rule the district table is already held to.
 nothing. The build now fails if a figure group loses its registered source, if
 the panel stops rendering one, or if a district row has a blank where a number
 should be. The rule is only real when it can fail.
+
+---
+
+## 10. The land card's labels are translated; the agronomy is not
+
+**Decided:** every heading, fact label, button and count sentence in the land
+card comes from `js/messages.js` and switches with the language selector. The
+district prose — zones, soils, field crops, the district note and the caveat —
+stays in English, and the interface does not pretend otherwise.
+
+**Why:** a label is a word with one meaning, and `ऊँचाई` for Height is not a
+judgement call. The prose is different: it compresses survey language into a
+sentence about soil and cropping, and a translation that softens "no
+village-level record is held" would remove the sentence the whole panel exists
+to protect. Without a named reviewer, rewriting it is a risk with no upside.
+
+**What it costs:** an Urdu reader gets a half-English card: translated chrome
+around English agronomy. That is visibly incomplete, which is the honest state
+of the work, and `TRANSLATION_CHECK.md` lists the 26 interface strings waiting
+for a reviewer in the same table as the rest.
+
+**What would change it:** a fluent speaker, named and dated, who reads the
+district sentences and the caveat. Then the prose moves into `messages.js` the
+same way the labels did, and this entry gains a line saying it was reversed.
