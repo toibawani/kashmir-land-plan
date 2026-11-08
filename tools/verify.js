@@ -1124,7 +1124,26 @@ while ((imgMatch = imgRe.exec(html)) !== null) {
   }
 }
 
-/* ---- Report ---- */
+/* ---- 11h. Every aria-* reference must point at something that exists ---- */
+
+// `aria-labelledby="district-label"` with no such id leaves the control with no
+// name at all, and the page still looks fine. The same goes for `aria-controls`
+// on the menu button: it is either a real element or it is a lie to the reader
+// about what the button opens.
+var ariaRefRe = /\b(aria-labelledby|aria-describedby|aria-controls)="([^"]+)"/g;
+var ariaRefMatch;
+while ((ariaRefMatch = ariaRefRe.exec(html)) !== null) {
+  ariaRefMatch[2].split(/\s+/).forEach(function (ref) {
+    if (!ref) return;
+    if (!idSeen[ref]) {
+      failures.push(
+        "index.html points " + ariaRefMatch[1] + ' at #' + ref + ", which is not an id on the page"
+      );
+    }
+  });
+}
+
+
 
 notes.forEach(function (n) {
   console.log("note: " + n);
