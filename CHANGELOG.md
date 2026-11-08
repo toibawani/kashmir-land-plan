@@ -10,7 +10,13 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- `npm run offline` reused one Chrome profile, so an old service worker stayed
+  registered and the check kept passing against `mlmp-v32` while `sw.js` declared
+  `mlmp-v34`. It now uses a fresh profile per run and fails if the cache in the
+  browser is not the version in `sw.js`. The claim in the 1.2.1 notes that it
+  passed on `mlmp-v33` was wrong for the same reason.
 
 ## [1.2.2] - 2026-11-08
 
@@ -38,7 +44,8 @@ Nothing yet.
   held, and the build refuses a list that does not reconcile or carries no
   citation.
 - `npm run offline`: drives Chrome over the DevTools protocol, switches the
-  browser offline, reloads and checks what rendered. It passes on `mlmp-v33`,
+  browser offline, reloads and checks what rendered. It passes, and it refuses a
+  run whose cache version does not match `sw.js`,
   with five step controls, 36 headings, the About counts and the banner present
   with no network.
 - `npm run offline -- --throttle`: the same run under 4x CPU and fast 3G, which
