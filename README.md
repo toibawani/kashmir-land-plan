@@ -76,9 +76,12 @@ caught a transposed area while this was being written.
 
 Below the district detail the card carries the Union Territory's own land use —
 forest, net area sown, irrigated share — labelled as UT figures so they are
-never mistaken for the district's or the field's. And a **Copy these details**
-button puts the visible card, caveat and source links into plain text, ready to
-paste into a message to the agriculture office.
+never mistaken for the district's or the field's. Three buttons take the card off the
+screen: **Copy these details** puts the visible text, caveat and source links on
+the clipboard, **Save as text file** writes the same text to a file with the
+district in its name, and **Share** opens the phone's share sheet where the
+browser has one. All three carry the caveat, so a forwarded card cannot arrive
+looking like a promise.
 
 The download is held to a measured budget: `tools/budget.js` fails the build if
 the referenced JavaScript, CSS or HTML grows past the size recorded in
