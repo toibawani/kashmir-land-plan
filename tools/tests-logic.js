@@ -1024,6 +1024,21 @@ check(
 check("Urdu is right to left", MSG.dir("ur") === "rtl");
 check("Hindi is left to right", MSG.dir("hi") === "ltr");
 
+
+console.log("land card actions");
+
+var panelSource = require("fs").readFileSync(require("path").join(root, "js", "landpanel.js"), "utf8");
+check("the land card offers a download control", panelSource.indexOf("data-download") !== -1);
+check("the land card offers sharing only when the device can", panelSource.indexOf("navigator.share") !== -1);
+check(
+  "the download and share labels exist in all three languages",
+  ["land.download", "land.share"].every(function (key) {
+    return ["en", "hi", "ur"].every(function (code) {
+      return typeof MSG.dict(code)[key] === "string" && MSG.dict(code)[key].length > 0;
+    });
+  })
+);
+
 console.log("");
 
 if (failures.length) {
