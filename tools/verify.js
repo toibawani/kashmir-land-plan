@@ -1246,7 +1246,21 @@ if (description.length < 50) {
   failures.push("index.html's meta description is missing or too short to be useful in a search result");
 }
 
+/* ---- 11l. A link that opens a new tab must not keep the opener ---- */
+
+// `window.opener` lets the opened page navigate the app's own tab. Every
+// external source link opens in a new tab, so each one needs rel="noopener".
+var blankRe = /<a\b[^>]*\btarget="_blank"[^>]*>/g;
+var blankMatch;
+while ((blankMatch = blankRe.exec(html)) !== null) {
+  if (!/\brel="[^"]*noopener/.test(blankMatch[0])) {
+    failures.push('index.html has a target="_blank" link without rel="noopener": ' + blankMatch[0].slice(0, 80));
+  }
+}
+
 /* ---- Report ---- */
+
+
 
 
 
