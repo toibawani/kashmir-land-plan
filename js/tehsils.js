@@ -8,20 +8,43 @@
  * whose page lists a different number is left out rather than trimmed to fit,
  * because a farmer sent to the wrong tehsil office loses a day.
  *
- * Kupwara is the only district whose published list has been checked so far.
- * The other nineteen are not "coming later" in the interface: the card says
+ * Six districts have a published list that reconciles so far. The other fourteen are not "coming later" in the interface: the card says
  * plainly that their names are not held here, and shows the official count.
  *
  * Interface
  *   MLMP_TEHSILS.forDistrict(name)  the names, or an empty array
  *   MLMP_TEHSILS.covered()         the districts with names
  *   MLMP_TEHSILS.total()           how many names are held
- *   MLMP_TEHSILS.sourceId()        the citation for every row here
+ *   MLMP_TEHSILS.sourceId(name)    the citation for that district's list
  */
 (function () {
   "use strict";
 
   var TEHSILS = {
+    Budgam: [
+      "Budgam",
+      "Beerwah",
+      "Chadoora",
+      "Khansahib",
+      "Chrarisharief",
+      "B K Pora",
+      "Khag",
+      "Narbal",
+      "Magam",
+    ],
+    Kathua: [
+      "Kathua",
+      "Hiranagar",
+      "Basohli",
+      "Bani",
+      "Billawar",
+      "Ramkot",
+      "Dinga Amb",
+      "Marheen",
+      "Nagri Parole",
+      "Mahanpur",
+      "Lohai Malhar",
+    ],
     Kupwara: [
       "Kupwara",
       "Handwara",
@@ -40,6 +63,28 @@
       "Villgam",
       "Kalamabad",
     ],
+    Poonch: ["Haveli", "Mandi", "Surankote", "Mendhar", "Mankote", "Balakote"],
+    Reasi: ["Reasi", "Pouni", "Mahore", "Throo", "Arnas", "Chassana", "Katra", "Bhamag", "Thakrakote"],
+    Srinagar: [
+      "Central Shalteng",
+      "Chanapora / Natipora",
+      "Eidgah",
+      "Khanyar",
+      "Pantha chowk",
+      "Srinagar North",
+      "Srinagar South",
+    ],
+  };
+
+  // Each district's list is cited to the page it came from. A district without
+  // an entry here cannot be added: the build fails on an unregistered source.
+  var SOURCE_BY_DISTRICT = {
+    Budgam: "budgam_tehsils",
+    Kathua: "kathua_tehsils",
+    Kupwara: "kupwara_tehsils",
+    Poonch: "poonch_tehsils",
+    Reasi: "reasi_tehsils",
+    Srinagar: "srinagar_tehsils",
   };
 
   function forDistrict(name) {
@@ -60,8 +105,8 @@
     forDistrict: forDistrict,
     covered: covered,
     total: total,
-    sourceId: function () {
-      return "kupwara_tehsils";
+    sourceId: function (name) {
+      return Object.prototype.hasOwnProperty.call(SOURCE_BY_DISTRICT, name) ? SOURCE_BY_DISTRICT[name] : null;
     },
   };
 })();

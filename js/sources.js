@@ -104,6 +104,41 @@
       url: "https://kupwara.nic.in/tehsils/",
       usedFor: "The names of the sixteen tehsils of Kupwara district, counted against the official table.",
     },
+    budgam_tehsils: {
+      id: "budgam_tehsils",
+      short: "Budgam tehsils",
+      name: "District Administration Budgam, tehsils of the district",
+      url: "https://budgam.nic.in/tehsil/",
+      usedFor: "The names of the nine tehsils of Budgam district, counted against the official table.",
+    },
+    kathua_tehsils: {
+      id: "kathua_tehsils",
+      short: "Kathua tehsils",
+      name: "District Administration Kathua, tehsils of the district",
+      url: "https://kathua.nic.in/tehsils/",
+      usedFor: "The names of the eleven tehsils of Kathua district, counted against the official table.",
+    },
+    poonch_tehsils: {
+      id: "poonch_tehsils",
+      short: "Poonch tehsils",
+      name: "District Administration Poonch, tehsils of the district",
+      url: "https://poonch.nic.in/tehsil/",
+      usedFor: "The names of the six tehsils of Poonch district, counted against the official table.",
+    },
+    reasi_tehsils: {
+      id: "reasi_tehsils",
+      short: "Reasi tehsils",
+      name: "District Administration Reasi, tehsils of the district",
+      url: "https://reasi.nic.in/tehsil/",
+      usedFor: "The names of the nine tehsils of Reasi district, counted against the official table.",
+    },
+    srinagar_tehsils: {
+      id: "srinagar_tehsils",
+      short: "Srinagar tehsils",
+      name: "District Administration Srinagar, tehsils of the district",
+      url: "https://srinagar.nic.in/tehsil/",
+      usedFor: "The names of the seven tehsils of Srinagar district, counted against the official table.",
+    },
   };
 
   function byId(id) {
