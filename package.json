@@ -13,6 +13,7 @@
     "translation-check": "node tools/translation-check.js",
     "screenshots": "node tools/screenshots.js",
     "phone-check": "node tools/phone-check.js",
+    "offline": "node tools/offline-check.js",
     "review-sheets": "node tools/review-sheet.js",
     "review-import": "node tools/import-review.js",
     "feedback-summary": "node tools/feedback-summary.js"
