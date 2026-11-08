@@ -188,7 +188,7 @@
       parts.push("</div>");
     }
 
-    parts.push('<div class="land-actions">');
+    parts.push('<div class="land-actions" role="group" aria-label="' + esc(t("land.actions")) + '">');
     parts.push('<button type="button" class="land-copy" data-copy="1">' + esc(t("land.copy")) + "</button>");
     parts.push('<button type="button" class="land-action" data-download="1">' + esc(t("land.download")) + "</button>");
     if (navigator.share) {
