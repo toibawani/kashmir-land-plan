@@ -968,6 +968,46 @@ console.log("honest language labels");
 });
 check("the English option is just its own name", MSG.optionLabel("en") === "English", MSG.optionLabel("en"));
 
+
+console.log("land reference invariants");
+
+LAND.districts().forEach(function (name) {
+  var division = LAND.divisionOf(name);
+  check("every district belongs to a published division: " + name, !!division, String(division));
+  var near = LAND.nearby(name);
+  check("a district is never its own neighbour: " + name, near.indexOf(name) === -1);
+  check(
+    "every nearby district shares its division: " + name,
+    near.every(function (other) { return LAND.divisionOf(other) === division; }),
+    near.join(", ")
+  );
+  var profile = LAND.forDistrict(name);
+  check(
+    "the district profile has zones, crops and fruit: " + name,
+    !!profile && profile.zones.length > 0 && !!profile.fruit &&
+      profile.zones.every(function (z) { return z.altitude && z.rain && z.soils && z.field && z.fruit; }),
+    "zones " + (profile ? profile.zones.length : 0)
+  );
+});
+
+var byDivision = {};
+LAND.districts().forEach(function (name) {
+  var d = LAND.divisionOf(name);
+  byDivision[d] = (byDivision[d] || 0) + 1;
+});
+check(
+  "the divisions listed in js/land.js account for every district",
+  Object.keys(byDivision).sort().join(",") === Object.keys(LAND.DIVISIONS).sort().join(","),
+  JSON.stringify(byDivision)
+);
+check(
+  "every division names the districts it holds",
+  Object.keys(LAND.DIVISIONS).every(function (d) {
+    return Array.isArray(LAND.DIVISIONS[d]) && LAND.DIVISIONS[d].length === byDivision[d];
+  }),
+  JSON.stringify(LAND.DIVISIONS)
+);
+
 console.log("");
 
 if (failures.length) {
