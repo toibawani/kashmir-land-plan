@@ -1223,7 +1223,32 @@ if (!fs.existsSync(manifestPath)) {
   });
 }
 
+/* ---- 11k. Page-level metadata must describe the page ---- */
+
+// One h1 tells a screen reader what the page is; none, or three, leaves it
+// guessing. A lang attribute decides how the text is pronounced, and a title
+// that is missing or 200 characters long is truncated in every tab and search
+// result.
+var h1Count = (html.match(/<h1[\s>]/g) || []).length;
+if (h1Count !== 1) {
+  failures.push("index.html has " + h1Count + " h1 element(s); exactly one names the page for a screen reader");
+}
+var htmlLang = (html.match(/<html\b[^>]*\blang="([^"]+)"/) || [])[1];
+if (!htmlLang) {
+  failures.push("index.html's <html> has no lang attribute, so a screen reader guesses how to pronounce it");
+}
+var titleText = ((html.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "").trim();
+if (titleText.length < 10 || titleText.length > 70) {
+  failures.push("index.html's <title> is " + titleText.length + " characters; it should be 10 to 70");
+}
+var description = (html.match(/<meta name="description" content="([^"]*)"/) || [])[1] || "";
+if (description.length < 50) {
+  failures.push("index.html's meta description is missing or too short to be useful in a search result");
+}
+
 /* ---- Report ---- */
+
+
 
 
 
