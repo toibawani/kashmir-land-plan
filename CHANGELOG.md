@@ -10,6 +10,10 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.2] - 2026-11-08
+
 ### Added
 
 - Tehsil names for seven more districts — Anantnag (12), Doda (17), Jammu (21),
@@ -28,7 +32,7 @@ should not, because the catalogue is still unreviewed.
 
 ### Added
 
-- Tehsil names for thirteen districts — Kupwara (16), Budgam (9), Srinagar (7),
+- Tehsil names for six districts — Kupwara (16), Budgam (9), Srinagar (7),
   Reasi (9), Kathua (11) and Poonch (6) — each counted against the official table
   and cited to its own district page. Every other district says its names are not
   held, and the build refuses a list that does not reconcile or carries no
