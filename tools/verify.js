@@ -1168,3 +1168,23 @@ console.log(
     readmeImages.length +
     " README images present."
 );
+
+/* ---- 11i. Every in-page link must land somewhere ---- */
+
+// The nav, the skip link and the footer all use `#id`. A renamed section leaves
+// those links silently dead: the URL changes, nothing moves, and the reader
+// concludes the button is broken.
+var anchorRe = /<a\b[^>]*\bhref="#([^"]*)"/g;
+var anchorMatch;
+while ((anchorMatch = anchorRe.exec(html)) !== null) {
+  var anchorTarget = anchorMatch[1];
+  if (!anchorTarget) continue;
+  if (!idSeen[anchorTarget]) {
+    failures.push(
+      'index.html links to #' + anchorTarget + ", which is not an id on the page, so the link goes nowhere"
+    );
+  }
+}
+
+/* ---- Report ---- */
+
