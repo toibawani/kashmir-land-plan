@@ -181,6 +181,31 @@ function connect(url) {
     true
   );
 
+  // The brief asks for LCP under 2.0 s on a Moto G4 profile. CPU throttling is
+  // not available through the emulation flag, so it is set here, with a fast-3G
+  // network, and the page is reloaded before LCP is read again.
+  var throttledLcp = null;
+  if (process.argv.indexOf("--throttle") !== -1) {
+    await client.send("Emulation.setCPUThrottlingRate", { rate: 4 }, session);
+    await client.send(
+      "Network.emulateNetworkConditions",
+      { offline: false, latency: 150, downloadThroughput: 200000, uploadThroughput: 93750 },
+      session
+    );
+    await client.send("Page.reload", { ignoreCache: true }, session);
+    await waitForReady();
+    throttledLcp = await evaluate(
+      "new Promise(function (resolve) {" +
+        "var seen = [];" +
+        "try { new PerformanceObserver(function (list) { list.getEntries().forEach(function (e) { seen.push(e.startTime); }); })" +
+        ".observe({ type: 'largest-contentful-paint', buffered: true }); } catch (_) {}" +
+        "setTimeout(function () { resolve(seen.length ? Math.round(seen[seen.length - 1]) : null); }, 1500);" +
+        "})",
+      true
+    );
+    await client.send("Emulation.setCPUThrottlingRate", { rate: 1 }, session);
+  }
+
   await client.send(
     "Network.emulateNetworkConditions",
     { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 },
@@ -233,6 +258,7 @@ function connect(url) {
   console.log("  About screen: " + probe.aboutVillage.trim().slice(0, 60));
   console.log("  land source links in the shell: " + probe.landSourceCount);
   console.log("  largest contentful paint (online, desktop, unthrottled): " + (lcp == null ? "not observed" : lcp + " ms"));
+  if (throttledLcp != null) console.log("  largest contentful paint (4x CPU, fast 3G): " + throttledLcp + " ms");
 
   client.close();
   chrome.kill("SIGTERM");
