@@ -18,10 +18,17 @@
 
 var spawn = require("child_process").spawn;
 var http = require("http");
+var fs = require("fs");
+var path = require("path");
 
 var PORT = 9333;
 var APP = "http://127.0.0.1:8080/";
 var CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+// A profile per run: a reused one keeps an older worker registered, and then the
+// check quietly proves that yesterday's code still works.
+var PROFILE = "/tmp/mlmp-offline-" + process.pid;
+var SW = fs.readFileSync(path.join(__dirname, "..", "sw.js"), "utf8");
+var CACHE_VERSION = (SW.match(/CACHE_VERSION = "([^"]+)"/) || [])[1];
 
 function getJson(path) {
   return new Promise(function (resolve, reject) {
@@ -109,7 +116,7 @@ function connect(url) {
       "--no-first-run",
       "--no-default-browser-check",
       "--remote-debugging-port=" + PORT,
-      "--user-data-dir=/tmp/mlmp-offline-profile",
+      "--user-data-dir=" + PROFILE,
       "about:blank",
     ],
     { stdio: "ignore" }
@@ -244,6 +251,17 @@ function connect(url) {
   if (!probe.appCached) failures.push("js/app.js is not in the cache after the online visit");
   if (!probe.pageCached) failures.push("index.html is not in the cache after the online visit");
   if (!probe.caches.length) failures.push("there is no cache at all");
+  if (!CACHE_VERSION) {
+    failures.push("sw.js declares no CACHE_VERSION, so this run cannot be trusted");
+  } else {
+    var stale = probe.caches.filter(function (name) { return name.indexOf(CACHE_VERSION + "-") !== 0; });
+    if (stale.length) {
+      failures.push(
+        "the browser is using " + stale.join(", ") + " but sw.js declares " + CACHE_VERSION +
+          ", so the offline proof was against an older worker"
+      );
+    }
+  }
   if (!/My Land, My Plan/.test(probe.title || "")) failures.push("the offline page has no title, so the shell did not render");
   if (probe.steps !== 5) failures.push("the offline page has " + probe.steps + " step controls, expected 5");
   if (probe.headings < 5) failures.push("the offline page rendered " + probe.headings + " headings, so screens did not render");
@@ -262,6 +280,10 @@ function connect(url) {
 
   client.close();
   chrome.kill("SIGTERM");
+  await wait(300);
+  try {
+    fs.rmSync(PROFILE, { recursive: true, force: true });
+  } catch (_) {}
 
   if (failures.length) {
     console.error("\nOffline check failed:");

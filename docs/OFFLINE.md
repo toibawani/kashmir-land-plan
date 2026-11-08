@@ -25,7 +25,7 @@ worker returned them.
 ## The result, 8 November 2026
 
 ```
-caches: mlmp-v31-core, mlmp-v31-fonts
+caches: mlmp-v34-core, mlmp-v34-fonts  (must match CACHE_VERSION in sw.js)
 service worker controlling: true
 steps rendered: 5, headings: 36
 About screen: The Union Territory has 6,314 villages in the 2011 census, 6...
