@@ -13,7 +13,7 @@ visit card, the saved plans. Only the weather needs a connection.
 
 ## Status
 
-**Version v1.2.2.** Nothing here is signed off by anyone. Three things are open,
+**Version v1.2.3.** Nothing here is signed off by anyone. Three things are open,
 and each line comes out only when the data behind it changes:
 
 1. **No officer has reviewed the catalogue.** Every screen that shows a
@@ -26,7 +26,7 @@ and each line comes out only when the data behind it changes:
    `reviewed: false`, the language menu says so beside the name, and a notice
    stays on screen while either is selected.
 
-The release is [v1.2.2](https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.2.2);
+The release is [v1.2.3](https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.2.3);
 what changed, and what was deliberately left out, is in `CHANGELOG.md`.
 
 It was also only checked in a browser at 360px and in Lighthouse, not in a
@@ -74,7 +74,7 @@ fails the build unless they equal the published totals (42,241 sq km,
 1,22,67,013 people, 285 blocks, 207 tehsils, 6,832 revenue villages). That check
 caught a transposed area while this was being written.
 
-Thirteen districts also list their tehsils — Kupwara, Budgam, Srinagar, Reasi, Kathua
+Fifteen districts also list their tehsils — Kupwara, Budgam, Srinagar, Reasi, Kathua
 and Poonch — each from the district administration's own page, counted against the
 official figure and linked to that page. The other fourteen say plainly that their
 tehsil names are not held here rather than guessing at them.

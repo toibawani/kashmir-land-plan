@@ -188,6 +188,20 @@
       url: "https://shopian.nic.in/tehsil/",
       usedFor: "The names of the seven tehsils of Shopian district, taken from the tehsildar designations the district publishes, and counted against the official table.",
     },
+    pulwama_tehsils: {
+      id: "pulwama_tehsils",
+      short: "Pulwama tehsils",
+      name: "J&K Revenue Department, patwar halqa list for Pulwama district",
+      url: "https://jkrevenue.nic.in/pthalqapul.html",
+      usedFor: "The names of the eight tehsils of Pulwama district, taken from the tehsil column of the Revenue Department's patwar halqa table and counted against the official table. The table prints one as \"Shahoora Litter\".",
+    },
+    ramban_tehsils: {
+      id: "ramban_tehsils",
+      short: "Ramban tehsils",
+      name: "J&K Revenue Department, patwar halqa list for Ramban district",
+      url: "https://jkrevenue.nic.in/pthalqaram.html",
+      usedFor: "The names of the eight tehsils of Ramban district, taken from the tehsil column of the Revenue Department's patwar halqa table and counted against the official table.",
+    },
   };
 
   function byId(id) {
