@@ -1258,7 +1258,22 @@ while ((blankMatch = blankRe.exec(html)) !== null) {
   }
 }
 
+/* ---- 11m. An image needs its dimensions before it loads ---- */
+
+// Without width and height the browser reserves no space, so the page jumps as
+// each image arrives. On a slow connection that is the layout shift a reader
+// feels most.
+var imgBoxRe = /<img\b[^>]*>/g;
+var imgBoxMatch;
+while ((imgBoxMatch = imgBoxRe.exec(html)) !== null) {
+  if (!/\bwidth="\d+"/.test(imgBoxMatch[0]) || !/\bheight="\d+"/.test(imgBoxMatch[0])) {
+    failures.push("index.html has an <img> without width and height, so the page will shift as it loads");
+  }
+}
+
 /* ---- Report ---- */
+
+
 
 
 
