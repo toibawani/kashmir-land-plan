@@ -3430,3 +3430,16 @@ select:focus {
   outline-offset: 4px;
   border-radius: 4px;
 }
+
+/* The card's actions sit side by side on a wide screen and stack on a narrow
+   one. Each keeps a 44px target, because these are the controls a farmer taps
+   one-handed while standing in a field. */
+.land-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.land-actions > button {
+  min-height: 44px;
+}

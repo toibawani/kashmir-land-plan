@@ -188,7 +188,10 @@
       parts.push("</div>");
     }
 
+    parts.push('<div class="land-actions">');
     parts.push('<button type="button" class="land-copy" data-copy="1">' + esc(t("land.copy")) + "</button>");
+    parts.push('<button type="button" class="land-action" data-download="1">' + esc(t("land.download")) + "</button>");
+    parts.push("</div>");
     parts.push(sourceLinks());
 
     // In the form this is reference material sitting between the district picker
@@ -287,6 +290,21 @@
           } else {
             copy.textContent = t("land.copyManual");
           }
+          return;
+        }
+        var download = event.target.closest ? event.target.closest("button[data-download]") : null;
+        if (download) {
+          var shown = LAND.forDistrict(select.value);
+          if (!shown) return;
+          var blob = new Blob([summaryText(shown)], { type: "text/plain;charset=utf-8" });
+          var url = URL.createObjectURL(blob);
+          var link = document.createElement("a");
+          link.href = url;
+          link.download = "land-" + shown.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") + ".txt";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
           return;
         }
         var chip = event.target.closest ? event.target.closest("button[data-district]") : null;
