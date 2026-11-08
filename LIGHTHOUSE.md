@@ -82,3 +82,14 @@ in `docs/DECISIONS.md`, not a budget bump.
 
 Still not re-measured: LCP on the Moto G4 profile. The last recorded run is
 above; the payload figure is current and the paint figure is not.
+
+## Largest contentful paint, measured 8 November 2026
+
+`tools/offline-check.js` observes LCP with a buffered `PerformanceObserver` after
+a fresh load, before it switches the network off. On the desktop build used for
+verification it reported **268 ms**.
+
+This is a desktop, unthrottled number, and it is recorded as one. The brief asks
+for under 2.0 s on a Moto G4 profile; that profile has not been re-run since the
+land card's actions landed, so the honest statement is: the desktop figure is
+268 ms, the phone figure is unknown, and no claim is made about it.

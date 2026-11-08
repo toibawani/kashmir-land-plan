@@ -1,41 +1,62 @@
 # Proving the app works offline
 
 The brief asks for a test the app cannot fake: installed, radio off, every screen
-still renders, the sheet still prints. This page records what has been measured,
-what has not, and how to finish it in ten minutes.
+still renders, the sheet still prints. This page records the method, the result,
+and the part a machine still cannot answer.
 
-## What is measured today
+## The test
 
-- `tools/verify.js` fails if any asset listed in `sw.js` is missing, if a script
-  referenced by `index.html` is not precached, or if the precache list shrinks.
-- In the browser, the service worker reaches `activated` and controls the page,
-  and `caches.keys()` contains the current `mlmp-vNN` cache with the same 30
-  entries the precache list names.
-- A cache-only read of the shell (`fetch(url, {cache: "only-if-cached"})` for
-  each precached asset) returns a response for every entry, so the cache is
-  complete rather than merely registered.
+`tools/offline-check.js`, run as `npm run offline`. It needs Chrome installed and
+the app served by `npm start`.
 
-## What is not measured
+It drives a real Chrome over the DevTools protocol rather than guessing:
 
-A real disconnected reload. The cache audit proves the bytes are stored; it does
-not prove the worker's fetch handler returns them when the network is gone. Those
-are different failures, and only one of them has been observed.
+1. opens the app and waits for `navigator.serviceWorker.ready`,
+2. reloads once so the page is controlled by the worker,
+3. calls `Network.emulateNetworkConditions` with `offline: true`,
+4. reloads again, which is the moment that matters,
+5. probes the rendered page for the title, the five step controls, the headings,
+   the About screen's village counts, the stylesheet, and the offline banner.
 
-## How to run it
+It exits non-zero and names the check that failed. That is the difference between
+this and a cache audit: the audit proved the bytes were stored, this proves the
+worker returned them.
 
-1. Serve the folder: `npm start`, then open `http://localhost:8080/`.
-2. Open the browser's application panel and confirm the service worker is
-   `activated`. Reload once so the page is controlled.
-3. Set the network to **Offline** in the application panel, or turn off Wi-Fi and
-   mobile data on the device.
-4. Reload. Every screen must render: Home, Plan through all five steps, Weather
-   (which must say it cannot reach the service, not show a stale reading), My
-   plans, About, and the printable visit card.
-5. Print the visit card. It must be one page and the footer must carry the
-   version and digest.
-6. Switch to Hindi and Urdu offline. The interface must change; no request may be
-   attempted for a string.
+## The result, 8 November 2026
 
-A failure at step 3 that disappears at step 4 is a cache-first/network-first
-question, not a data problem. A failure in Weather is expected and is the one
-screen allowed to say it cannot answer.
+```
+caches: mlmp-v31-core, mlmp-v31-fonts
+service worker controlling: true
+steps rendered: 5, headings: 36
+About screen: The Union Territory has 6,314 villages in the 2011 census, 6...
+largest contentful paint (online, desktop, unthrottled): 268 ms
+Offline check passed.
+```
+
+The shell reloaded with the network off, the stylesheet applied, every step
+control was present, the About screen rendered its sourced counts from the
+cache, and the offline banner appeared.
+
+## What this still does not prove
+
+- **A real radio-off reload on a phone.** The emulation is the browser's own
+  network layer, which is the same layer the app sees, but it is not an antenna.
+- **A slow phone.** This run is desktop, unthrottled. The 268 ms paint is a
+  desktop number and is recorded as one in `LIGHTHOUSE.md`; the Moto G4 figure
+  has not been re-measured.
+- **Printing from the installed app.** The sheet's one-page rule is tested by the
+  fitter, not by a printer.
+- **The install prompt.** Nothing here clicks "Install".
+
+## Doing it by hand
+
+1. `npm start`, open `http://localhost:8080/`, reload once.
+2. Set the network to Offline in the browser's application panel, or turn off
+   Wi-Fi and mobile data on the device.
+3. Reload. Every screen must render, Weather must say it cannot reach the
+   service rather than showing a stale reading, and the visit card must print on
+   one page with the version in the footer.
+4. Switch to Hindi and Urdu offline; no request may be made for a string.
+
+A failure in Weather is expected and is the one screen allowed to say it cannot
+answer.
