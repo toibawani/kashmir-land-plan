@@ -54,6 +54,40 @@ if (langs.length < 3) {
   errors.push("Expected English, Hindi and Urdu to be offered, found " + langs.length + " language(s).");
 }
 
+// A translation that drops {district} or renames {villages} still renders — it
+// just silently loses the only part of the sentence that changes. Comparing the
+// placeholder sets catches that before a reader sees a sentence missing its
+// subject. An empty value is treated as a failure too: it blanks the screen
+// rather than falling back, because the key exists.
+function placeholders(value) {
+  var found = [];
+  var re = /\{([a-zA-Z0-9_]+)\}/g;
+  var match;
+  while ((match = re.exec(String(value == null ? "" : value))) !== null) {
+    if (found.indexOf(match[1]) === -1) found.push(match[1]);
+  }
+  return found.sort();
+}
+
+langs.forEach(function (lang) {
+  var dict = M.dict(lang.code);
+  keys.forEach(function (key) {
+    var value = dict[key];
+    if (value == null) return;
+    if (!String(value).trim()) {
+      errors.push(lang.code + " has an empty string for " + key);
+      return;
+    }
+    var want = placeholders(M.dict("en")[key]);
+    var got = placeholders(value);
+    if (want.join(",") !== got.join(",")) {
+      errors.push(
+        lang.code + " " + key + " uses {" + got.join("}, {") + "} where English uses {" + want.join("}, {") + "}"
+      );
+    }
+  });
+});
+
 var hi = M.dict("hi");
 var ur = M.dict("ur");
 
