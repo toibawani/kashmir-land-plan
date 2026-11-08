@@ -10,6 +10,14 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+### Fixed
+
+- The land card's district heading had no `tabindex`, so the focus move after a
+  neighbouring-district jump did nothing and a keyboard user was left at the top
+  of the page.
+- The language selector and the menu button were announced in English in every
+  language; the offline banner and the skip link likewise.
+
 ### Added
 
 - The land card's interface in Hindi and Urdu: headings, fact labels, the copy
@@ -17,6 +25,15 @@ should not, because the catalogue is still unreviewed.
   shared dictionary and re-render when the language changes. The district prose
   and the caveat stay in English on purpose, and the review sheet lists all 26
   new strings for a native speaker.
+
+- A **Save as text file** button on the land card, and **Share** where the device
+  has a share sheet, so the district summary reaches a message or a printer
+  without retyping it. Both use the same text as the copy button, caveat and
+  sources included.
+- The offline banner and the skip link are translated, so the first two things a
+  screen reader and a disconnected reader meet are in the chosen language.
+- Land-card headings can now take focus, so jumping to a neighbouring district
+  announces the new district instead of silently replacing the card.
 
 ## [1.1.0] - 2026-11-07
 
