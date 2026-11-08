@@ -41,3 +41,15 @@ it.
 Only the latest release on `main` is supported. There are no maintained
 branches: the app is one folder, and an old copy on a phone is updated by the
 service worker the next time it reaches the network.
+
+## The land card's export buttons
+
+The copy, save and share controls act on text the app already has on screen. The
+saved file is built in the browser with a Blob URL, handed to the download, and
+revoked a second later; nothing is uploaded. The share sheet is the operating
+system's own, and the app passes it the same text it would have copied.
+
+The text includes the plot details if the reader has entered them, because that
+is the point of the card. It is written to the phone's downloads or to whichever
+app the share sheet targets, which are outside this app's control, so the screen
+says what is being exported rather than exporting silently.
