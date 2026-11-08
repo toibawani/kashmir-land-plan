@@ -191,6 +191,9 @@
     parts.push('<div class="land-actions">');
     parts.push('<button type="button" class="land-copy" data-copy="1">' + esc(t("land.copy")) + "</button>");
     parts.push('<button type="button" class="land-action" data-download="1">' + esc(t("land.download")) + "</button>");
+    if (navigator.share) {
+      parts.push('<button type="button" class="land-action" data-share="1">' + esc(t("land.share")) + "</button>");
+    }
     parts.push("</div>");
     parts.push(sourceLinks());
 
@@ -305,6 +308,15 @@
           link.click();
           document.body.removeChild(link);
           setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+          return;
+        }
+        var share = event.target.closest ? event.target.closest("button[data-share]") : null;
+        if (share) {
+          var shownShare = LAND.forDistrict(select.value);
+          if (!shownShare) return;
+          navigator.share({ title: t("land.title", { district: shownShare.name }), text: summaryText(shownShare) }).catch(function () {
+            /* The reader dismissed the sheet. Nothing to report. */
+          });
           return;
         }
         var chip = event.target.closest ? event.target.closest("button[data-district]") : null;
