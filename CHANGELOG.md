@@ -10,8 +10,22 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.3] - 2026-11-08
+
+### Added
+
+- Tehsil names for Pulwama (8) and Ramban (8), taken from the tehsil column of the
+  Revenue Department's patwar halqa tables rather than the district pages, counted
+  against the official table and cited. Pulwama's table prints one tehsil as
+  "Shahoora Litter", and that is what ships.
+
 ### Fixed
 
+- Srinagar's seven tehsils had been lost when the data file was rebuilt for
+  1.2.2, while that release's notes claimed thirteen districts; it is restored and
+  a test now fails if a district cites a page but holds no names.
 - `npm run offline` reused one Chrome profile, so an old service worker stayed
   registered and the check kept passing against `mlmp-v32` while `sw.js` declared
   `mlmp-v34`. It now uses a fresh profile per run and fails if the cache in the
