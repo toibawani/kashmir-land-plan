@@ -10,13 +10,25 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Tehsil names for seven more districts — Anantnag (12), Doda (17), Jammu (21),
+  Kishtwar (11), Kulgam (7), Rajouri (13) and Shopian (7) — each counted against
+  the official table and cited to the page it came from. Doda and Shopian publish
+  tehsildar designations rather than a name column, which is what is used.
+
+### Changed
+
+- Baramulla stays without names even though its page lists eighteen rows: one
+  cell is truncated to "Singh" and Rafiabad is missing, so the count matches and
+  the names would still be wrong. The tests now assert that exclusion rather than
+  naming whichever district happened to be uncovered.
 
 ## [1.2.1] - 2026-11-08
 
 ### Added
 
-- Tehsil names for six districts — Kupwara (16), Budgam (9), Srinagar (7),
+- Tehsil names for thirteen districts — Kupwara (16), Budgam (9), Srinagar (7),
   Reasi (9), Kathua (11) and Poonch (6) — each counted against the official table
   and cited to its own district page. Every other district says its names are not
   held, and the build refuses a list that does not reconcile or carries no
