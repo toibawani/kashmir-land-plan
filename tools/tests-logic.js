@@ -1039,6 +1039,38 @@ check(
   })
 );
 
+
+console.log("land interface keys");
+
+var landPanelSource = require("fs").readFileSync(require("path").join(root, "js", "landpanel.js"), "utf8");
+var literalKeys = [];
+var keyRe = /t\("([a-z][a-z0-9._]+)"/g;
+var keyMatch;
+while ((keyMatch = keyRe.exec(landPanelSource)) !== null) {
+  if (literalKeys.indexOf(keyMatch[1]) === -1) literalKeys.push(keyMatch[1]);
+}
+// The panel also builds "land.division." + division, which is a prefix rather
+// than a key, and `new Event("change")` matches the same pattern. Only complete
+// land.* keys are checked against the dictionary.
+literalKeys = literalKeys.filter(function (key) {
+  return key.indexOf("land.") === 0 && key.slice(-1) !== ".";
+});
+check("the panel asks for its labels through the dictionary", literalKeys.length >= 20, String(literalKeys.length));
+literalKeys.forEach(function (key) {
+  check(
+    "the panel's label exists in all three languages: " + key,
+    ["en", "hi", "ur"].every(function (code) { return typeof MSG.dict(code)[key] === "string"; })
+  );
+});
+check(
+  "every land.* key in the dictionary exists for a reason",
+  MSG.keys()
+    .filter(function (key) { return key.indexOf("land.") === 0 && key.indexOf("land.division.") !== 0; })
+    .every(function (key) {
+      return landPanelSource.indexOf('"' + key + '"') !== -1;
+    })
+);
+
 console.log("");
 
 if (failures.length) {
