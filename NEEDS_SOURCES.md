@@ -64,49 +64,55 @@ figure. When in doubt, the row stays.
 
 ## The village directory: names, tehsils and halqas
 
-**What is missing.** A citable list of the revenue villages in each district, with
-the tehsil and patwar halqa each falls under, in a form that can be shipped in a
-static folder. Without it the app can say a district has 394 revenue villages
-(Anantnag) but cannot let a farmer find theirs.
+**What is missing.** A citable list of revenue villages per district, with the
+tehsil and patwar halqa each falls under, in a form a static folder can ship.
 
-**Why it is not there yet.** The counts are published; the *list* is published
-per district, in formats that differ by district — NIC district pages, the Census
-2011 village directory, and the LGD village directory. None of those was obtained
-as a verified, machine-readable file during this pass, and transcribing 6,832
-names by hand from page images would produce plausible-looking errors, which is
-the exact failure this project exists to avoid. A one-district sample would be
-worse than none: it would look like coverage that is not there.
+**What the sources actually publish, checked 8 November 2026.**
 
-**Who publishes it.**
+- **Census 2011 location code directory**, one XLSX for all of India:
+  `https://censusindia.gov.in/nada/index.php/catalog/42648/download/46323/PC11_TV_DIR.xlsx`.
+  State, district, sub-district and village codes with names. Tehsils appear as
+  codes, not names; there is no block and no halqa.
+- **Census 2011 district handbooks (DCHB Part A)**, one PDF per district, e.g.
+  `.../catalog/512/download/1696/DH_2011_0101_PART_A_DCHB_KUPWARA.pdf`. These are
+  the village directories with amenities, organised by CD block. Text, not scans,
+  but PDF only: no CSV or XLSX of Part A exists.
+- **Local Government Directory** (`lgdirectory.gov.in`): current villages with
+  village, sub-district and district names, exported one entity at a time behind
+  a CAPTCHA. Its own report gives J&K **6,857** villages against the 6,832
+  revenue villages in the state table.
+- **data.gov.in** mirrors the LGD village fields but requires a login to download
+  and an API key for the API.
+- **District NIC pages** are the only place with tehsil **and** patwar halqa
+  together, and only for some districts: Anantnag publishes a village directory
+  with Tehsil, Niabat, GQ Circle, Patwar Halqa, Village and area in kanals;
+  Srinagar publishes patwar halqas. Kupwara publishes only its 16 tehsils.
+- **J&K Revenue Department** SRO notifications (PDF) list Sub Division → Tehsil →
+  Niabat → Patwar Halqa → villages, one notification per district.
 
-- Office of the Registrar General & Census Commissioner: Census 2011 Village
-  Directory, district tables with village name, tehsil and CD block.
-- Ministry of Panchayati Raj: Local Government Directory (LGD), village codes and
-  parent tehsil/district.
-- J&K Revenue Department: the jamabandi and the village list held by each tehsil.
+**Why the counts do not reconcile — and this matters.**
 
-**What shipping it requires.** Import one district at a time, reconcile the row
-count to `LAND.admin(name).villages`, ship only reconciled districts, and show an
-explicit "list not held here" state for the rest. Names and parents only: no
-crop, soil or irrigation attribute may be attached to a village row, because no
-public dataset carries that at village level.
+| Series | J&K total | Kupwara | Anantnag |
+| --- | --- | --- | --- |
+| Census 2011 villages in the directory | 6,553 | 362 | 342 |
+| State "total villages, Census 2011" | 6,314 | — | — |
+| Revenue villages, UT at a Glance 2024-25 (the table in `js/land.js`) | 6,832 | 380 | — |
+| LGD, current | 6,857 | — | — |
+| District administration pages | — | 363 / 367 | 395 |
 
-## Tehsil names per district
+So a Census list **cannot** be reconciled to the revenue-village column this app
+shows: they are different series with different years and definitions. The app's
+counts come from the official 2024-25 table and are pinned by tests; the village
+names would have to come from a source that publishes revenue villages, and the
+only such sources are per-district SRO PDFs and a few NIC HTML pages.
 
-**What is missing.** The names of the tehsils each district contains, so the land
-card can narrow to "the tehsil you picked is in these zones". The counts are
-already shown from the official table (207 tehsils in the Union Territory); the
-names are not in the app.
+**What shipping it requires.** One district at a time, keyed on Census or LGD
+**codes**, never on names, with the series named on screen ("Census 2011
+villages" or "revenue villages, 2024-25"). A list whose row count does not match
+the series it claims is a build failure. Districts without a list show "list not
+held here". No crop, soil or irrigation attribute may be attached to a village
+row.
 
-**Why it is not there yet.** Each district publishes its tehsil list on its own
-NIC page, in a different layout, and several are scanned images. A list stitched
-from memory would look authoritative and be wrong in exactly the way this project
-refuses: a farmer sent to the wrong tehsil office loses a day.
-
-**Who publishes it.** The district NIC site's "Administration → Tehsils" page, the
-Revenue Department's tehsil list, and the Census 2011 district handbook.
-
-**What shipping it requires.** One district at a time, cited in `js/sources.js`
-with the date read, and a build check that the number of names equals
-`LAND.admin(district).tehsils`. A district whose list does not reconcile ships
-without names, not with a guess.
+**Who could close it.** The Revenue Department, by publishing the SRO annexures
+as data rather than PDFs; or the district NIC pages, which already hold the
+halqa-level table for at least two districts.
