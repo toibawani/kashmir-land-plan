@@ -13,7 +13,7 @@ visit card, the saved plans. Only the weather needs a connection.
 
 ## Status
 
-**Version v1.2.3.** Nothing here is signed off by anyone. Three things are open,
+**Version v1.2.5.** Nothing here is signed off by anyone. Three things are open,
 and each line comes out only when the data behind it changes:
 
 1. **No officer has reviewed the catalogue.** Every screen that shows a
@@ -26,7 +26,7 @@ and each line comes out only when the data behind it changes:
    `reviewed: false`, the language menu says so beside the name, and a notice
    stays on screen while either is selected.
 
-The release is [v1.2.3](https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.2.3);
+The release is [v1.2.5](https://github.com/toibawani/kashmir-land-plan/releases/tag/v1.2.5);
 what changed, and what was deliberately left out, is in `CHANGELOG.md`.
 
 It was also only checked in a browser at 360px and in Lighthouse, not in a
@@ -74,10 +74,10 @@ fails the build unless they equal the published totals (42,241 sq km,
 1,22,67,013 people, 285 blocks, 207 tehsils, 6,832 revenue villages). That check
 caught a transposed area while this was being written.
 
-Fifteen districts also list their tehsils — Kupwara, Budgam, Srinagar, Reasi, Kathua
-and Poonch — each from the district administration's own page, counted against the
-official figure and linked to that page. The other fourteen say plainly that their
-tehsil names are not held here rather than guessing at them.
+Fifteen districts also list their tehsils, from Kupwara's sixteen to Poonch's six,
+each counted against the official figure and linked to the page it came from. The
+other five say plainly that their tehsil names are not held here rather than
+guessing at them, and `js/tehsils.js` records why each one is missing.
 
 Below the district detail the card carries the Union Territory's own land use —
 forest, net area sown, irrigated share — labelled as UT figures so they are
@@ -178,7 +178,10 @@ Deployment is GitHub Pages through `.github/workflows/pages.yml`, which runs
 Which document answers which question is mapped in [`docs/README.md`](docs/README.md).
 
 There is no backend and no key in this repository; what is still worth
-reporting, and how, is in `SECURITY.md`.
+reporting, and how, is in `SECURITY.md`. Both pages carry a Content Security
+Policy with `script-src 'self'`, which the build checks, because GitHub Pages
+cannot send response headers. The full production-readiness review, including
+what a static host cannot do, is [docs/AUDIT.md](docs/AUDIT.md).
 
 ## Sources
 

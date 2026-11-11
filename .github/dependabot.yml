@@ -1,0 +1,16 @@
+version: 2
+
+# There is no npm dependency tree here: package.json has no dependencies and no
+# lockfile, so the only third-party code this repository runs is the actions in
+# .github/workflows/. Those are pinned to a major version, which is deliberate
+# (readable diffs on a static site), and Dependabot is what keeps that pin from
+# quietly ageing. A security advisory against an action surfaces as a pull
+# request instead of a note nobody reads.
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"

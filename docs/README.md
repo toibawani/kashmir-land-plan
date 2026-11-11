@@ -13,6 +13,7 @@ that matches why you are here.
 | Asking why a figure is missing | [NEEDS_SOURCES.md](../NEEDS_SOURCES.md): each gap and who could close it |
 | Wondering why the app is built this way | [DECISIONS.md](DECISIONS.md): the trade-off behind each choice |
 | Reviewing a change | [CONTRIBUTING.md](../CONTRIBUTING.md), then [SECURITY.md](../SECURITY.md) |
+| Auditing the app before it is trusted | [AUDIT.md](AUDIT.md): the production-readiness review, item by item, and what this host cannot do |
 | Looking at performance | [LIGHTHOUSE.md](../LIGHTHOUSE.md): scores, dates and what is left |
 | Looking for what changed | [CHANGELOG.md](../CHANGELOG.md) |
 | Checking what the suite enforces | [CHECKS.md](CHECKS.md): every rule, and the file to open when it fails |

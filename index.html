@@ -3,6 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- GitHub Pages serves these files with no way to set a response header, so
+       the policy travels in the document. `script-src 'self'` is the rule that
+       matters: every script is a file, there is no inline script and no inline
+       event handler, so an injected one is inert. `style-src` keeps
+       'unsafe-inline' because the app sets element styles at runtime and the
+       field-test page has its own small stylesheet; styles cannot execute.
+       frame-ancestors and HSTS are ignored in a meta tag, which SECURITY.md and
+       docs/AUDIT.md record as a limit of the host. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="description" content="An offline-first J&amp;K land planning PWA that helps farmers prepare practical options and office-visit questions without inventing scheme eligibility or crop guarantees. Prepare for the agriculture office visit." />
   <meta name="theme-color" content="#3d5a3d" />
   <meta name="color-scheme" content="light" />
@@ -17,9 +27,11 @@
   <!-- Fonts are fetched without blocking the first paint. The text is readable
        immediately in the fallback stack, and the webfont swaps in when it
        arrives, which matters on a weak connection where the CSS request alone
-       can take seconds. Without JavaScript the plain stylesheet is used. -->
+       can take seconds. Without JavaScript the plain stylesheet is used.
+       The switch from print to all is done by js/fonts.js rather than an
+       onload attribute, so this page needs no inline-script exemption. -->
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" media="print" data-fontswap />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet" /></noscript>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -736,6 +748,7 @@
     </div>
   </footer>
 
+  <script src="js/fonts.js" defer></script>
   <script src="js/regions.js" defer></script>
   <script src="js/reviews.js" defer></script>
   <script src="js/catalogue.js" defer></script>

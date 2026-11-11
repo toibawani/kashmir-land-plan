@@ -360,6 +360,8 @@ function page(district) {
     "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\" />\n" +
     '<meta name="viewport" content="width=device-width, initial-scale=1" />\n' +
     '<meta name="robots" content="noindex" />\n' +
+    "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'\" />\n" +
+    '<meta name="referrer" content="no-referrer" />\n' +
     "<title>Catalogue review sheet: " +
     esc(district) +
     "</title>\n<style>" +
@@ -447,6 +449,8 @@ function cover(districts) {
     "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\" />\n" +
     '<meta name="viewport" content="width=device-width, initial-scale=1" />\n' +
     '<meta name="robots" content="noindex" />\n' +
+    "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'\" />\n" +
+    '<meta name="referrer" content="no-referrer" />\n' +
     "<title>Catalogue review pack</title>\n<style>" +
     STYLE +
     "</style>\n</head>\n<body class=\"pack\">\n" +
@@ -521,6 +525,8 @@ function printAll(districts) {
     "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\" />\n" +
     '<meta name="viewport" content="width=device-width, initial-scale=1" />\n' +
     '<meta name="robots" content="noindex" />\n' +
+    "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'\" />\n" +
+    '<meta name="referrer" content="no-referrer" />\n' +
     "<title>Catalogue review sheets: all districts</title>\n<style>" +
     STYLE +
     "</style>\n</head>\n<body>\n" +

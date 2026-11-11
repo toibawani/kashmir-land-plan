@@ -8,6 +8,22 @@ storage on that phone and is never sent anywhere, with one exception the person
 choosing the weather screen makes: a district name and a request to Open-Meteo.
 There is nothing to breach, and no key or token exists in this repository.
 
+## What the policy in the page covers
+
+Both shipped pages carry a Content Security Policy in a `<meta>` tag, because
+GitHub Pages cannot send a response header. The rule that matters is
+`script-src 'self'`: every script is a file, and there is no inline script and
+no inline event handler, so an injected one cannot run. `connect-src` is
+limited to the two Open-Meteo hosts on the app page and to nothing at all on the
+field-test answers page. `npm run build` fails if a page loses that policy,
+weakens it, or grows an inline script.
+
+Two protections cannot be expressed this way: `frame-ancestors` (clickjacking)
+and HSTS are ignored in a meta tag, and Pages sets no `X-Content-Type-Options`.
+Closing those needs a host or proxy that sends headers; until then they are a
+known limit, not an oversight. The full review is in
+[docs/AUDIT.md](docs/AUDIT.md).
+
 ## What is still worth reporting
 
 - A way to make one farmer's saved plan, or the answer they typed into the

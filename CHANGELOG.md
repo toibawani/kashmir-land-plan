@@ -12,6 +12,52 @@ should not, because the catalogue is still unreviewed.
 
 Nothing yet.
 
+## [1.2.5] - 2026-11-11
+
+### Security
+
+- The printed review pack now carries its own policy. Every district sheet, the
+  cover and the print-all file declare `default-src 'none'` with inline styles
+  only, so a sheet opened from a download or an email cannot run script. They
+  also send no referrer.
+- `npm run build` now cross-checks the app's policy against `js/weather.js`: add
+  a weather host to the code without a matching `connect-src` and the build
+  fails, instead of the weather being blocked silently on a phone.
+
+### Changed
+
+- `docs/AUDIT.md` ranks the remaining technical debt by risk and effort, so the
+  things left undone are a list rather than an impression.
+
+## [1.2.4] - 2026-11-11
+
+### Security
+
+- Both shipped pages now carry a Content Security Policy with `script-src
+  'self'`: any injected inline script is inert. GitHub Pages cannot send a
+  response header, so the policy lives in the document, and `npm run build`
+  refuses a page whose policy is missing, weakened, or written beside an inline
+  script that the policy would silently block.
+- The only inline event handler (the webfont link's `onload`) and the only
+  inline script (the field-test answers page) moved into `js/fonts.js` and
+  `js/feedback-page.js`, so no page needs an inline-script exemption. Inline
+  *styles* are still allowed, because the field-test page has its own stylesheet
+  and the app sets element styles at runtime; styles cannot execute.
+- A referrer policy of `strict-origin-when-cross-origin` is now stated in both
+  pages rather than left to the browser default.
+- `docs/AUDIT.md` records what was checked, what was fixed, and what a static
+  host cannot do (HSTS, `frame-ancestors`, `X-Content-Type-Options`).
+
+### Added
+
+- `.github/dependabot.yml`: weekly updates for the workflow actions, the only
+  third-party code this repository runs.
+
+### Changed
+
+- `SECURITY.md` and `docs/README.md` point at the audit, so the limits are not
+  discoverable only by reading the workflow.
+
 ## [1.2.3] - 2026-11-08
 
 ### Added

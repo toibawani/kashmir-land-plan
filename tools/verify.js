@@ -129,6 +129,96 @@ precache.forEach(function (r) {
   }
 });
 
+// feedback.html ships too, and the worker precaches it. A file it names but
+// does not have, or one it loads without precaching, would leave the only
+// screen that can read the field-test answers broken offline.
+var feedbackHtml = fs.readFileSync(path.join(root, "feedback.html"), "utf8");
+var feedbackRe = /(?:src|href)="([^"]+)"/g;
+var feedbackMatch;
+while ((feedbackMatch = feedbackRe.exec(feedbackHtml)) !== null) {
+  var feedbackTarget = feedbackMatch[1];
+  if (
+    /^(https?:)?\/\//.test(feedbackTarget) ||
+    feedbackTarget.startsWith("#") ||
+    feedbackTarget.startsWith("data:")
+  ) {
+    continue;
+  }
+  if (!exists(path.join(root, feedbackTarget))) {
+    failures.push("feedback.html references " + feedbackTarget + " but it is not on disk");
+  }
+  if (feedbackTarget.endsWith(".js") && precache.indexOf(feedbackTarget) === -1) {
+    failures.push("feedback.html loads " + feedbackTarget + " but sw.js does not precache it");
+  }
+}
+
+/* ---- 3b. The policy that has to live in the page ---- */
+
+// GitHub Pages cannot send a response header, so a Content Security Policy can
+// only travel in the document. Without one, a stray inline script or an
+// injected handler runs with the app's full privileges. `script-src 'self'`
+// is the rule that does the work: it makes inline script inert. The build
+// refuses a page that dropped the policy, weakened it, or regrew an inline
+// script that its own policy would silently block.
+["index.html", "feedback.html"].forEach(function (name) {
+  var file = path.join(root, name);
+  if (!exists(file)) return;
+  var text = fs.readFileSync(file, "utf8");
+
+  var policy = text.match(/<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]+)"/i);
+  if (!policy) {
+    failures.push(name + " carries no Content-Security-Policy, so an injected script would run");
+    return;
+  }
+
+  var csp = policy[1];
+  ["script-src 'self'", "object-src 'none'", "base-uri 'none'"].forEach(function (rule) {
+    if (csp.indexOf(rule) === -1) {
+      failures.push(name + " has a Content-Security-Policy without " + rule);
+    }
+  });
+  if (/script-src[^;]*unsafe-inline/.test(csp)) {
+    failures.push(name + " allows inline script in its Content-Security-Policy");
+  }
+
+  // The policy and the code must name the same hosts. A weather host added to
+  // js/weather.js without a matching connect-src is blocked in the browser, and
+  // the screen then says the service could not be reached when it is the policy
+  // doing the blocking. Nobody debugs that from a phone, so it fails here.
+  if (name === "index.html") {
+    var weatherCode = fs.readFileSync(path.join(root, "js", "weather.js"), "utf8");
+    var hostRe = /https:\/\/([a-z0-9][a-z0-9.-]*)/gi;
+    var seenHosts = {};
+    var hostMatch;
+    while ((hostMatch = hostRe.exec(weatherCode)) !== null) {
+      seenHosts[hostMatch[1].toLowerCase()] = true;
+    }
+    Object.keys(seenHosts).forEach(function (host) {
+      if (csp.indexOf(host) === -1) {
+        failures.push(
+          name +
+            " calls " +
+            host +
+            " from js/weather.js but its Content-Security-Policy does not allow it, so the request would be blocked silently"
+        );
+      }
+    });
+  }
+
+  // A JSON block is data, not script; anything else inline would be dead code
+  // that looks as if it runs, which is worse than an obvious failure. This
+  // walks the tags in one pass on purpose: a nested lazy quantifier over a
+  // 60 KB page is quadratic enough to hang the build.
+  var scriptTags = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  var scriptMatch;
+  while ((scriptMatch = scriptTags.exec(text)) !== null) {
+    if (!/\bsrc\s*=/.test(scriptMatch[1]) && scriptMatch[2].replace(/\s+/g, " ").trim()) {
+      failures.push(name + " has an inline <script> block, which its own policy blocks");
+      break;
+    }
+  }
+});
+
 /* ---- 4. A recorded officer review must be complete ---- */
 
 // A half-filled review is worse than none at all: a bare "reviewed" flag
