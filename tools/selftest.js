@@ -284,6 +284,38 @@ var guarded = PLANS.upsert({
 check("a non-object covered map falls back to the previous value", guarded.coveredQuestions["q-water-source"] === true, "corrupted: " + JSON.stringify(guarded.coveredQuestions));
 PLANS.remove(visitPlan.id);
 
+// The store advertises a maximum, and it has to hold it: a ninth plan must not
+// quietly push the first one out without the farmer being told.
+console.log("plan storage limits");
+var kept = 0;
+for (var limitIndex = 0; limitIndex < PLANS.MAX + 4; limitIndex++) {
+  PLANS.upsert({ name: "Plan " + limitIndex, data: sampleData, interested: {}, options: [] });
+  kept = PLANS.list().length;
+}
+check(
+  "the store keeps at most its advertised maximum",
+  kept === PLANS.MAX,
+  kept + " plans kept of a stated maximum of " + PLANS.MAX
+);
+
+// A browser in private mode, or a full device, takes the call and refuses the
+// write. The store must not return a plan it did not keep.
+var strictSandbox = { window: {} };
+strictSandbox.window.localStorage = {
+  getItem: function () {
+    return null;
+  },
+  setItem: function () {
+    throw new Error("QuotaExceededError");
+  },
+  removeItem: function () {},
+};
+load(["plans.js"], strictSandbox);
+var STRICT = strictSandbox.window.MLMP_PLANS;
+var refused = STRICT.upsert({ name: "No room", data: sampleData, interested: {}, options: [] });
+check("a device that refuses the write reports no saved plan", refused === null, "a plan came back anyway");
+check("nothing is listed after a refused write", STRICT.list().length === 0, STRICT.list().length + " plan(s)");
+
 console.log("speech chunking");
 check("no voice here, so reading is honestly unavailable", SPEECH.supported() === false, "supported() true with no voice");
 var spoken = "First sentence. Second sentence. " + new Array(40).join("A very long sentence that keeps going and going. ");

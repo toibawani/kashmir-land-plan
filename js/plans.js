@@ -12,7 +12,8 @@
  * Interface
  *   MLMP_PLANS.list()                     all saved plans, newest first
  *   MLMP_PLANS.get(id)                    one plan, or null
- *   MLMP_PLANS.upsert(plan)               save new or update in place, returns the plan
+ *   MLMP_PLANS.upsert(plan)               save new or update in place, returns the plan,
+ *                                         or null when the device refused the write
  *   MLMP_PLANS.remove(id)                 delete one
  *   MLMP_PLANS.rename(id, name)           rename
  *   MLMP_PLANS.choose(id)                 mark which one goes to the office
@@ -139,7 +140,12 @@
     } else {
       plans[existingIndex] = plan;
     }
-    writeRaw(plans);
+    // A browser in private mode, or a device whose storage is full, accepts the
+    // call and then refuses the write. Returning the plan anyway would let the
+    // interface say "saved" about something that is not there, and the farmer
+    // would find an empty list at the office. So a refused write returns null
+    // and the caller says so.
+    if (!writeRaw(plans)) return null;
     return plan;
   }
 
