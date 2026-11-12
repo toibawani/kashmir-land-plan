@@ -12,6 +12,33 @@ should not, because the catalogue is still unreviewed.
 
 Nothing yet.
 
+## [1.2.7] - 2026-11-12
+
+### Fixed
+
+- A device that refuses to store a plan no longer gets told the plan was saved.
+  `MLMP_PLANS.upsert()` returned the plan whether or not the write landed, so a
+  browser in private mode, or a device with no room left, showed "Saved as ..."
+  over an empty list. It now returns null on a refused write, and the results
+  screen says the plan was not saved and points at Download and at freeing
+  space.
+- The eight-plan limit is stated before it is reached. The My plans heading
+  reads "3 saved plans of 8 this device keeps", and a ninth save is refused
+  with a sentence asking which plan to delete, instead of quietly pushing the
+  oldest one out of the list.
+- A ticked question that could not be written back to a saved plan now says so,
+  rather than implying the visit note reached the plan when it only reached the
+  draft.
+
+### Build
+
+- New check: every file in `js/` must be loaded by a page and precached by
+  `sw.js`. A shipped script that nothing requests is either dead weight or the
+  wiring mistake that once left the tehsil names invisible.
+- The self-test now covers the storage boundary: a store that throws on write
+  must report no plan and list nothing, and the store must hold its stated
+  maximum of eight.
+
 ## [1.2.6] - 2026-11-12
 
 ### Fixed

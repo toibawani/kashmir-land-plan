@@ -148,6 +148,16 @@ The worker is network-first, so a corrected deploy reaches a device on the next
 online load, but a device that stays offline keeps the copy it has. Accepted for
 an offline-first app; the alternative (no offline shell) defeats its purpose.
 
+**Medium — a refused plan write was reported as a save.**
+`MLMP_PLANS.upsert()` returned the plan object whether or not
+`localStorage.setItem` had worked, and the results screen printed "Saved as …"
+from that object. On a browser in private mode, or a device with storage full,
+a farmer would reach the office with an empty list and a card in hand. Fixed in
+1.2.7: a refused write returns null, the screen says the plan was not saved and
+points at Download, and the self-test drives a store that throws on write to
+prove it. The eight-plan limit is also stated in the list heading and enforced
+before a save, so no plan is dropped to make room without a word.
+
 **Low — Google Fonts is a third party on first load.**
 The CSS request reveals the visitor's IP and, until the referrer policy was
 stated, the page URL, to Google. SRI is not possible for the user-agent-specific
@@ -270,6 +280,18 @@ Run again on 2026-11-12 for 1.2.6, after the report was moved to the end of
 - The markup check found two real drifts when it was first run: the home page
   still described "a typical year for each" and a "comparison" that the English
   strings had already replaced. Both are fixed in the same release.
+
+Run again on 2026-11-12 for 1.2.7:
+
+- `npm test`: green, with the new storage checks (a store that throws on write
+  reports no plan and lists nothing; the store holds its maximum of eight) and
+  the orphan-script check. JS 118.6 KB of 119.9 KB; total 145.8 KB.
+- The orphan check was exercised: dropping a `js/orphan-probe.js` into the
+  folder makes `npm run build` exit 1 with both halves named, the missing page
+  reference and the missing precache entry.
+- Not exercised: the "device refused the write" message on a real browser in
+  private mode. The store path is covered by the self-test; the sentence on
+  screen is covered by reading it, not by seeing it.
 
 Not verified: response headers on the live Pages site, branch protection and
 alert settings, any real-device behaviour, the Esc key in a real screen reader,
