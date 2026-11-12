@@ -1588,6 +1588,43 @@ if (appCode.indexOf("\"Escape\"") === -1) {
   );
 }
 
+/* ---- 11w. Every shipped script is loaded by a page and cached ---- */
+
+// A file in js/ that no page asks for is either dead weight or a wiring mistake
+// of the same kind that once left the tehsil names invisible: the file exists,
+// the interface looks for it, and nothing is there. Both halves are checked,
+// because a script that loads online and is not precached disappears offline.
+(function () {
+  var jsDir = path.join(root, "js");
+  if (!fs.existsSync(jsDir)) return;
+  var pageText = fs
+    .readdirSync(root)
+    .filter(function (name) {
+      return /\.html$/.test(name);
+    })
+    .map(function (name) {
+      return fs.readFileSync(path.join(root, name), "utf8");
+    })
+    .join("\n");
+
+  fs.readdirSync(jsDir)
+    .filter(function (name) {
+      return /\.js$/.test(name);
+    })
+    .sort()
+    .forEach(function (name) {
+      var script = "js/" + name;
+      if (pageText.indexOf(script) === -1) {
+        failures.push(
+          script + " is shipped but no page loads it, so either wire it up or delete it"
+        );
+      }
+      if (swSource.indexOf(script) === -1) {
+        failures.push(script + " is shipped but sw.js does not precache it, so it is missing offline");
+      }
+    });
+})();
+
 /* ---- Report ---- */
 
 notes.forEach(function (n) {
