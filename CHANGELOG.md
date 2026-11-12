@@ -12,6 +12,35 @@ should not, because the catalogue is still unreviewed.
 
 Nothing yet.
 
+## [1.2.6] - 2026-11-12
+
+### Fixed
+
+- The home page's "What you enter" and "What you get" paragraphs now say what
+  the English strings say. The markup had kept an older sentence about "a
+  typical year for each" and a "comparison", and the script replaced it on
+  load, so only a reader with JavaScript off met the stale text.
+- The navigation menu closes on Escape and puts focus back on the button that
+  opened it. Before this, a keyboard reader who opened the menu by mistake had
+  no way to dismiss it.
+- The forecast cache is bounded to twenty districts, least recently used first
+  out. A tab left open across a long afternoon used to hold every town it had
+  ever looked up, and nothing ever removed one.
+
+### Build
+
+- `tools/verify.js` printed its pass message and returned before the last
+  sections ran, so a failure in any of them — dead in-page links, the heading
+  rule, the tehsil data checks, the new markup and keyboard rules — could never
+  fail the build. The report now runs last.
+- Two of those sections were also wrong once they finally ran: the link check
+  treated the router's `#plan` and `#weather` hashes as missing ids, and the
+  heading rule counted one h1 per document when this page carries ten screens.
+  Both now test the intent: a hash is either a real id or a known route, and
+  every screen carries exactly one h1 with exactly one screen visible.
+- Two new checks: the text inside a `data-i18n` element must equal its English
+  string, and `js/app.js` must keep closing the menu on Escape.
+
 ## [1.2.5] - 2026-11-11
 
 ### Security

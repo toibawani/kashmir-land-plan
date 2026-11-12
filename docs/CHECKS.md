@@ -8,8 +8,8 @@ code to find out whether their change is allowed.
 | Tool | Refuses | Where the rule lives |
 | --- | --- | --- |
 | `tools/lint.js` | leftover TODOs, `console.log`, `eval`, committed secrets, insecure `http://` links | `tools/lint.js` |
-| `tools/verify.js` | a broken script, a dead local reference, an asset missing from the offline cache, a manifest icon that is absent or mis-sized, a reused id, an `aria-*` reference with no target, an in-page link with no anchor, an unnamed control, an image without alt text, a land figure with no source, a missing caveat | `tools/verify.js` |
-| `tools/selftest.js` | scoring, plan saving, visit fitting, QR payloads and catalogue consistency drifting from the documented behaviour | `tools/selftest.js` |
+| `tools/verify.js` | a broken script, a dead local reference, an asset missing from the offline cache, a manifest icon that is absent or mis-sized, a reused id, an `aria-*` reference with no target, a dead in-page link, a screen with no h1 or with more than one, an unnamed control, an image without alt text, a land figure with no source, a missing caveat, markup that no longer matches its English string, a navigation menu that cannot be closed with Escape | `tools/verify.js` |
+| `tools/selftest.js` | scoring, plan saving, visit fitting, QR payloads, the forecast cache growing without bound, and catalogue consistency drifting from the documented behaviour | `tools/selftest.js` |
 | `tools/tests-logic.js` | a district with no counts, a division that does not cover every district, a neighbour outside the division, a dropped placeholder, a sheet that imports a different version | `tools/tests-logic.js` |
 | `tools/budget.js` | the gzipped payload over its budget, per file and in total | `tools/budget.js` |
 | `tools/translation-check.js --check` | a missing or extra key in any language, an empty string, a placeholder that changed, `TRANSLATION_CHECK.md` out of date | `tools/translation-check.js` |
@@ -29,3 +29,9 @@ forgotten:
 Put the rule next to the thing it protects, fail with a sentence that names the
 file and the fix, and add it to the table above in the same commit. A check that
 only says "invalid" makes the next person read the source to find out why.
+
+One structural rule: **the report is the last statement in `tools/verify.js`**.
+Until 1.2.6 it was not, and every section added after it ran without being able
+to fail the build, which is how four sections went quiet. Append new sections
+above the `/* ---- Report ---- */` marker, and run the failure case once to see
+the exit code turn non-zero. A check nobody has seen fail is a comment.

@@ -160,8 +160,10 @@ Anyone with the unlocked phone and the browser profile can read them. The app
 says so, and offers Start over. Encrypting at rest with a key stored beside the
 data would add ceremony without a real boundary.
 
-**Low — the in-memory forecast cache never evicts.** Bounded by 20 district
-names in practice. Left as is.
+**Low — the in-memory forecast cache never evicts.** Fixed in 1.2.6: the cache
+holds at most twenty districts, least recently used first out, and the self-test
+loads twenty-two to prove that one is dropped and that a town still cached is
+served without a second request.
 
 ## Technical debt, ranked
 
@@ -175,7 +177,7 @@ an officer could be misled by; effort is the size of the change, not its value.
 | `innerHTML` templates depend on hand-written escaping | Medium | Days, plus fuzzing | Correct by reading today; `script-src 'self'` is the backstop, not a proof |
 | No village-level data | Medium | Weeks of sourcing | Three official series disagree; recorded in `issues/004-village-directory.md` |
 | Google Fonts is a third party on first load | Low | An afternoon | Self-hosting adds weight and a licence note to the repo |
-| The forecast cache never evicts | Low | Minutes | Bounded by the twenty district names in practice |
+| The verifier reported before its last four sections ran | High, because every check added after it was decorative | An hour | Fixed in 1.2.6: the report is now the last statement in `tools/verify.js`, and the link and heading rules it exposed were corrected to test their intent |
 | The review pack changes on every version bump | Low | Minutes | Churn, not risk; the `--check` keeps it from going stale |
 | No staging URL | Low | An hour | A pull request's CI run is the gate; Pages serves `main` only |
 
@@ -255,7 +257,21 @@ Run on this machine on 2026-11-11, before the commit that adds this section.
   `mlmp-v39-fonts`, the worker controls the page, and 5 steps with 36 headings
   render with the network off.
 
+Run again on 2026-11-12 for 1.2.6, after the report was moved to the end of
+`tools/verify.js`:
+
+- `npm test`: green. The self-test now runs 175 checks, including three on the
+  forecast cache: the newest stays, the oldest is dropped, and a cached town is
+  served without a new request. JS 118.1 KB of 119.9 KB; total 145.3 KB.
+- The guard was exercised, not assumed: removing the Escape handler, or putting
+  the old village wording back into `index.html`, makes `npm run build` exit 1
+  with a sentence naming the file. A planted dead in-page link does the same —
+  before the move it did not, because the report had already printed.
+- The markup check found two real drifts when it was first run: the home page
+  still described "a typical year for each" and a "comparison" that the English
+  strings had already replaced. Both are fixed in the same release.
+
 Not verified: response headers on the live Pages site, branch protection and
-alert settings, any real-device behaviour, and the escaped `innerHTML` paths in
-attribute context.
+alert settings, any real-device behaviour, the Esc key in a real screen reader,
+and the escaped `innerHTML` paths in attribute context.
 
