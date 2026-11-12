@@ -3657,6 +3657,18 @@
       setStatus("copy-status", "Finish the plot details first, then this can be saved.");
       return null;
     }
+    // My plans holds eight. A ninth would either be dropped silently by the
+    // store or push the oldest out, and losing a plan someone means to keep is
+    // worse than asking them to choose.
+    if (!state.currentPlanId && PLANS.list().length >= PLANS.MAX) {
+      setStatus(
+        "copy-status",
+        "This device already holds " +
+          PLANS.MAX +
+          " plans, which is the limit. Delete one in My plans, then save this one."
+      );
+      return null;
+    }
     var snapshot = planSnapshot();
     if (!state.currentPlanId) {
       var taken = PLANS.list().map(function (p) {
@@ -3665,10 +3677,15 @@
       snapshot.name = PLANS.suggestName(chosenOptions(), taken);
     }
     var saved = PLANS.upsert(snapshot);
-    if (saved) {
-      state.currentPlanId = saved.id;
-      state.currentPlanName = saved.name;
+    if (!saved) {
+      setStatus(
+        "copy-status",
+        "This device refused to store the plan, so it was not saved. Your answers are still here: free some space, or use Download, and try again."
+      );
+      return null;
     }
+    state.currentPlanId = saved.id;
+    state.currentPlanName = saved.name;
     return saved;
   }
 
@@ -3688,7 +3705,7 @@
     if (!plansAvailable() || !state.currentPlanId) return null;
     var plan = PLANS.get(state.currentPlanId);
     if (!plan) return null;
-    PLANS.upsert({
+    var written = PLANS.upsert({
       id: plan.id,
       name: plan.name,
       data: plan.data,
@@ -3699,6 +3716,13 @@
       isDemo: plan.isDemo,
       chosen: plan.chosen,
     });
+    // The tick is already on screen and in the draft. If the store refused this
+    // write the tick will still be there when the draft is reopened, but it
+    // will not have reached the saved plan, so say so rather than imply it did.
+    if (!written) {
+      setStatus("copy-status", "This device refused to update the saved plan, so this tick is only in the draft for now.");
+      return null;
+    }
     return plan.id;
   }
 
@@ -3810,6 +3834,12 @@
       '<h2 class="plans-heading">' +
       plans.length +
       (plans.length === 1 ? " saved plan" : " saved plans") +
+      // The limit is stated before it is reached, not only when a save fails:
+      // a farmer deciding whether to keep an old plan needs to know how many
+      // the device holds, not discover it at the moment of saving.
+      (plans.length >= PLANS.MAX
+        ? ", which is the limit for this device"
+        : " of " + PLANS.MAX + " this device keeps") +
       "</h2>" +
       '<ul class="plans-cards">' +
       plans
