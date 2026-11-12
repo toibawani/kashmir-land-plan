@@ -4788,6 +4788,22 @@
         if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
       });
 
+    // Escape closes the menu on the same terms as choosing a link, and puts
+    // focus back on the button that opened it. Without this, a keyboard reader
+    // who opens the menu and changes their mind has no way to dismiss it, and
+    // focus is left on a list that is no longer visible.
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape" && event.key !== "Esc") return;
+      var openMenu = $("#nav-menu");
+      if (!openMenu || !openMenu.classList.contains("is-open")) return;
+      var toggle = $("#nav-toggle");
+      openMenu.classList.remove("is-open");
+      if (toggle) {
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.focus();
+      }
+    });
+
     window.addEventListener("hashchange", function () {
       handleHash(false);
     });
