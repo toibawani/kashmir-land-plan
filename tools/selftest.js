@@ -972,16 +972,129 @@ check(
   "an honest sentence was flagged as a claim"
 );
 
+/* ---- The forecast cache stays bounded ---- */
+
+console.log("forecast cache");
+
+// weather.js is loaded in its own sandbox with a stubbed fetch, so the cache can
+// be exercised without a network. The stub answers the two Open-Meteo services
+// and counts its calls, which is how a cache hit is told from a refetch.
+var forecastSandbox = {
+  window: {},
+  navigator: { onLine: true },
+  setTimeout: setTimeout,
+  clearTimeout: clearTimeout,
+  Promise: Promise,
+  Date: Date,
+  AbortController: function () {
+    this.signal = null;
+    this.abort = function () {};
+  },
+};
+var weatherFetches = 0;
+forecastSandbox.fetch = function (url) {
+  weatherFetches += 1;
+  if (url.indexOf("geocoding-api.open-meteo.com") !== -1) {
+    var asked = decodeURIComponent((url.split("name=")[1] || "").split("&")[0]);
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          results: [
+            {
+              name: asked,
+              admin1: "Jammu and Kashmir",
+              admin2: asked,
+              latitude: 34.08,
+              longitude: 74.8,
+              timezone: "Asia/Kolkata",
+              population: 20000,
+              feature_code: "PPLA2",
+            },
+          ],
+        });
+      },
+    });
+  }
+  return Promise.resolve({
+    ok: true,
+    json: function () {
+      return Promise.resolve({
+        timezone: "Asia/Kolkata",
+        elevation: 1600,
+        current: {
+          temperature_2m: 9,
+          weather_code: 0,
+          relative_humidity_2m: 60,
+          precipitation: 0,
+          wind_speed_10m: 5,
+        },
+        daily: {
+          time: ["2026-11-11", "2026-11-12"],
+          weather_code: [0, 3],
+          temperature_2m_max: [12, 11],
+          temperature_2m_min: [1, 2],
+          precipitation_sum: [0, 1],
+          precipitation_probability_max: [5, 70],
+        },
+      });
+    },
+  });
+};
+load(["weather.js"], forecastSandbox);
+var CACHE_WEATHER = forecastSandbox.window.MLMP_WEATHER;
+
+var cacheNames = [];
+for (var cacheIndex = 1; cacheIndex <= 22; cacheIndex++) {
+  cacheNames.push("Cache District " + cacheIndex);
+}
+
+var cacheChain = Promise.resolve();
+cacheNames.forEach(function (name) {
+  cacheChain = cacheChain.then(function () {
+    return CACHE_WEATHER.get(name, false);
+  });
+});
+
+cacheChain
+  .then(function () {
+    check(
+      "the newest forecast stays cached",
+      CACHE_WEATHER.cached(cacheNames[21]) !== null,
+      "the last district is missing"
+    );
+    check(
+      "the oldest forecast is dropped once the cache is full",
+      CACHE_WEATHER.cached(cacheNames[0]) === null,
+      "the cache grew past its limit"
+    );
+    var before = weatherFetches;
+    return CACHE_WEATHER.get(cacheNames[21], false).then(function () {
+      check(
+        "a cached forecast is served without a new request",
+        weatherFetches === before,
+        "refetched " + (weatherFetches - before) + " time(s)"
+      );
+    });
+  })
+  .then(report)
+  .catch(function (err) {
+    failures.push("the forecast cache test threw: " + (err && err.message));
+    report();
+  });
+
 /* ---- Report ---- */
 
-console.log("");
-if (failures.length) {
-  console.error("Self test failed (" + checks + " checks, " + failures.length + " failing):");
-  failures.forEach(function (f) {
-    console.error("  - " + f);
-  });
-  process.exit(1);
+function report() {
+  console.log("");
+  if (failures.length) {
+    console.error("Self test failed (" + checks + " checks, " + failures.length + " failing):");
+    failures.forEach(function (f) {
+      console.error("  - " + f);
+    });
+    process.exit(1);
+  }
+  console.log("Self test passed: " + checks + " checks across the catalogue, questions, saved plans and speech.");
 }
-console.log("Self test passed: " + checks + " checks across the catalogue, questions, saved plans and speech.");
 
 

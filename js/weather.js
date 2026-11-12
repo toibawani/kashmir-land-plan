@@ -297,7 +297,42 @@
     };
   }
 
+  /**
+   * The forecast cache is bounded. A tab left open across a district-hopping
+   * afternoon used to keep every result it had ever seen, keyed by the name the
+   * farmer typed, and nothing ever removed one. Twenty districts is the whole
+   * set this app ships, so the cap is set there: past it, the least recently
+   * used town is dropped and asked for again if the farmer returns to it.
+   */
+  var CACHE_LIMIT = 20;
   var cache = Object.create(null);
+  var cacheOrder = [];
+
+  function hasCached(key) {
+    return Object.prototype.hasOwnProperty.call(cache, key);
+  }
+
+  /** Store a result, mark it as the most recent, and drop the oldest past the cap. */
+  function remember(key, result) {
+    var at = cacheOrder.indexOf(key);
+    if (at !== -1) cacheOrder.splice(at, 1);
+    cacheOrder.push(key);
+    cache[key] = result;
+    while (cacheOrder.length > CACHE_LIMIT) {
+      delete cache[cacheOrder.shift()];
+    }
+  }
+
+  /** Read a result and mark it as the most recent, so a revisit is not a miss. */
+  function recall(key) {
+    if (!hasCached(key)) return null;
+    var at = cacheOrder.indexOf(key);
+    if (at !== -1 && at !== cacheOrder.length - 1) {
+      cacheOrder.splice(at, 1);
+      cacheOrder.push(key);
+    }
+    return cache[key];
+  }
 
   /**
    * Look up weather for a district name.
@@ -315,7 +350,10 @@
       empty.reason = "no_district";
       return Promise.reject(empty);
     }
-    if (!force && cache[key]) return Promise.resolve(cache[key]);
+    if (!force) {
+      var remembered = recall(key);
+      if (remembered) return Promise.resolve(remembered);
+    }
     if (isOffline()) {
       var offline = new Error(
         "This device is offline. Weather is the only part of the app that needs the internet."
@@ -331,7 +369,7 @@
         });
       })
       .then(function (result) {
-        cache[key] = result;
+        remember(key, result);
         return result;
       })
       .catch(function (err) {
@@ -348,7 +386,7 @@
   }
 
   function cached(districtName) {
-    return cache[String(districtName || "").trim().toLowerCase()] || null;
+    return recall(String(districtName || "").trim().toLowerCase());
   }
 
   /**
