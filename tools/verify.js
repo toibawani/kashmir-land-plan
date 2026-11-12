@@ -1235,41 +1235,35 @@ while ((ariaRefMatch = ariaRefRe.exec(html)) !== null) {
 
 
 
-notes.forEach(function (n) {
-  console.log("note: " + n);
-});
-
-if (failures.length) {
-  console.error("\nBuild check failed:");
-  failures.forEach(function (f) {
-    console.error("  - " + f);
-  });
-  process.exit(1);
-}
-
-console.log(
-  "\nBuild check passed: " +
-    jsFiles.length +
-    " scripts parse, " +
-    refs.length +
-    " local references resolve, " +
-    precache.length +
-    " assets precached for offline, " +
-    readmeImages.length +
-    " README images present."
-);
 
 /* ---- 11i. Every in-page link must land somewhere ---- */
 
 // The nav, the skip link and the footer all use `#id`. A renamed section leaves
 // those links silently dead: the URL changes, nothing moves, and the reader
 // concludes the button is broken.
+// Not every `#` link is an anchor. `#plan`, `#weather` and their neighbours are
+// routes: js/app.js reads the hash and swaps the screen, so there is no element
+// to scroll to and no id to require. They are listed here, and the router's own
+// fallback for an unknown hash is what makes a typo safe.
+var ROUTE_HASHES = [
+  "home",
+  "plan",
+  "form",
+  "results",
+  "compare",
+  "next",
+  "summary",
+  "visit",
+  "weather",
+  "plans",
+  "about",
+];
 var anchorRe = /<a\b[^>]*\bhref="#([^"]*)"/g;
 var anchorMatch;
 while ((anchorMatch = anchorRe.exec(html)) !== null) {
   var anchorTarget = anchorMatch[1];
   if (!anchorTarget) continue;
-  if (!idSeen[anchorTarget]) {
+  if (!idSeen[anchorTarget] && ROUTE_HASHES.indexOf(anchorTarget) === -1) {
     failures.push(
       'index.html links to #' + anchorTarget + ", which is not an id on the page, so the link goes nowhere"
     );
@@ -1315,13 +1309,32 @@ if (!fs.existsSync(manifestPath)) {
 
 /* ---- 11k. Page-level metadata must describe the page ---- */
 
-// One h1 tells a screen reader what the page is; none, or three, leaves it
-// guessing. A lang attribute decides how the text is pronounced, and a title
-// that is missing or 200 characters long is truncated in every tab and search
-// result.
-var h1Count = (html.match(/<h1[\s>]/g) || []).length;
-if (h1Count !== 1) {
-  failures.push("index.html has " + h1Count + " h1 element(s); exactly one names the page for a screen reader");
+// This page holds ten screens, one of which is on show. "Exactly one h1" is the
+// rule for a document, and each screen is its own document to a screen reader:
+// the hidden ones are out of the accessibility tree. So the rule that has to
+// hold is one h1 per screen, one screen visible at a time, and no heading
+// stranded outside them. Counting h1 tags across the whole file (ten of them)
+// would fail a page that is correct.
+var screenChunks = html.split(/<section\s+id="screen-/).slice(1);
+var visibleScreens = 0;
+if (!screenChunks.length) {
+  failures.push("index.html has no screen sections, so there is nothing to announce on load");
+}
+screenChunks.forEach(function (chunk) {
+  var screenId = (chunk.match(/^([^"]+)"/) || [])[1] || "unnamed";
+  var openTag = (chunk.match(/^[^>]*>/) || [""])[0];
+  if (openTag.indexOf("hidden") === -1) visibleScreens += 1;
+  var screenEnd = chunk.search(/<section\s+id="screen-/);
+  var screenBody = screenEnd === -1 ? chunk : chunk.slice(0, screenEnd);
+  var screenH1 = (screenBody.match(/<h1[\s>]/g) || []).length;
+  if (screenH1 !== 1) {
+    failures.push(
+      'The "' + screenId + '" screen has ' + screenH1 + " h1 heading(s); each screen needs exactly one"
+    );
+  }
+});
+if (visibleScreens !== 1) {
+  failures.push("index.html shows " + visibleScreens + " screens at once, and exactly one screen should be visible");
 }
 var htmlLang = (html.match(/<html\b[^>]*\blang="([^"]+)"/) || [])[1];
 if (!htmlLang) {
@@ -1500,27 +1513,103 @@ if (!TEHSILS) {
   }
 });
 
+/* ---- 11u. The markup must not drift from the English strings ---- */
+
+// js/messages.js repaints every [data-i18n] element when the page loads, so a
+// stale sentence in the markup is invisible in a browser and only appears to a
+// reader with JavaScript off, or to a search engine. That is the reader least
+// able to work around it. The home page had drifted twice before this check:
+// the markup still described "a typical year for each" and a "comparison" that
+// the English strings had already replaced. The rule is simple: the text inside
+// an element must equal the English string for its key.
+(function () {
+  var messagesFile = path.join(root, "js", "messages.js");
+  if (!exists(messagesFile)) return;
+
+  function normaliseText(value) {
+    return String(value)
+      .replace(/&amp;/g, "&")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  var messagesSandbox = {
+    window: {},
+    localStorage: { getItem: function () { return null; }, setItem: function () {} },
+  };
+  try {
+    new vm.Script(fs.readFileSync(messagesFile, "utf8"), {
+      filename: "js/messages.js",
+    }).runInNewContext(messagesSandbox);
+  } catch (err) {
+    failures.push("js/messages.js could not be loaded for the markup check: " + err.message);
+    return;
+  }
+
+  var MESSAGES = messagesSandbox.window.MLMP_MESSAGES;
+  if (!MESSAGES) return;
+  var english = MESSAGES.dict("en");
+  var source = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  var flat = normaliseText(source);
+  var seen = Object.create(null);
+  var pattern = /data-i18n="([^"]+)"/g;
+  var match;
+
+  while ((match = pattern.exec(source))) {
+    var key = match[1];
+    if (seen[key]) continue;
+    seen[key] = true;
+    if (english[key] === undefined) {
+      failures.push(
+        'index.html uses data-i18n="' + key + '", which has no English string in js/messages.js'
+      );
+    } else if (flat.indexOf(normaliseText(english[key])) === -1) {
+      failures.push(
+        'index.html: the markup for "' + key + '" no longer matches its English string in js/messages.js.\n' +
+        "      Update the element's text to the string, or change the string, so the page reads the same with JavaScript off."
+      );
+    }
+  }
+})();
+
+/* ---- 11v. The mobile menu must be dismissible from the keyboard ---- */
+
+// The menu opens with a button and closes when a link is chosen. It also has to
+// close on Escape, with focus returned to the button, or a keyboard reader who
+// opens it by mistake is stuck looking at a list that has just been hidden.
+if (appCode.indexOf("\"Escape\"") === -1) {
+  failures.push(
+    "js/app.js no longer closes the navigation menu on Escape, so a keyboard reader cannot dismiss it"
+  );
+} else if (!/aria-expanded", "false"\)[\s\S]{0,200}toggle\.focus\(\)/.test(appCode)) {
+  failures.push(
+    "js/app.js closes the menu on Escape but no longer returns focus to the menu button"
+  );
+}
+
 /* ---- Report ---- */
 
+notes.forEach(function (n) {
+  console.log("note: " + n);
+});
 
+if (failures.length) {
+  console.error("\nBuild check failed:");
+  failures.forEach(function (f) {
+    console.error("  - " + f);
+  });
+  process.exit(1);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+console.log(
+  "\nBuild check passed: " +
+    jsFiles.length +
+    " scripts parse, " +
+    refs.length +
+    " local references resolve, " +
+    precache.length +
+    " assets precached for offline, " +
+    readmeImages.length +
+    " README images present."
+);
