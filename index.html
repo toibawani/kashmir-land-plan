@@ -571,9 +571,55 @@
         <div id="plans-compare" class="plans-compare" hidden></div>
         <div class="results-actions">
           <button type="button" class="btn btn-secondary" id="btn-plans-back">Back</button>
+          <button type="button" class="btn btn-secondary" id="btn-plans-data" data-i18n="data.title">On this device</button>
           <button type="button" class="btn btn-primary" id="btn-plans-visit">Office visit card</button>
         </div>
         <p class="inline-status" id="plans-status" role="status" hidden></p>
+      </div>
+    </section>
+
+    <!-- ON THIS DEVICE -->
+    <section id="screen-data" class="screen" aria-labelledby="data-title" hidden>
+      <div class="container narrow">
+        <h1 id="data-title" class="screen-title" data-i18n="data.title">On this device</h1>
+        <p class="screen-intro" data-i18n="data.intro">
+          Everything this app keeps stays in this browser on this phone. There is no account and no
+          server copy. From here you can take a backup, restore one, or delete it all.
+        </p>
+
+        <div class="checklist-card">
+          <h2 data-i18n="data.storedHeading">What is stored here</h2>
+          <ul class="checklist-plain" id="data-facts"></ul>
+        </div>
+
+        <div class="checklist-card">
+          <h2 data-i18n="data.backupHeading">Backup</h2>
+          <div class="results-actions">
+            <button type="button" class="btn btn-primary" id="btn-data-export" data-i18n="data.export">Export all data</button>
+            <button type="button" class="btn btn-secondary" id="btn-data-import" data-i18n="data.import">Import a backup</button>
+          </div>
+          <label class="sr-only" for="data-import-input" data-i18n="data.import">Import a backup</label>
+          <input type="file" id="data-import-input" accept="application/json,.json" hidden />
+          <p class="hint" data-i18n="data.exportHint">
+            Saves one JSON file with your plans and draft. It is written to this device, and nothing is uploaded.
+          </p>
+          <p class="hint" data-i18n="data.importHint">
+            Choose a backup file made by this app. It replaces what is here now, so export first if you want to keep it.
+          </p>
+        </div>
+
+        <div class="checklist-card data-danger">
+          <h2 data-i18n="data.dangerHeading">Delete</h2>
+          <p class="hint" data-i18n="data.deleteHint">
+            Removes every plan, the draft, the language choice and the feedback answers. This cannot be undone.
+          </p>
+          <button type="button" class="btn btn-quiet" id="btn-data-delete" data-i18n="data.deleteAll">Delete everything on this device</button>
+        </div>
+
+        <p class="inline-status" id="data-status" role="status" hidden></p>
+        <div class="results-actions">
+          <button type="button" class="btn btn-secondary" id="btn-data-back" data-i18n="data.back">Back to my plans</button>
+        </div>
       </div>
     </section>
 
@@ -769,6 +815,7 @@
   <script src="js/weather.js" defer></script>
   <script src="js/questions.js" defer></script>
   <script src="js/plans.js" defer></script>
+  <script src="js/data.js" defer></script>
   <script src="js/speech.js" defer></script>
   <script src="js/qr.js" defer></script>
   <script src="js/offline.js" defer></script>

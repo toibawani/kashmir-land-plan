@@ -16,6 +16,8 @@
  *                                         or null when the device refused the write
  *   MLMP_PLANS.remove(id)                 delete one
  *   MLMP_PLANS.rename(id, name)           rename
+ *   MLMP_PLANS.setNotes(id, text)          replace the notes on one plan
+ *   MLMP_PLANS.replaceAll(plans)           swap the whole list, for a restore
  *   MLMP_PLANS.choose(id)                 mark which one goes to the office
  *   MLMP_PLANS.chosen()                   the chosen plan, or null
  *   MLMP_PLANS.suggestName(options, taken)  a short human name for a new plan
@@ -26,6 +28,7 @@
 
   var STORAGE_KEY = "mlmp_plans_v1";
   var MAX = 8;
+  var MAX_NOTES = 2000;
 
   /** Storage can be unavailable or hold nonsense, so reads never throw. */
   function readRaw() {
@@ -130,6 +133,14 @@
       // made during a visit must not vanish the next time the plan is opened.
       // Without this, upsert would quietly drop the field every save.
       coveredQuestions: isPlainObject(input.coveredQuestions) ? input.coveredQuestions : (previous && previous.coveredQuestions) || {},
+      // What the farmer wrote down after the visit: what the officer said and
+      // what to do next. It rides with the plan for the same reason the ticks
+      // do. An empty string is a real answer (the note was cleared), so it is
+      // distinguished from "this save did not touch the notes".
+      notes:
+        typeof input.notes === "string"
+          ? input.notes.slice(0, MAX_NOTES)
+          : (previous && previous.notes) || "",
       options: input.options || [],
       zoneId: input.zoneId || null,
       isDemo: !!input.isDemo,
@@ -155,6 +166,35 @@
     });
     writeRaw(plans);
     return plans;
+  }
+
+  /** Replace only the notes. Upsert would need every other field passed again. */
+  function setNotes(id, text) {
+    var plans = readRaw();
+    var found = false;
+    plans.forEach(function (p) {
+      if (p.id === id) {
+        p.notes = String(text == null ? "" : text).slice(0, MAX_NOTES);
+        p.updatedAt = nowIso();
+        found = true;
+      }
+    });
+    if (!found) return null;
+    if (!writeRaw(plans)) return null;
+    return get(id);
+  }
+
+  /**
+   * Swap the whole list for a restored backup. The caller has already checked
+   * every plan; this only enforces the device's limit and reports whether the
+   * write landed, so a refused restore cannot look like a successful one.
+   */
+  function replaceAll(plans) {
+    if (!Array.isArray(plans)) return null;
+    var kept = plans.filter(isUsable).slice(0, MAX);
+    if (kept.length !== plans.length) return null;
+    if (!writeRaw(kept)) return null;
+    return kept;
   }
 
   function rename(id, name) {
@@ -245,6 +285,8 @@
     upsert: upsert,
     remove: remove,
     rename: rename,
+    setNotes: setNotes,
+    replaceAll: replaceAll,
     choose: choose,
     chosen: chosen,
     clear: clear,

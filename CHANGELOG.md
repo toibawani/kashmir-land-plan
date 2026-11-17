@@ -21,7 +21,29 @@ should not, because the catalogue is still unreviewed.
   app (`script-src 'none'`), and the build refuses a page that loses it, is not
   precached, or is not linked from the app.
 
+### Added
+
+- **Notes on a saved plan.** Each plan card carries a notes field for what the
+  officer said and what to do next. A note is saved only when the button is
+  pressed, so a half-typed sentence cannot overwrite one someone meant to keep.
+- **A backup you can carry away.** Export all data writes one JSON file holding
+  every saved plan and the draft, on the device. Import reads a file back with a
+  closed schema: unknown fields, an invented enum value, a district this app does
+  not offer, two plans sharing an id, a file from another app or a later format
+  all refuse the whole file, so a restore cannot half-happen.
+- **Delete everything on this device**, behind a confirm, removing every
+  `mlmp_` key the app owns: plans, draft, language choice and field-test answers.
+- **An "On this device" screen** that lists what is stored here and offers the
+  three actions above. It is reachable from My plans.
+- The last change appears in all three languages: 28 new strings, listed in
+  `TRANSLATION_CHECK.md` for a native speaker, still marked `reviewed: false`.
+
 ### Changed
+
+- `sw.js` moves to `mlmp-v43` and precaches `js/data.js`.
+- The payload budget is raised deliberately to 129.0 KB of JavaScript and
+  12.8 KB of HTML, with the measured numbers and what they bought recorded in
+  `LIGHTHOUSE.md`.
 
 - `sw.js` moves to `mlmp-v42` and precaches both legal pages, so they open with
   the rest of the app when there is no signal.

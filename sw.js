@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v42";
+var CACHE_VERSION = "mlmp-v43";
 var CORE_CACHE = CACHE_VERSION + "-core";
 var FONT_CACHE = CACHE_VERSION + "-fonts";
 
@@ -34,6 +34,7 @@ var CORE_ASSETS = [
   "./js/weather.js",
   "./js/questions.js",
   "./js/plans.js",
+  "./js/data.js",
   "./js/speech.js",
   "./js/qr.js",
   "./js/offline.js",
