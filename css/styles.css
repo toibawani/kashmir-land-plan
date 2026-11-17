@@ -3363,6 +3363,106 @@ select:focus {
   }
 }
 
+/* Photos of the plot, kept with the plan and printed under the card. */
+.visit-photos {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.visit-photos-title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.05rem;
+}
+
+.visit-photos-note {
+  margin: 0 0 var(--space-3);
+  font-size: 0.9rem;
+}
+
+.photo-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.photo-slot-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.photo-slot-empty,
+.photo-slot-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f1eee4;
+}
+
+.photo-slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.photo-slot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.photo-slot-actions .btn {
+  min-height: 40px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 560px) {
+  .photo-slots {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .visit-photos {
+    break-inside: avoid;
+    padding: 0;
+    border: 0;
+  }
+
+  .visit-photos .photo-slots {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .visit-photos .photo-slot-img {
+    max-height: 45mm;
+    aspect-ratio: auto;
+  }
+
+  .visit-photos .photo-slot-empty {
+    display: none;
+  }
+}
+
 .land-chips {
   display: flex;
   flex-wrap: wrap;

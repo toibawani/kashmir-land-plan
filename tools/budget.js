@@ -24,11 +24,12 @@ var root = path.resolve(__dirname, "..");
 /* Measured 2026-11-17 with gzip -9, which is what the host serves. Raise these
    only with a number in LIGHTHOUSE.md explaining what was added.
 
-   Raised from 122784/16470/12331 on 2026-11-17 for the data controls:
-   js/data.js (4672 bytes) is the one new module, plus the notes and backup
-   wiring in app.js, its strings in messages.js and the screen in index.html.
-   The new budget is 129.0 KB JS, 16.1 KB CSS, 12.8 KB HTML. */
-var BUDGET = { js: 132096, css: 16470, html: 13107 };
+   Raised on 2026-11-17 for the data controls to 129.0/16.1/12.8 KB, and again
+   the same day for guided photo capture: js/photos.js (IndexedDB, resize and
+   the quality check), the visit-card photo section in app.js and index.html,
+   its 26 strings in messages.js and the photo styles. The budget is now
+   138.0 KB JS, 16.5 KB CSS, 13.0 KB HTML. */
+var BUDGET = { js: 141312, css: 16896, html: 13312 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;

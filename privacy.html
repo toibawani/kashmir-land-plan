@@ -64,6 +64,7 @@
         <li><strong>Saved plans:</strong> the same answers, plus the options that were shown, which options you marked, and which questions you ticked off at the office.</li>
         <li><strong>Your language choice</strong>, so the app opens in the language you picked.</li>
         <li><strong>A feedback record</strong>, only if you open the optional field-test page and save your answers there.</li>
+        <li><strong>Photos you choose to take</strong>, kept in this browser's photo storage (IndexedDB), attached to the plan they were taken for. Each photo is redrawn smaller and re-saved as a new JPEG before it is stored, which drops the location and other camera metadata the original file carried.</li>
       </ul>
       <p>
         These values are stored as plain text in your browser's storage. Anyone who can use this
@@ -103,13 +104,15 @@
         <li>No accounts, no passwords, no email addresses.</li>
         <li>No server-side copy of your plans, your village, or your photos.</li>
         <li>No sharing of your data with any other person through the app.</li>
-        <li>No photo analysis. This version of the app does not send photos anywhere.</li>
+        <li>No photo analysis. A photo is never sent anywhere, not even to a service: it is resized and stored on this device, and that is all.</li>
       </ul>
 
       <h2>Your control over the data</h2>
       <ul>
         <li><strong>Start over</strong> in the form removes the saved draft.</li>
-        <li><strong>Delete</strong> on a saved plan removes that plan from this device.</li>
+        <li><strong>Delete</strong> on a saved plan removes that plan and its photos from this device.</li>
+        <li><strong>Delete photo</strong> under a photo on the visit card removes just that photo.</li>
+        <li><strong>Delete everything on this device</strong>, on the "On this device" screen, removes every plan, the draft, the language choice, the field-test answers and every photo.</li>
         <li><strong>Clearing this site's data</strong> in your browser settings removes everything the app has stored, including plans and the language choice. That is also the way to remove it if you lose the phone or give it away.</li>
       </ul>
       <p>

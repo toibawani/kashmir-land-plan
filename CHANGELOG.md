@@ -12,6 +12,29 @@ should not, because the catalogue is still unreviewed.
 
 ### Added
 
+- **Guided photos of a plot.** Three shots: a wide view, a ground close-up, and
+  the nearest water source, which can be skipped. Both buttons use a file input
+  with `capture`, so the browser opens its own camera and the app never asks for
+  a camera permission; a second button opens the gallery for a picture already
+  on the phone.
+- Every photo is redrawn onto a canvas at 1280 pixels on the long edge and
+  re-encoded as JPEG at 0.8 quality before it is stored. That drops the EXIF
+  block the original carried, including any GPS position, and it is stated on
+  the screen and in the Privacy Policy.
+- A quality check for too dark, too bright, blurred and too small, each with a
+  plain sentence and a Retake button. A photo that fails is not stored at all,
+  so a useless picture cannot end up on a printed card.
+- Photos live in IndexedDB, keyed to the plan they belong to. Deleting a plan
+  deletes its photos; "Delete everything on this device" clears them too; a
+  refused write is reported as a full device rather than a saved photo.
+- The photos appear under the office visit card and print with it, and can be
+  shared as files where the browser supports it, with a download fallback where
+  it does not.
+- 26 new strings in English, Hindi and Urdu. `TRANSLATION_CHECK.md` now lists 197
+  keys, all still marked unreviewed.
+
+### Added
+
 - A Privacy Policy (`privacy.html`) and Terms of Service (`terms.html`), linked in
   the footer of every page. Both describe only what the app does today: data stays
   in this browser, there are no accounts, no analytics and no cookies, weather

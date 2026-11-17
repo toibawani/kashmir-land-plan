@@ -11,7 +11,7 @@
        field-test page has its own small stylesheet; styles cannot execute.
        frame-ancestors and HSTS are ignored in a meta tag, which SECURITY.md and
        docs/AUDIT.md record as a limit of the host. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="description" content="An offline-first J&amp;K land planning PWA that helps farmers prepare practical options and office-visit questions without inventing scheme eligibility or crop guarantees. Prepare for the agriculture office visit." />
   <meta name="theme-color" content="#3d5a3d" />
@@ -524,6 +524,7 @@
               <button type="button" class="btn btn-secondary" id="btn-visit-share">Share on WhatsApp</button>
               <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-download" data-i18n="visit.download">Download as text</button>
               <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-save">Save a copy on this device</button>
+              <button type="button" class="btn btn-secondary visit-mode-hide" id="btn-visit-share-photos" data-i18n="photos.share" hidden>Share the photos</button>
             </div>
             <div class="read-controls">
               <div class="results-actions">
@@ -548,6 +549,20 @@
             </div>
           </div>
         <div class="visit-card" id="visit-card" role="region" aria-label="Office visit card"></div>
+        <div class="visit-photos" id="visit-photos" hidden>
+          <h2 class="visit-photos-title" data-i18n="photos.title">Photos of this plot</h2>
+          <p class="visit-photos-note no-print" data-i18n="photos.note">
+            Kept on this device. Each photo is made smaller and its location data is dropped before it is
+            stored. Nothing is uploaded.
+          </p>
+          <ul class="photo-slots" id="photo-slots"></ul>
+          <p class="inline-status no-print" id="photo-status" role="status" hidden></p>
+          <div class="photo-retry no-print" id="photo-retry-row" hidden>
+            <button type="button" class="btn btn-secondary" id="btn-photo-retry" data-i18n="photos.retake">Retake</button>
+          </div>
+          <label class="sr-only" for="photo-input" data-i18n="photos.take">Take photo</label>
+          <input type="file" id="photo-input" accept="image/*" hidden />
+        </div>
         <div class="office-host no-print visit-mode-hide" id="office-host"></div>
         <div class="feedback-block no-print visit-mode-hide" id="feedback-host" hidden></div>
         <div class="results-actions no-print visit-mode-hide">
@@ -816,6 +831,7 @@
   <script src="js/questions.js" defer></script>
   <script src="js/plans.js" defer></script>
   <script src="js/data.js" defer></script>
+  <script src="js/photos.js" defer></script>
   <script src="js/speech.js" defer></script>
   <script src="js/qr.js" defer></script>
   <script src="js/offline.js" defer></script>

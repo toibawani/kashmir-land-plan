@@ -147,6 +147,32 @@ Every string the app shows on the critical path, in the three languages it offer
 | `notes.hint` | What the officer said, and what to do next. Kept on this device with the plan. | अधिकारी ने क्या कहा और आगे क्या करना है। योजना के साथ इसी डिवाइस पर रहता है। | افسر نے کیا کہا اور آگے کیا کرنا ہے۔ منصوبے کے ساتھ اسی ڈیوائس پر رہتا ہے۔ |
 | `notes.save` | Save note | टिप्पणी सहेजें | نوٹ محفوظ کریں |
 | `notes.saved` | Note saved with this plan. | टिप्पणी योजना के साथ सहेजी गई। | نوٹ منصوبے کے ساتھ محفوظ ہو گیا۔ |
+| `photos.title` | Photos of this plot | इस ज़मीन की तस्वीरें | اس زمین کی تصاویر |
+| `photos.note` | Kept on this device. Each photo is made smaller and its location data is dropped before it is stored. Nothing is uploaded. | इसी डिवाइस पर रखी जाती हैं। हर तस्वीर सहेजने से पहले छोटी की जाती है और उसका स्थान डेटा हटा दिया जाता है। कहीं अपलोड नहीं होती। | اسی ڈیوائس پر رکھی جاتی ہیں۔ ہر تصویر محفوظ کرنے سے پہلے چھوٹی کی جاتی ہے اور اس کا مقام کا ڈیٹا ہٹا دیا جاتا ہے۔ کہیں اپ لوڈ نہیں ہوتی۔ |
+| `photos.slot.wide` | Wide view of the plot | ज़मीन का चौड़ा नज़ारा | زمین کا وسیع منظر |
+| `photos.slot.ground` | Ground close-up | ज़मीन का नज़दीकी नज़ारा | زمین کا قریبی منظر |
+| `photos.slot.water` | Nearest water source | सबसे नज़दीक पानी का स्रोत | قریب ترین پانی کا ذریعہ |
+| `photos.optional` | optional | वैकल्पिक | اختیاری |
+| `photos.take` | Take photo | तस्वीर लें | تصویر لیں |
+| `photos.choose` | Choose from gallery | गैलरी से चुनें | گیلری سے چنیں |
+| `photos.retake` | Retake | फिर से लें | دوبارہ لیں |
+| `photos.remove` | Delete photo | तस्वीर हटाएँ | تصویر ہٹائیں |
+| `photos.empty` | No photo yet. | अभी कोई तस्वीर नहीं। | ابھی کوئی تصویر نہیں۔ |
+| `photos.needPlan` | Save this plan first, then photos can be kept with it. | पहले यह योजना सहेजें, फिर तस्वीरें इसके साथ रखी जा सकती हैं। | پہلے یہ منصوبہ محفوظ کریں، پھر تصاویر اس کے ساتھ رکھی جا سکتی ہیں۔ |
+| `photos.saving` | Saving the photo on this device... | तस्वीर इस डिवाइस पर सहेजी जा रही है... | تصویر اس ڈیوائس پر محفوظ ہو رہی ہے... |
+| `photos.saved` | Photo saved with this plan. | तस्वीर योजना के साथ सहेजी गई। | تصویر منصوبے کے ساتھ محفوظ ہو گئی۔ |
+| `photos.tooSmall` | This photo is too small to be useful. Move closer and take it again. | यह तस्वीर बहुत छोटी है। थोड़ा पास आकर फिर से लें। | یہ تصویر بہت چھوٹی ہے۔ تھوڑا قریب آ کر دوبارہ لیں۔ |
+| `photos.tooDark` | This photo is too dark. Move into better light and take it again. | यह तस्वीर बहुत अंधेरी है। बेहतर रोशनी में जाकर फिर से लें। | یہ تصویر بہت اندھیری ہے۔ بہتر روشنی میں جا کر دوبارہ لیں۔ |
+| `photos.tooBright` | This photo is too bright. Move out of the sun and take it again. | यह तस्वीर बहुत तेज़ रोशनी में है। धूप से हटकर फिर से लें। | یہ تصویر بہت تیز روشنی میں ہے۔ دھوپ سے ہٹ کر دوبارہ لیں۔ |
+| `photos.blurry` | This photo looks blurred. Hold the phone still and take it again. | यह तस्वीर धुंधली लगती है। फ़ोन स्थिर रखकर फिर से लें। | یہ تصویر دھندلی لگتی ہے۔ فون کو ساکن رکھ کر دوبارہ لیں۔ |
+| `photos.quota` | This device has no room for another photo. Delete one, or free some space, then try again. | इस डिवाइस में एक और तस्वीर के लिए जगह नहीं है। कोई तस्वीर हटाएँ या जगह खाली करें, फिर कोशिश करें। | اس ڈیوائس میں ایک اور تصویر کی جگہ نہیں۔ کوئی تصویر ہٹائیں یا جگہ خالی کریں، پھر کوشش کریں۔ |
+| `photos.failed` | The photo could not be read. Try another one. | तस्वीर पढ़ी नहीं जा सकी। दूसरी तस्वीर आज़माएँ। | تصویر پڑھی نہیں جا سکی۔ دوسری تصویر آزمائیں۔ |
+| `photos.share` | Share the photos | तस्वीरें साझा करें | تصاویر شیئر کریں |
+| `photos.noneToShare` | No photos to share yet. | साझा करने के लिए अभी कोई तस्वीर नहीं। | شیئر کرنے کے لیے ابھی کوئی تصویر نہیں۔ |
+| `photos.downloaded` | This browser cannot share files, so the photos were saved on this device. | यह ब्राउज़र फ़ाइलें साझा नहीं कर सकता, इसलिए तस्वीरें इस डिवाइस पर सहेज दी गईं। | یہ براؤزر فائلیں شیئر نہیں کر سکتا، اس لیے تصاویر اس ڈیوائس پر محفوظ کر دی گئیں۔ |
+| `photos.confirmRemove` | Delete this photo from this device? | यह तस्वीर इस डिवाइस से हटाएँ? | یہ تصویر اس ڈیوائس سے ہٹائیں؟ |
+| `photos.removed` | Photo deleted from this device. | तस्वीर इस डिवाइस से हटा दी गई। | تصویر اس ڈیوائس سے ہٹا دی گئی۔ |
+| `photos.removeFailed` | This device refused to delete the photo. Try again. | डिवाइस ने तस्वीर हटाने से मना किया। फिर कोशिश करें। | ڈیوائس نے تصویر ہٹانے سے انکار کیا۔ دوبارہ کوشش کریں۔ |
 | `common.confirmLocally` | Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar. | फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें। | فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔ |
 | `common.notOfficial` | This is a working prototype, not a government service. It helps you prepare questions. It cannot verify land, approve a scheme, or guarantee that a crop will suit your plot. | यह एक काम करने वाला प्रोटोटाइप है, सरकारी सेवा नहीं। यह सवाल तैयार करने में मदद करता है। यह ज़मीन की पुष्टि नहीं कर सकता, योजना मंजूर नहीं कर सकता, और फसल की गारंटी नहीं दे सकता। | یہ ایک کام کرنے والا پروٹو ٹائپ ہے، سرکاری خدمت نہیں۔ یہ سوالات تیار کرنے میں مدد کرتا ہے۔ یہ زمین کی تصدیق نہیں کر سکتا، اسکیم منظور نہیں کر سکتا، اور فصل کی ضمانت نہیں دے سکتا۔ |
 | `common.illustrative` | Illustrative | उदाहरणात्मक | مثالی |

@@ -70,6 +70,24 @@ Measured with `node tools/budget.js --measure`, gzip -9:
 | index.html | 12.3 KB | 12.8 KB |
 | **Total first visit** | **155.7 KB** | |
 
+## The payload after guided photo capture (17 November 2026)
+
+`node tools/budget.js --measure`, gzip -9:
+
+| Part | Size | Budget |
+| --- | --- | --- |
+| JavaScript (27 files) | 135.9 KB | 138.0 KB |
+| CSS (1 file) | 15.9 KB | 16.5 KB |
+| index.html | 12.6 KB | 13.0 KB |
+| **Total first visit** | **164.4 KB** | |
+
+What the next 8.1 KB bought: `js/photos.js` (about 4.2 KB) does the guided
+capture, the canvas resize that drops EXIF, the quality check and the IndexedDB
+store; the visit-card photo section and its wiring in `app.js` add about 2.4 KB,
+and 26 strings in three languages about 1.5 KB. The photos themselves are
+stored on the device, not downloaded with the app, so they are outside this
+budget on purpose.
+
 What the 8.9 KB of JavaScript bought: `js/data.js` (4.6 KB) validates a backup
 file against a closed schema and erases what the app stored; the rest is the
 notes field on each plan card, the new screen's wiring in `app.js` (about
