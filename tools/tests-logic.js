@@ -68,6 +68,7 @@ load(
     "questions.js",
     "plans.js",
     "data.js",
+    "photos.js",
     "speech.js",
     "qr.js",
     "offline.js",
@@ -1288,6 +1289,59 @@ check(
   "a note is capped at the limit",
   PLANS.setNotes(storedPlan.id, new Array(4000).join("y")).notes.length === DATA.MAX_NOTES
 );
+
+/* ---- Photos: the quality check, and what must not be stored ---- */
+
+var PHOTOS = sandbox.window.MLMP_PHOTOS;
+
+function lumaGrid(width, height, fn) {
+  var out = new Uint8ClampedArray(width * height);
+  for (var y = 0; y < height; y++) {
+    for (var x = 0; x < width; x++) out[y * width + x] = fn(x, y);
+  }
+  return out;
+}
+
+var BIG = { width: 1600, height: 1200 };
+check("the three guided shots are the three the brief names", PHOTOS.SLOTS.join(",") === "wide,ground,water");
+check("a slot this app does not offer is refused", !PHOTOS.isSlot("front-door"));
+
+var sharp = PHOTOS.assess(
+  lumaGrid(32, 32, function (x, y) {
+    return (x + y) % 2 === 0 ? 20 : 235;
+  }),
+  32,
+  32,
+  BIG
+);
+check("a sharp, well-lit photo passes", sharp.ok, sharp.issues.join(","));
+
+var flat = PHOTOS.assess(lumaGrid(32, 32, function () { return 128; }), 32, 32, BIG);
+check("a flat, detail-free photo is reported as blurred", flat.issues.indexOf("blurry") !== -1);
+
+var dark = PHOTOS.assess(lumaGrid(32, 32, function () { return 8; }), 32, 32, BIG);
+check("a dark photo is reported as too dark", dark.issues.indexOf("too_dark") !== -1);
+check("a dark photo is not reported as a good one", !dark.ok);
+
+var bright = PHOTOS.assess(lumaGrid(32, 32, function () { return 250; }), 32, 32, BIG);
+check("a blown-out photo is reported as too bright", bright.issues.indexOf("too_bright") !== -1);
+
+var tiny = PHOTOS.assess(
+  lumaGrid(32, 32, function (x, y) {
+    return (x + y) % 2 === 0 ? 20 : 235;
+  }),
+  32,
+  32,
+  { width: 240, height: 180 }
+);
+check("a photo below the minimum size is reported as too small", tiny.issues.indexOf("too_small") !== -1);
+
+var blank = PHOTOS.assess(lumaGrid(32, 32, function () { return 0; }), 32, 32, BIG);
+check(
+  "a blank frame can report more than one problem at once",
+  blank.issues.indexOf("too_dark") !== -1 && blank.issues.indexOf("blurry") !== -1
+);
+check("the check returns a readable mean and variance", typeof blank.mean === "number" && typeof blank.variance === "number");
 
 console.log("");
 

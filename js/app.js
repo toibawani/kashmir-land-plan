@@ -32,6 +32,7 @@
   var VISIT = window.MLMP_VISIT;
   var FEEDBACK = window.MLMP_FEEDBACK;
   var DATA = window.MLMP_DATA;
+  var PHOTOS = window.MLMP_PHOTOS;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -4057,6 +4058,221 @@
     return true;
   }
 
+  // ----------------------------------------------------------------- Photos
+
+  // Object URLs handed to <img> have to be released, or a visit screen opened
+  // twenty times holds twenty copies of the same JPEG in memory.
+  var photoUrls = [];
+  var pendingPhotoSlot = null;
+
+  function releasePhotoUrls() {
+    photoUrls.forEach(function (url) {
+      URL.revokeObjectURL(url);
+    });
+    photoUrls = [];
+  }
+
+  function photoIssueMessage(issues) {
+    var map = {
+      too_small: tr("photos.tooSmall", "This photo is too small to be useful. Move closer and take it again."),
+      too_dark: tr("photos.tooDark", "This photo is too dark. Move into better light and take it again."),
+      too_bright: tr("photos.tooBright", "This photo is too bright. Move out of the sun and take it again."),
+      blurry: tr("photos.blurry", "This photo looks blurred. Hold the phone still and take it again."),
+    };
+    return (issues || [])
+      .map(function (code) {
+        return map[code] || "";
+      })
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  function showPhotoRetry(slot) {
+    var row = $("#photo-retry-row");
+    if (!row) return;
+    row.hidden = !slot;
+    row.setAttribute("data-photo-slot", slot || "");
+  }
+
+  /**
+   * Paint the three guided shots. A photo is shown under the visit card and
+   * prints with it; the buttons around it are screen only.
+   */
+  function renderPhotos() {
+    var host = $("#visit-photos");
+    var list = $("#photo-slots");
+    if (!host || !list) return;
+    host.hidden = false;
+    releasePhotoUrls();
+    showPhotoRetry(null);
+
+    var share = $("#btn-visit-share-photos");
+    if (!PHOTOS) {
+      list.innerHTML = "";
+      if (share) share.hidden = true;
+      return;
+    }
+    if (!state.currentPlanId) {
+      list.innerHTML =
+        '<li class="photo-slot"><p class="photo-slot-empty">' +
+        escapeHtml(tr("photos.needPlan", "Save this plan first, then photos can be kept with it.")) +
+        "</p></li>";
+      if (share) share.hidden = true;
+      return;
+    }
+
+    PHOTOS.list(state.currentPlanId).then(function (rows) {
+      var latest = PHOTOS.latestBySlot(rows);
+      list.innerHTML = PHOTOS.SLOTS.map(function (slot) {
+        var photo = latest[slot];
+        var title = tr("photos.slot." + slot, PHOTOS.slotLabel(slot));
+        var media;
+        if (photo && photo.blob) {
+          var url = URL.createObjectURL(photo.blob);
+          photoUrls.push(url);
+          media =
+            '<img class="photo-slot-img" src="' +
+            url +
+            '" alt="' +
+            escapeHtml(title) +
+            '" />' +
+            '<p class="photo-slot-date">' +
+            escapeHtml(savedDate(photo.createdAt)) +
+            "</p>";
+        } else {
+          media =
+            '<p class="photo-slot-empty">' + escapeHtml(tr("photos.empty", "No photo yet.")) + "</p>";
+        }
+        var controls =
+          '<div class="photo-slot-actions no-print">' +
+          '<button type="button" class="btn btn-secondary" data-photo-take="' +
+          escapeHtml(slot) +
+          '">' +
+          escapeHtml(photo ? tr("photos.retake", "Retake") : tr("photos.take", "Take photo")) +
+          "</button>" +
+          '<button type="button" class="btn btn-quiet" data-photo-choose="' +
+          escapeHtml(slot) +
+          '">' +
+          escapeHtml(tr("photos.choose", "Choose from gallery")) +
+          "</button>" +
+          (photo
+            ? '<button type="button" class="btn btn-quiet" data-photo-delete="' +
+              escapeHtml(photo.id) +
+              '">' +
+              escapeHtml(tr("photos.remove", "Delete photo")) +
+              "</button>"
+            : "") +
+          "</div>";
+        return (
+          '<li class="photo-slot"><h3 class="photo-slot-title">' +
+          escapeHtml(title + (slot === "water" ? " (" + tr("photos.optional", "optional") + ")" : "")) +
+          "</h3>" +
+          media +
+          controls +
+          "</li>"
+        );
+      }).join("");
+      if (share) share.hidden = !rows.length;
+    });
+  }
+
+  /**
+   * Open the camera or the gallery. `capture` on a file input is what avoids a
+   * camera permission prompt: the browser opens its own picker and hands the
+   * app a file, so the app never touches a MediaStream.
+   */
+  function askForPhoto(slot, useCamera) {
+    var input = $("#photo-input");
+    if (!input) return;
+    pendingPhotoSlot = slot;
+    if (useCamera) input.setAttribute("capture", "environment");
+    else input.removeAttribute("capture");
+    input.value = "";
+    input.click();
+  }
+
+  function savePhoto(slot, file) {
+    if (!file || !state.currentPlanId || !PHOTOS) return;
+    showPhotoRetry(null);
+    setStatus("photo-status", tr("photos.saving", "Saving the photo on this device..."), 0);
+    PHOTOS.save(state.currentPlanId, slot, file).then(function (result) {
+      if (result.ok) {
+        setStatus("photo-status", tr("photos.saved", "Photo saved with this plan."));
+        renderPhotos();
+        return;
+      }
+      if (result.rejected) {
+        setStatus("photo-status", photoIssueMessage(result.issues), 0);
+        showPhotoRetry(slot);
+        return;
+      }
+      if (result.quota) {
+        setStatus(
+          "photo-status",
+          tr(
+            "photos.quota",
+            "This device has no room for another photo. Delete one, or free some space, then try again."
+          ),
+          0
+        );
+        showPhotoRetry(slot);
+        return;
+      }
+      setStatus(
+        "photo-status",
+        tr("photos.failed", "The photo could not be read. Try another one."),
+        0
+      );
+      showPhotoRetry(slot);
+    });
+  }
+
+  function downloadPhotoBlob(blob, name) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  /**
+   * Share the photos themselves where the browser can, and fall back to saving
+   * them on the device where it cannot. Either way the app is not involved after
+   * the hand-off: the share sheet belongs to the phone.
+   */
+  function sharePhotos() {
+    if (!PHOTOS || !state.currentPlanId) return;
+    PHOTOS.list(state.currentPlanId).then(function (rows) {
+      if (!rows.length) {
+        setStatus("visit-status", tr("photos.noneToShare", "No photos to share yet."));
+        return;
+      }
+      var files = rows.map(function (row, i) {
+        return new File([row.blob], "plot-" + row.slot + "-" + (i + 1) + ".jpg", { type: "image/jpeg" });
+      });
+      if (navigator.canShare && navigator.share && navigator.canShare({ files: files })) {
+        navigator
+          .share({ files: files, title: tr("photos.title", "Photos of this plot") })
+          .catch(function () {
+            // A cancelled share sheet is not an error worth a message.
+          });
+        return;
+      }
+      files.forEach(function (file) {
+        downloadPhotoBlob(file, file.name);
+      });
+      setStatus(
+        "visit-status",
+        tr("photos.downloaded", "This browser cannot share files, so the photos were saved on this device.")
+      );
+    });
+  }
+
   // --------------------------------------------------------------- Events
 
   function goHome() {
@@ -4503,6 +4719,7 @@
       }
       setVisitMode(false);
       renderVisitCard();
+      renderPhotos();
       showScreen("visit");
     }
 
@@ -4657,6 +4874,10 @@
       );
       if (!ok) return;
       var removed = DATA ? DATA.clearAll() : [];
+      // Photos are not in localStorage, so clearing that is not everything.
+      // Saying "everything" while a photo stayed behind would be a false
+      // promise about the most personal thing the app holds.
+      if (PHOTOS && PHOTOS.clearAll) PHOTOS.clearAll();
       resetWorkingState(true);
       renderData();
       renderPlans();
@@ -4746,6 +4967,22 @@
         setStatus("visit-status", "Saved as a text file on this device. It opens without a signal.");
       });
     $("#btn-visit-share") && $("#btn-visit-share").addEventListener("click", shareVisitCard);
+    $("#btn-visit-share-photos") &&
+      $("#btn-visit-share-photos").addEventListener("click", sharePhotos);
+    $("#btn-photo-retry") &&
+      $("#btn-photo-retry").addEventListener("click", function () {
+        var row = $("#photo-retry-row");
+        var slot = row ? row.getAttribute("data-photo-slot") : "";
+        if (slot) askForPhoto(slot, true);
+      });
+    $("#photo-input") &&
+      $("#photo-input").addEventListener("change", function (event) {
+        var file = event.target.files && event.target.files[0];
+        var slot = pendingPhotoSlot;
+        event.target.value = "";
+        if (!file || !slot) return;
+        savePhoto(slot, file);
+      });
     $("#btn-visit-mode") &&
       $("#btn-visit-mode").addEventListener("click", function () {
         setVisitMode(!visitModeOn());
@@ -4841,6 +5078,31 @@
         setStatus("plans-status", "Renamed.");
         return;
       }
+      var take = e.target.closest("[data-photo-take]");
+      if (take) {
+        askForPhoto(take.getAttribute("data-photo-take"), true);
+        return;
+      }
+      var choose = e.target.closest("[data-photo-choose]");
+      if (choose) {
+        askForPhoto(choose.getAttribute("data-photo-choose"), false);
+        return;
+      }
+      var photoRemove = e.target.closest("[data-photo-delete]");
+      if (photoRemove && PHOTOS) {
+        var photoId = photoRemove.getAttribute("data-photo-delete");
+        if (!window.confirm(tr("photos.confirmRemove", "Delete this photo from this device?"))) return;
+        PHOTOS.remove(photoId).then(function (gone) {
+          setStatus(
+            "photo-status",
+            gone
+              ? tr("photos.removed", "Photo deleted from this device.")
+              : tr("photos.removeFailed", "This device refused to delete the photo. Try again.")
+          );
+          renderPhotos();
+        });
+        return;
+      }
       var remove = e.target.closest("[data-plan-remove]");
       if (remove) {
         var target = PLANS.get(remove.getAttribute("data-plan-remove"));
@@ -4848,6 +5110,10 @@
         var ok = window.confirm('Delete "' + target.name + '"? This removes it from this device only.');
         if (!ok) return;
         PLANS.remove(target.id);
+        // A plan's photos belong to it. Leaving them behind would keep an
+        // officer's photo of someone's plot on the device after the plan it
+        // was taken for was deleted.
+        if (PHOTOS) PHOTOS.removeByPlan(target.id);
         if (state.currentPlanId === target.id) {
           state.currentPlanId = null;
           state.currentPlanName = "";

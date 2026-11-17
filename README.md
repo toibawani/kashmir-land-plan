@@ -54,6 +54,10 @@ if one appears.
   next, exports every plan and draft to one JSON backup, reads that file back
   through a closed schema, and can delete everything the app stored, from one
   "On this device" screen.
+- Takes up to three guided photos of a plot — wide view, ground close-up,
+  nearest water source — resizes each to 1280px and drops its location data,
+  checks it for light, blur and size, and keeps it in this browser against the
+  plan. Photos print under the visit card. They are never uploaded.
 - Carries a plain-language [Privacy Policy](privacy.html) and
   [Terms of Service](terms.html) in the footer, both matching what the app does
   today. Both need a human read before they are treated as settled.
