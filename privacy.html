@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- Same reason as index.html: GitHub Pages cannot send a response header, so
+       the policy travels in the document. This page loads no script at all, so
+       its policy can be stricter than the app's. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="description" content="What My Land, My Plan stores, what leaves the device, and how to remove it." />
+  <meta name="theme-color" content="#3d5a3d" />
+  <meta name="color-scheme" content="light" />
+  <title>Privacy Policy, My Land, My Plan</title>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header" role="banner">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-text">My Land, My Plan</span>
+      </a>
+      <nav class="nav" aria-label="Pages">
+        <ul class="nav-menu">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container narrow">
+    <h1 class="screen-title">Privacy Policy</h1>
+    <div class="about-content">
+      <p>
+        This page says plainly what this app keeps, what leaves your device, and how to remove it.
+        It describes the app as it works today. Last updated 17 November 2026.
+      </p>
+
+      <h2>Who runs this</h2>
+      <p>
+        My Land, My Plan is a personal, unfunded prototype. It is not a company, not a registered
+        body, and not a government service. There is no office, no postal address and no phone
+        number to give. The only contact is the project's public issue tracker:
+        <a href="https://github.com/toibawani/kashmir-land-plan/issues" target="_blank" rel="noopener noreferrer">github.com/toibawani/kashmir-land-plan/issues</a>.
+      </p>
+
+      <h2>There are no accounts</h2>
+      <p>
+        You do not sign in, register, or give a name, phone number or email to use this app.
+        There is no login, no password, and no user profile of any kind.
+      </p>
+
+      <h2>What is stored on your device</h2>
+      <p>
+        The app uses your browser's own local storage, on the device you are holding. Nothing here
+        is uploaded, copied to a server, or shared with another person by the app.
+      </p>
+      <ul>
+        <li><strong>Your draft:</strong> the district, altitude zone, village name, plot size, water access, terrain, soil-test answer and main constraint you type into the form.</li>
+        <li><strong>Saved plans:</strong> the same answers, plus the options that were shown, which options you marked, and which questions you ticked off at the office.</li>
+        <li><strong>Your language choice</strong>, so the app opens in the language you picked.</li>
+        <li><strong>A feedback record</strong>, only if you open the optional field-test page and save your answers there.</li>
+      </ul>
+      <p>
+        These values are stored as plain text in your browser's storage. Anyone who can use this
+        phone and open this browser can read them. The app does not encrypt them, because a key
+        kept beside the data would add ceremony without a real boundary.
+      </p>
+
+      <h2>What leaves your device</h2>
+      <p>
+        Two things, both explained below: a weather request when you ask for the forecast, and the
+        first load of the app's two typefaces. The land plan itself, the options, the visit card and
+        the checklist never leave the device.
+      </p>
+      <ul>
+        <li>
+          <strong>Weather.</strong> When you press the button to get a forecast, the district name or
+          nearby town you chose is sent to Open-Meteo (<a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">open-meteo.com</a>)
+          so it can return a forecast. Your village name is never sent. Like any web request, it also
+          carries your device's IP address to that service. Nothing is sent unless you press the button.
+        </li>
+        <li>
+          <strong>Typefaces.</strong> The app's two fonts are loaded from Google Fonts when the page
+          first opens. That request tells Google your IP address and which page loaded the font.
+          Once the app is installed and has been opened once, the fonts are stored on the device and
+          are not requested again.
+        </li>
+        <li>
+          <strong>Hosting.</strong> The app is served by GitHub Pages, which, like any web host,
+          receives the request for the page and its files.
+        </li>
+      </ul>
+
+      <h2>What this app does not do</h2>
+      <ul>
+        <li>No analytics, no tracking pixels, no advertising, no third-party measurement.</li>
+        <li>No cookies. The app stores data in local storage, which is not sent with web requests.</li>
+        <li>No accounts, no passwords, no email addresses.</li>
+        <li>No server-side copy of your plans, your village, or your photos.</li>
+        <li>No sharing of your data with any other person through the app.</li>
+        <li>No photo analysis. This version of the app does not send photos anywhere.</li>
+      </ul>
+
+      <h2>Your control over the data</h2>
+      <ul>
+        <li><strong>Start over</strong> in the form removes the saved draft.</li>
+        <li><strong>Delete</strong> on a saved plan removes that plan from this device.</li>
+        <li><strong>Clearing this site's data</strong> in your browser settings removes everything the app has stored, including plans and the language choice. That is also the way to remove it if you lose the phone or give it away.</li>
+      </ul>
+      <p>
+        Because there is no server copy, deleting on the device is final. There is nothing left for
+        anyone to delete afterwards, and nothing for the project to recover for you.
+      </p>
+
+      <h2>Children</h2>
+      <p>
+        The app is written for farmers preparing an office visit. It collects no age, identity or
+        contact information from anyone, so it holds nothing specific to a child.
+      </p>
+
+      <h2>Changes to this page</h2>
+      <p>
+        If a future version sends anything new off the device, this page will be updated in the same
+        change and the date above will move. The date is the only version marker: there is no
+        mailing list to notify.
+      </p>
+
+      <h2>Questions or a concern</h2>
+      <p>
+        Open an issue at
+        <a href="https://github.com/toibawani/kashmir-land-plan/issues" target="_blank" rel="noopener noreferrer">github.com/toibawani/kashmir-land-plan/issues</a>.
+        Please do not put a real farmer's name, village or phone number in a public issue.
+      </p>
+
+      <p class="option-note">
+        This policy is written to match what the app actually does, not as a legal instrument. It has
+        not been checked by a lawyer.
+      </p>
+
+      <p><a href="index.html">Back to the app</a></p>
+    </div>
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <p>My Land, My Plan is a prototype for farmers in Jammu and Kashmir. It is not an official service.</p>
+      <p>
+        <a href="index.html">Home</a> | <a href="privacy.html">Privacy Policy</a> |
+        <a href="terms.html">Terms of Service</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

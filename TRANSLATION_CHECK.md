@@ -22,6 +22,8 @@ Every string the app shows on the critical path, in the three languages it offer
 | `nav.about` | About | बारे में | بارے میں |
 | `nav.menu` | Menu | मेनू | مینو |
 | `nav.language` | Language | भाषा | زبان |
+| `footer.privacy` | Privacy Policy | गोपनीयता नीति | رازداری کی پالیسی |
+| `footer.terms` | Terms of Service | सेवा की शर्तें | خدمات کی شرائط |
 | `home.eyebrow` | For farmers in Jammu and Kashmir | जम्मू और कश्मीर के किसानों के लिए | جموں اور کشمیر کے کسانوں کے لیے |
 | `home.title` | My Land, My Plan | मेरी ज़मीन, मेरी योजना | میری زمین، میرا منصوبہ |
 | `home.lead` | An offline-first land planning app that helps you prepare practical options and questions for the agriculture office, without inventing scheme eligibility or crop guarantees. | एक ऑफ़लाइन ज़मीन योजना ऐप, जो आपको व्यावहारिक विकल्प और कृषि कार्यालय के लिए सवाल तैयार करने में मदद करता है। यह योजना की पात्रता या फसल की गारंटी नहीं बनाता। | ایک آف لائن زمین منصوبہ بندی ایپ، جو آپ کو عملی اختیارات اور زراعت کے دفتر کے لیے سوالات تیار کرنے میں مدد کرتی ہے۔ یہ کسی اسکیم کی اہلیت یا فصل کی ضمانت نہیں بناتی۔ |
