@@ -152,6 +152,39 @@ while ((feedbackMatch = feedbackRe.exec(feedbackHtml)) !== null) {
   }
 }
 
+/* ---- 3a. The legal pages ship, resolve and are reachable ---- */
+
+// A privacy page that is not linked is a page nobody reads. These two are
+// checked as shipped documents: their own references must exist, the worker
+// must precache them so they open offline with the rest of the app, and the
+// app footer must link both. Hindi and Urdu UI strings alone do not make a
+// page reachable, so the link is checked in the markup, not in js/messages.js.
+["privacy.html", "terms.html"].forEach(function (name) {
+  var file = path.join(root, name);
+  if (!exists(file)) {
+    failures.push(name + " is missing, so the footer link would be a dead end");
+    return;
+  }
+  if (precache.indexOf(name) === -1) {
+    failures.push("sw.js does not precache " + name + ", so it would fail offline");
+  }
+
+  var text = fs.readFileSync(file, "utf8");
+  var linkRe = /(?:src|href)="([^"]+)"/g;
+  var linkMatch;
+  while ((linkMatch = linkRe.exec(text)) !== null) {
+    var target = linkMatch[1];
+    if (/^(https?:)?\/\//.test(target) || target.startsWith("#") || target.startsWith("data:")) continue;
+    if (!exists(path.join(root, target))) {
+      failures.push(name + " references " + target + " but it is not on disk");
+    }
+  }
+
+  if (html.indexOf('href="' + name + '"') === -1) {
+    failures.push(name + " exists but index.html does not link it, so it is unreachable");
+  }
+});
+
 /* ---- 3b. The policy that has to live in the page ---- */
 
 // GitHub Pages cannot send a response header, so a Content Security Policy can
@@ -160,7 +193,16 @@ while ((feedbackMatch = feedbackRe.exec(feedbackHtml)) !== null) {
 // is the rule that does the work: it makes inline script inert. The build
 // refuses a page that dropped the policy, weakened it, or regrew an inline
 // script that its own policy would silently block.
-["index.html", "feedback.html"].forEach(function (name) {
+// The two legal pages carry no script at all, so their policy can be stricter
+// than the app's: `script-src 'none'`. Each page names the rule that must hold
+// for it, and the loop below refuses one that weakened it.
+[
+  { name: "index.html", scriptRule: "script-src 'self'" },
+  { name: "feedback.html", scriptRule: "script-src 'self'" },
+  { name: "privacy.html", scriptRule: "script-src 'none'" },
+  { name: "terms.html", scriptRule: "script-src 'none'" },
+].forEach(function (page) {
+  var name = page.name;
   var file = path.join(root, name);
   if (!exists(file)) return;
   var text = fs.readFileSync(file, "utf8");
@@ -172,7 +214,7 @@ while ((feedbackMatch = feedbackRe.exec(feedbackHtml)) !== null) {
   }
 
   var csp = policy[1];
-  ["script-src 'self'", "object-src 'none'", "base-uri 'none'"].forEach(function (rule) {
+  [page.scriptRule, "object-src 'none'", "base-uri 'none'"].forEach(function (rule) {
     if (csp.indexOf(rule) === -1) {
       failures.push(name + " has a Content-Security-Policy without " + rule);
     }

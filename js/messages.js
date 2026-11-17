@@ -37,6 +37,8 @@
     "nav.about": "About",
     "nav.menu": "Menu",
     "nav.language": "Language",
+    "footer.privacy": "Privacy Policy",
+    "footer.terms": "Terms of Service",
 
     "home.eyebrow": "For farmers in Jammu and Kashmir",
     "home.title": "My Land, My Plan",
@@ -207,6 +209,8 @@
     "nav.about": "बारे में",
     "nav.menu": "मेनू",
     "nav.language": "भाषा",
+    "footer.privacy": "गोपनीयता नीति",
+    "footer.terms": "सेवा की शर्तें",
 
     "home.eyebrow": "जम्मू और कश्मीर के किसानों के लिए",
     "home.title": "मेरी ज़मीन, मेरी योजना",
@@ -376,6 +380,8 @@
     "nav.about": "بارے میں",
     "nav.menu": "مینو",
     "nav.language": "زبان",
+    "footer.privacy": "رازداری کی پالیسی",
+    "footer.terms": "خدمات کی شرائط",
 
     "home.eyebrow": "جموں اور کشمیر کے کسانوں کے لیے",
     "home.title": "میری زمین، میرا منصوبہ",

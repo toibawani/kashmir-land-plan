@@ -10,7 +10,21 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- A Privacy Policy (`privacy.html`) and Terms of Service (`terms.html`), linked in
+  the footer of every page. Both describe only what the app does today: data stays
+  in this browser, there are no accounts, no analytics and no cookies, weather
+  names a district to Open-Meteo only when asked, and the two typefaces load from
+  Google Fonts on a first visit. Contact is the repository's public issue tracker,
+  not a personal address. The pages carry no script and a stricter policy than the
+  app (`script-src 'none'`), and the build refuses a page that loses it, is not
+  precached, or is not linked from the app.
+
+### Changed
+
+- `sw.js` moves to `mlmp-v42` and precaches both legal pages, so they open with
+  the rest of the app when there is no signal.
 
 ## [1.2.7] - 2026-11-12
 
