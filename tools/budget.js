@@ -21,9 +21,14 @@ var zlib = require("zlib");
 
 var root = path.resolve(__dirname, "..");
 
-/* Measured 2026-11-07 with gzip -9, which is what the host serves. Raise these
-   only with a number in LIGHTHOUSE.md explaining what was added. */
-var BUDGET = { js: 122784, css: 16470, html: 12331 };
+/* Measured 2026-11-17 with gzip -9, which is what the host serves. Raise these
+   only with a number in LIGHTHOUSE.md explaining what was added.
+
+   Raised from 122784/16470/12331 on 2026-11-17 for the data controls:
+   js/data.js (4672 bytes) is the one new module, plus the notes and backup
+   wiring in app.js, its strings in messages.js and the screen in index.html.
+   The new budget is 129.0 KB JS, 16.1 KB CSS, 12.8 KB HTML. */
+var BUDGET = { js: 132096, css: 16470, html: 13107 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;

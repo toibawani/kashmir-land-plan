@@ -156,6 +156,40 @@
     "lang.englishOnly": "Option details are in English only for now.",
     "lang.uncheckedShort": "native-speaker check pending",
 
+    "data.title": "On this device",
+    "data.intro":
+      "Everything this app keeps stays in this browser on this phone. There is no account and no server copy. From here you can take a backup, restore one, or delete it all.",
+    "data.storedHeading": "What is stored here",
+    "data.backupHeading": "Backup",
+    "data.dangerHeading": "Delete",
+    "data.plansCount": "Saved plans: {count}",
+    "data.draftYes": "A draft of the form you last worked on",
+    "data.draftNo": "No draft saved",
+    "data.langYes": "Your language choice",
+    "data.none": "No saved plans yet.",
+    "data.export": "Export all data",
+    "data.exportHint":
+      "Saves one JSON file with your plans and draft. It is written to this device, and nothing is uploaded.",
+    "data.import": "Import a backup",
+    "data.importHint":
+      "Choose a backup file made by this app. It replaces what is here now, so export first if you want to keep it.",
+    "data.deleteAll": "Delete everything on this device",
+    "data.deleteHint":
+      "Removes every plan, the draft, the language choice and the feedback answers. This cannot be undone.",
+    "data.back": "Back to my plans",
+    "data.exported": "Backup saved on this device as a JSON file.",
+    "data.imported": "{count} plans restored. Your saved plans now match the file.",
+    "data.deleted": "Everything this app stored on this device has been removed.",
+    "data.refused": "Not imported: {why}",
+    "data.confirmImport":
+      "Replace what is stored on this device with this backup? The plans and draft here now will be removed.",
+    "data.confirmDelete":
+      "Delete every plan, the draft, the language choice and the feedback answers from this device? This cannot be undone.",
+    "notes.label": "Notes for this plot",
+    "notes.hint": "What the officer said, and what to do next. Kept on this device with the plan.",
+    "notes.save": "Save note",
+    "notes.saved": "Note saved with this plan.",
+
     "common.confirmLocally":
       "Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar.",
     "common.notOfficial":
@@ -328,6 +362,40 @@
     "lang.englishOnly": "विकल्पों का विवरण अभी केवल अंग्रेज़ी में है।",
     "lang.uncheckedShort": "मूल वक्ता की जाँच बाकी",
 
+    "data.title": "इस डिवाइस पर",
+    "data.intro":
+      "यह ऐप जो कुछ भी रखता है, इसी फ़ोन के इस ब्राउज़र में रहता है। कोई खाता नहीं और सर्वर पर कोई प्रतिलिपि नहीं। यहाँ से आप बैकअप ले सकते हैं, उसे वापस ला सकते हैं, या सब कुछ मिटा सकते हैं।",
+    "data.storedHeading": "यहाँ क्या रखा है",
+    "data.backupHeading": "बैकअप",
+    "data.dangerHeading": "मिटाएँ",
+    "data.plansCount": "सहेजी गई योजनाएँ: {count}",
+    "data.draftYes": "उस फ़ॉर्म का मसौदा जिस पर आपने आखिरी बार काम किया",
+    "data.draftNo": "कोई मसौदा सहेजा नहीं गया",
+    "data.langYes": "आपकी भाषा का चयन",
+    "data.none": "अभी कोई योजना सहेजी नहीं गई।",
+    "data.export": "सारा डेटा निर्यात करें",
+    "data.exportHint":
+      "आपकी योजनाओं और मसौदे के साथ एक JSON फ़ाइल सहेजता है। यह इसी डिवाइस पर लिखी जाती है, कहीं अपलोड नहीं होती।",
+    "data.import": "बैकअप आयात करें",
+    "data.importHint":
+      "इस ऐप से बनी बैकअप फ़ाइल चुनें। यह यहाँ मौजूद डेटा की जगह लेगी, इसलिए पहले निर्यात कर लें।",
+    "data.deleteAll": "इस डिवाइस से सब कुछ मिटाएँ",
+    "data.deleteHint":
+      "हर योजना, मसौदा, भाषा का चयन और फ़ीडबैक के जवाब हट जाएँगे। इसे वापस नहीं लाया जा सकता।",
+    "data.back": "मेरी योजनाओं पर वापस",
+    "data.exported": "बैकअप इस डिवाइस पर JSON फ़ाइल के रूप में सहेजा गया।",
+    "data.imported": "{count} योजनाएँ बहाल हुईं। आपकी सहेजी योजनाएँ अब फ़ाइल से मिलती हैं।",
+    "data.deleted": "इस ऐप ने इस डिवाइस पर जो कुछ रखा था, वह हटा दिया गया है।",
+    "data.refused": "आयात नहीं हुआ: {why}",
+    "data.confirmImport":
+      "इस डिवाइस पर रखे डेटा को इस बैकअप से बदलें? यहाँ मौजूद योजनाएँ और मसौदा हट जाएँगे।",
+    "data.confirmDelete":
+      "इस डिवाइस से हर योजना, मसौदा, भाषा का चयन और फ़ीडबैक के जवाब मिटाएँ? इसे वापस नहीं लाया जा सकता।",
+    "notes.label": "इस ज़मीन के लिए टिप्पणी",
+    "notes.hint": "अधिकारी ने क्या कहा और आगे क्या करना है। योजना के साथ इसी डिवाइस पर रहता है।",
+    "notes.save": "टिप्पणी सहेजें",
+    "notes.saved": "टिप्पणी योजना के साथ सहेजी गई।",
+
     "common.confirmLocally":
       "फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें।",
     "common.notOfficial":
@@ -498,6 +566,40 @@
       "اس ترجمے کی ابھی کسی مادری زبان بولنے والے نے جانچ نہیں کی۔ اختیارات کی تفصیل ابھی انگریزی میں ہے۔ کرنے سے پہلے ہمیشہ مقامی طور پر تصدیق کریں۔",
     "lang.englishOnly": "اختیارات کی تفصیل ابھی صرف انگریزی میں ہے۔",
     "lang.uncheckedShort": "مادری زبان والے کی جانچ باقی",
+
+    "data.title": "اس ڈیوائس پر",
+    "data.intro":
+      "یہ ایپ جو کچھ رکھتی ہے، اسی فون کے اسی براؤزر میں رہتا ہے۔ کوئی اکاؤنٹ نہیں اور سرور پر کوئی نقل نہیں۔ یہاں سے آپ بیک اپ لے سکتے ہیں، واپس لا سکتے ہیں، یا سب کچھ مٹا سکتے ہیں۔",
+    "data.storedHeading": "یہاں کیا رکھا ہے",
+    "data.backupHeading": "بیک اپ",
+    "data.dangerHeading": "مٹائیں",
+    "data.plansCount": "محفوظ منصوبے: {count}",
+    "data.draftYes": "اس فارم کا مسودہ جس پر آپ نے آخری بار کام کیا",
+    "data.draftNo": "کوئی مسودہ محفوظ نہیں",
+    "data.langYes": "آپ کی زبان کا انتخاب",
+    "data.none": "ابھی کوئی منصوبہ محفوظ نہیں۔",
+    "data.export": "سارا ڈیٹا برآمد کریں",
+    "data.exportHint":
+      "آپ کے منصوبوں اور مسودے کے ساتھ ایک JSON فائل محفوظ کرتا ہے۔ یہ اسی ڈیوائس پر لکھی جاتی ہے، کہیں اپ لوڈ نہیں ہوتی۔",
+    "data.import": "بیک اپ درآمد کریں",
+    "data.importHint":
+      "اس ایپ سے بنی بیک اپ فائل چنیں۔ یہ یہاں موجود ڈیٹا کی جگہ لے گی، اس لیے پہلے برآمد کر لیں۔",
+    "data.deleteAll": "اس ڈیوائس سے سب کچھ مٹائیں",
+    "data.deleteHint":
+      "ہر منصوبہ، مسودہ، زبان کا انتخاب اور فیڈبیک کے جوابات ہٹ جائیں گے۔ اسے واپس نہیں لایا جا سکتا۔",
+    "data.back": "میرے منصوبوں پر واپس",
+    "data.exported": "بیک اپ اس ڈیوائس پر JSON فائل کے طور پر محفوظ ہو گیا۔",
+    "data.imported": "{count} منصوبے بحال ہوئے۔ آپ کے محفوظ منصوبے اب فائل سے میل کھاتے ہیں۔",
+    "data.deleted": "اس ایپ نے اس ڈیوائس پر جو کچھ رکھا تھا، وہ ہٹا دیا گیا ہے۔",
+    "data.refused": "درآمد نہیں ہوا: {why}",
+    "data.confirmImport":
+      "اس ڈیوائس پر رکھا ڈیٹا اس بیک اپ سے بدلیں؟ یہاں موجود منصوبے اور مسودہ ہٹ جائیں گے۔",
+    "data.confirmDelete":
+      "اس ڈیوائس سے ہر منصوبہ، مسودہ، زبان کا انتخاب اور فیڈبیک کے جوابات مٹائیں؟ اسے واپس نہیں لایا جا سکتا۔",
+    "notes.label": "اس زمین کے لیے نوٹ",
+    "notes.hint": "افسر نے کیا کہا اور آگے کیا کرنا ہے۔ منصوبے کے ساتھ اسی ڈیوائس پر رہتا ہے۔",
+    "notes.save": "نوٹ محفوظ کریں",
+    "notes.saved": "نوٹ منصوبے کے ساتھ محفوظ ہو گیا۔",
 
     "common.confirmLocally":
       "فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔",

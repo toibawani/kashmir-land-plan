@@ -120,6 +120,33 @@ Every string the app shows on the critical path, in the three languages it offer
 | `lang.notice` | This translation has not been checked by a native speaker yet. Option details are still in English. Always confirm locally before acting. | इस अनुवाद को अभी किसी मूल वक्ता ने नहीं जांचा। विकल्पों का विवरण अभी अंग्रेज़ी में है। करने से पहले हमेशा स्थानीय रूप से पुष्टि करें। | اس ترجمے کی ابھی کسی مادری زبان بولنے والے نے جانچ نہیں کی۔ اختیارات کی تفصیل ابھی انگریزی میں ہے۔ کرنے سے پہلے ہمیشہ مقامی طور پر تصدیق کریں۔ |
 | `lang.englishOnly` | Option details are in English only for now. | विकल्पों का विवरण अभी केवल अंग्रेज़ी में है। | اختیارات کی تفصیل ابھی صرف انگریزی میں ہے۔ |
 | `lang.uncheckedShort` | native-speaker check pending | मूल वक्ता की जाँच बाकी | مادری زبان والے کی جانچ باقی |
+| `data.title` | On this device | इस डिवाइस पर | اس ڈیوائس پر |
+| `data.intro` | Everything this app keeps stays in this browser on this phone. There is no account and no server copy. From here you can take a backup, restore one, or delete it all. | यह ऐप जो कुछ भी रखता है, इसी फ़ोन के इस ब्राउज़र में रहता है। कोई खाता नहीं और सर्वर पर कोई प्रतिलिपि नहीं। यहाँ से आप बैकअप ले सकते हैं, उसे वापस ला सकते हैं, या सब कुछ मिटा सकते हैं। | یہ ایپ جو کچھ رکھتی ہے، اسی فون کے اسی براؤزر میں رہتا ہے۔ کوئی اکاؤنٹ نہیں اور سرور پر کوئی نقل نہیں۔ یہاں سے آپ بیک اپ لے سکتے ہیں، واپس لا سکتے ہیں، یا سب کچھ مٹا سکتے ہیں۔ |
+| `data.storedHeading` | What is stored here | यहाँ क्या रखा है | یہاں کیا رکھا ہے |
+| `data.backupHeading` | Backup | बैकअप | بیک اپ |
+| `data.dangerHeading` | Delete | मिटाएँ | مٹائیں |
+| `data.plansCount` | Saved plans: {count} | सहेजी गई योजनाएँ: {count} | محفوظ منصوبے: {count} |
+| `data.draftYes` | A draft of the form you last worked on | उस फ़ॉर्म का मसौदा जिस पर आपने आखिरी बार काम किया | اس فارم کا مسودہ جس پر آپ نے آخری بار کام کیا |
+| `data.draftNo` | No draft saved | कोई मसौदा सहेजा नहीं गया | کوئی مسودہ محفوظ نہیں |
+| `data.langYes` | Your language choice | आपकी भाषा का चयन | آپ کی زبان کا انتخاب |
+| `data.none` | No saved plans yet. | अभी कोई योजना सहेजी नहीं गई। | ابھی کوئی منصوبہ محفوظ نہیں۔ |
+| `data.export` | Export all data | सारा डेटा निर्यात करें | سارا ڈیٹا برآمد کریں |
+| `data.exportHint` | Saves one JSON file with your plans and draft. It is written to this device, and nothing is uploaded. | आपकी योजनाओं और मसौदे के साथ एक JSON फ़ाइल सहेजता है। यह इसी डिवाइस पर लिखी जाती है, कहीं अपलोड नहीं होती। | آپ کے منصوبوں اور مسودے کے ساتھ ایک JSON فائل محفوظ کرتا ہے۔ یہ اسی ڈیوائس پر لکھی جاتی ہے، کہیں اپ لوڈ نہیں ہوتی۔ |
+| `data.import` | Import a backup | बैकअप आयात करें | بیک اپ درآمد کریں |
+| `data.importHint` | Choose a backup file made by this app. It replaces what is here now, so export first if you want to keep it. | इस ऐप से बनी बैकअप फ़ाइल चुनें। यह यहाँ मौजूद डेटा की जगह लेगी, इसलिए पहले निर्यात कर लें। | اس ایپ سے بنی بیک اپ فائل چنیں۔ یہ یہاں موجود ڈیٹا کی جگہ لے گی، اس لیے پہلے برآمد کر لیں۔ |
+| `data.deleteAll` | Delete everything on this device | इस डिवाइस से सब कुछ मिटाएँ | اس ڈیوائس سے سب کچھ مٹائیں |
+| `data.deleteHint` | Removes every plan, the draft, the language choice and the feedback answers. This cannot be undone. | हर योजना, मसौदा, भाषा का चयन और फ़ीडबैक के जवाब हट जाएँगे। इसे वापस नहीं लाया जा सकता। | ہر منصوبہ، مسودہ، زبان کا انتخاب اور فیڈبیک کے جوابات ہٹ جائیں گے۔ اسے واپس نہیں لایا جا سکتا۔ |
+| `data.back` | Back to my plans | मेरी योजनाओं पर वापस | میرے منصوبوں پر واپس |
+| `data.exported` | Backup saved on this device as a JSON file. | बैकअप इस डिवाइस पर JSON फ़ाइल के रूप में सहेजा गया। | بیک اپ اس ڈیوائس پر JSON فائل کے طور پر محفوظ ہو گیا۔ |
+| `data.imported` | {count} plans restored. Your saved plans now match the file. | {count} योजनाएँ बहाल हुईं। आपकी सहेजी योजनाएँ अब फ़ाइल से मिलती हैं। | {count} منصوبے بحال ہوئے۔ آپ کے محفوظ منصوبے اب فائل سے میل کھاتے ہیں۔ |
+| `data.deleted` | Everything this app stored on this device has been removed. | इस ऐप ने इस डिवाइस पर जो कुछ रखा था, वह हटा दिया गया है। | اس ایپ نے اس ڈیوائس پر جو کچھ رکھا تھا، وہ ہٹا دیا گیا ہے۔ |
+| `data.refused` | Not imported: {why} | आयात नहीं हुआ: {why} | درآمد نہیں ہوا: {why} |
+| `data.confirmImport` | Replace what is stored on this device with this backup? The plans and draft here now will be removed. | इस डिवाइस पर रखे डेटा को इस बैकअप से बदलें? यहाँ मौजूद योजनाएँ और मसौदा हट जाएँगे। | اس ڈیوائس پر رکھا ڈیٹا اس بیک اپ سے بدلیں؟ یہاں موجود منصوبے اور مسودہ ہٹ جائیں گے۔ |
+| `data.confirmDelete` | Delete every plan, the draft, the language choice and the feedback answers from this device? This cannot be undone. | इस डिवाइस से हर योजना, मसौदा, भाषा का चयन और फ़ीडबैक के जवाब मिटाएँ? इसे वापस नहीं लाया जा सकता। | اس ڈیوائس سے ہر منصوبہ، مسودہ، زبان کا انتخاب اور فیڈبیک کے جوابات مٹائیں؟ اسے واپس نہیں لایا جا سکتا۔ |
+| `notes.label` | Notes for this plot | इस ज़मीन के लिए टिप्पणी | اس زمین کے لیے نوٹ |
+| `notes.hint` | What the officer said, and what to do next. Kept on this device with the plan. | अधिकारी ने क्या कहा और आगे क्या करना है। योजना के साथ इसी डिवाइस पर रहता है। | افسر نے کیا کہا اور آگے کیا کرنا ہے۔ منصوبے کے ساتھ اسی ڈیوائس پر رہتا ہے۔ |
+| `notes.save` | Save note | टिप्पणी सहेजें | نوٹ محفوظ کریں |
+| `notes.saved` | Note saved with this plan. | टिप्पणी योजना के साथ सहेजी गई। | نوٹ منصوبے کے ساتھ محفوظ ہو گیا۔ |
 | `common.confirmLocally` | Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar. | फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें। | فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔ |
 | `common.notOfficial` | This is a working prototype, not a government service. It helps you prepare questions. It cannot verify land, approve a scheme, or guarantee that a crop will suit your plot. | यह एक काम करने वाला प्रोटोटाइप है, सरकारी सेवा नहीं। यह सवाल तैयार करने में मदद करता है। यह ज़मीन की पुष्टि नहीं कर सकता, योजना मंजूर नहीं कर सकता, और फसल की गारंटी नहीं दे सकता। | یہ ایک کام کرنے والا پروٹو ٹائپ ہے، سرکاری خدمت نہیں۔ یہ سوالات تیار کرنے میں مدد کرتا ہے۔ یہ زمین کی تصدیق نہیں کر سکتا، اسکیم منظور نہیں کر سکتا، اور فصل کی ضمانت نہیں دے سکتا۔ |
 | `common.illustrative` | Illustrative | उदाहरणात्मक | مثالی |

@@ -31,6 +31,7 @@
   var SOURCES = window.MLMP_SOURCES;
   var VISIT = window.MLMP_VISIT;
   var FEEDBACK = window.MLMP_FEEDBACK;
+  var DATA = window.MLMP_DATA;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -117,8 +118,8 @@
    * already in the markup, so a language that is missing a key still shows a
    * real sentence rather than a key name or a blank.
    */
-  function tr(key, fallback) {
-    return MSG && MSG.tr ? MSG.tr(key, fallback) : fallback;
+  function tr(key, fallback, vars) {
+    return MSG && MSG.tr ? MSG.tr(key, fallback, vars) : fallback;
   }
 
   /** The confirm-locally line in the current language. */
@@ -571,8 +572,13 @@
     } catch (_) {}
   }
 
-  function resetPlan() {
-    clearDraft();
+  /**
+   * Empty the working copy in memory. Saved plans are the caller's business:
+   * Start over leaves them alone, while Delete everything removes them first.
+   * `refillForm` is off when the screen is not the form, because repainting a
+   * hidden form during a restore would be work nobody sees.
+   */
+  function resetWorkingState(refillForm) {
     state.isDemo = false;
     state.step = 1;
     state.options = [];
@@ -590,6 +596,7 @@
     state.currentPlanId = null;
     state.currentPlanName = "";
     state.weather = { district: "", query: "", result: null, error: null, status: "idle" };
+    if (!refillForm) return;
     var form = $("#land-form");
     if (form) form.reset();
     fillFormFromState();
@@ -597,6 +604,11 @@
     if (notice) notice.hidden = true;
     var openSaved = $("#btn-open-saved-plan");
     if (openSaved) openSaved.hidden = true;
+  }
+
+  function resetPlan() {
+    clearDraft();
+    resetWorkingState(true);
     setStatus("save-status", "");
     renderWeather();
     showStep(1, { focus: false });
@@ -3798,6 +3810,40 @@
     return rows;
   }
 
+  /**
+   * The notes a farmer keeps beside a plan: what the officer said, and what to
+   * do next. It is a plain textarea, saved only when the button is pressed, so
+   * a half-typed sentence is never written over a note someone meant to keep.
+   */
+  function planNotesHtml(plan) {
+    var id = "note-" + plan.id;
+    return (
+      '<div class="plan-notes">' +
+      '<label class="plan-notes-label" for="' +
+      escapeHtml(id) +
+      '">' +
+      escapeHtml(tr("notes.label", "Notes for this plot")) +
+      "</label>" +
+      '<textarea id="' +
+      escapeHtml(id) +
+      '" data-plan-note="' +
+      escapeHtml(plan.id) +
+      '" rows="3" maxlength="' +
+      (DATA ? DATA.MAX_NOTES : 2000) +
+      '" placeholder="' +
+      escapeHtml(tr("notes.hint", "What the officer said, and what to do next.")) +
+      '">' +
+      escapeHtml(plan.notes || "") +
+      "</textarea>" +
+      '<div class="plan-actions">' +
+      '<button type="button" class="btn btn-secondary" data-plan-note-save="' +
+      escapeHtml(plan.id) +
+      '">' +
+      escapeHtml(tr("notes.save", "Save note")) +
+      "</button></div></div>"
+    );
+  }
+
   function renderPlansList() {
     var host = $("#plans-list");
     var empty = $("#plans-empty");
@@ -3871,6 +3917,7 @@
             (lead
               ? '<p class="plan-lead">Leads with ' + escapeHtml(activityTitleFor(lead)) + "</p>"
               : "") +
+            planNotesHtml(p) +
             '<div class="plan-actions">' +
             '<button type="button" class="btn btn-secondary" data-plan-open="' +
             escapeHtml(p.id) +
@@ -4512,10 +4559,151 @@
       showScreen("plans");
     }
 
+    /**
+     * "On this device": the one screen that answers what is stored, and the
+     * three things a person can do about it. Every sentence here describes
+     * the app as it is; nothing is promised that a future version has to
+     * remember to keep.
+     */
+    function renderData() {
+      var host = $("#data-facts");
+      if (!host) return;
+      var plans = plansAvailable() ? PLANS.list() : [];
+      var hasDraft = !!(readDraft() && readDraft().data);
+      var items = [];
+      items.push(
+        plans.length
+          ? tr("data.plansCount", "Saved plans: {count}", { count: plans.length })
+          : tr("data.none", "No saved plans yet.")
+      );
+      items.push(hasDraft ? tr("data.draftYes", "A draft of the form you last worked on") : tr("data.draftNo", "No draft saved"));
+      items.push(tr("data.langYes", "Your language choice"));
+      host.innerHTML = items
+        .map(function (line) {
+          return "<li>" + escapeHtml(line) + "</li>";
+        })
+        .join("");
+    }
+
+    function openData() {
+      renderData();
+      showScreen("data");
+    }
+
+    /**
+     * Read a backup file and, if every plan inside it passes, replace what is
+     * on this device. A file that fails one check replaces nothing: a restore
+     * that half-happens would leave someone with fewer plans than they started
+     * with and no way to tell which ones went.
+     */
+    function applyImportedBackup(text) {
+      if (!DATA) {
+        setStatus("data-status", tr("data.refused", "Not imported: {why}", { why: "the data module did not load" }));
+        return;
+      }
+      var result = DATA.validate(text, { districts: REGIONS && REGIONS.names ? REGIONS.names : [] });
+      if (!result.ok) {
+        setStatus("data-status", tr("data.refused", "Not imported: {why}", { why: result.error }));
+        return;
+      }
+      var ok = window.confirm(
+        tr(
+          "data.confirmImport",
+          "Replace what is stored on this device with this backup? The plans and draft here now will be removed."
+        )
+      );
+      if (!ok) return;
+
+      var written = PLANS.replaceAll(result.plans);
+      if (!written) {
+        setStatus(
+          "data-status",
+          tr("data.refused", "Not imported: {why}", { why: "this device refused to store the plans" })
+        );
+        return;
+      }
+
+      if (result.draft) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(result.draft));
+        } catch (_) {
+          setStatus(
+            "data-status",
+            tr("data.refused", "Not imported: {why}", { why: "the plans were restored but the draft could not be stored" })
+          );
+          renderData();
+          renderPlans();
+          return;
+        }
+      } else {
+        clearDraft();
+      }
+
+      // Put the working state back in step with what was just written, so the
+      // next screen does not show a plan the file replaced.
+      resetWorkingState(false);
+      loadDraft();
+      setStatus("data-status", tr("data.imported", "{count} plans restored. Your saved plans now match the file.", { count: written.length }));
+      renderData();
+      renderPlans();
+    }
+
+    function deleteEverything() {
+      var ok = window.confirm(
+        tr(
+          "data.confirmDelete",
+          "Delete every plan, the draft, the language choice and the feedback answers from this device? This cannot be undone."
+        )
+      );
+      if (!ok) return;
+      var removed = DATA ? DATA.clearAll() : [];
+      resetWorkingState(true);
+      renderData();
+      renderPlans();
+      setStatus(
+        "data-status",
+        removed.length
+          ? tr("data.deleted", "Everything this app stored on this device has been removed.")
+          : tr("data.refused", "Not imported: {why}", { why: "this browser allows no storage to delete" })
+      );
+    }
+
     $("#btn-visit-card") && $("#btn-visit-card").addEventListener("click", openVisitCard);
     $("#btn-visit-plans") && $("#btn-visit-plans").addEventListener("click", openPlans);
     $("#btn-results-plans") && $("#btn-results-plans").addEventListener("click", openPlans);
     $("#btn-plans-visit") && $("#btn-plans-visit").addEventListener("click", openVisitCard);
+    $("#btn-plans-data") && $("#btn-plans-data").addEventListener("click", openData);
+    $("#btn-data-back") && $("#btn-data-back").addEventListener("click", openPlans);
+    $("#btn-data-delete") && $("#btn-data-delete").addEventListener("click", deleteEverything);
+    $("#btn-data-export") &&
+      $("#btn-data-export").addEventListener("click", function () {
+        if (!DATA) return;
+        var plans = plansAvailable() ? PLANS.list() : [];
+        DATA.download(plans, readDraft());
+        setStatus("data-status", tr("data.exported", "Backup saved on this device as a JSON file."));
+      });
+    $("#btn-data-import") &&
+      $("#btn-data-import").addEventListener("click", function () {
+        var input = $("#data-import-input");
+        if (input) input.click();
+      });
+    $("#data-import-input") &&
+      $("#data-import-input").addEventListener("change", function (event) {
+        var file = event.target.files && event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          applyImportedBackup(String(reader.result || ""));
+        };
+        reader.onerror = function () {
+          setStatus(
+            "data-status",
+            tr("data.refused", "Not imported: {why}", { why: "the file could not be read" })
+          );
+        };
+        reader.readAsText(file);
+        event.target.value = "";
+      });
     $("#btn-visit-back") &&
       $("#btn-visit-back").addEventListener("click", function () {
         renderSummary();
@@ -4624,6 +4812,21 @@
         PLANS.choose(choose.getAttribute("data-plan-choose"));
         renderPlans();
         setStatus("plans-status", "Noted. The office visit card will carry the plan you marked.");
+        return;
+      }
+      var noteSave = e.target.closest("[data-plan-note-save]");
+      if (noteSave) {
+        var notePlan = PLANS.get(noteSave.getAttribute("data-plan-note-save"));
+        if (!notePlan) return;
+        var field = $("#note-" + notePlan.id);
+        var written = PLANS.setNotes(notePlan.id, field ? field.value : "");
+        setStatus(
+          "plans-status",
+          written
+            ? tr("notes.saved", "Note saved with this plan.")
+            : "This device refused to store the note, so it was not saved. Free some space and try again."
+        );
+        if (written) renderPlans();
         return;
       }
       var rename = e.target.closest("[data-plan-rename]");
@@ -4846,6 +5049,10 @@
     var restore = function () { return loadDraft(); };
 
     if (h === "about") showScreen("about", { focus: focus });
+    else if (h === "data") {
+      renderData();
+      showScreen("data", { focus: focus });
+    }
     else if (h === "plans") {
       // Saved plans stand on their own, so this deep link never needs a draft.
       renderPlans();

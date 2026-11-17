@@ -2809,6 +2809,35 @@ select:focus {
   padding: calc(var(--space-4) - 1px);
 }
 
+/* The note a farmer keeps after the visit. Plain text, saved on request. */
+.plan-notes {
+  margin: 0.9rem 0 0.5rem;
+}
+
+.plan-notes-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.plan-notes textarea {
+  width: 100%;
+  min-height: 4.5rem;
+  padding: 0.6rem;
+  border: 1px solid #9a9585;
+  border-radius: 6px;
+  background: #fffdf7;
+  color: #26231c;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.plan-notes textarea:focus {
+  outline: 3px solid #2f5d3a;
+  outline-offset: 1px;
+}
+
 .plan-card h3 {
   font-family: var(--font-sans);
   font-size: 1.05rem;

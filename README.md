@@ -50,6 +50,13 @@ if one appears.
   document lists invented anywhere.
 - Speaks English, Hindi and Urdu, with the Urdu screen laid out right to left.
 - Keeps everything on the device. No accounts, no analytics, no backend.
+- Keeps a note beside each saved plan for what the officer said and what to do
+  next, exports every plan and draft to one JSON backup, reads that file back
+  through a closed schema, and can delete everything the app stored, from one
+  "On this device" screen.
+- Carries a plain-language [Privacy Policy](privacy.html) and
+  [Terms of Service](terms.html) in the footer, both matching what the app does
+  today. Both need a human read before they are treated as settled.
 
 ## Land, district by district
 

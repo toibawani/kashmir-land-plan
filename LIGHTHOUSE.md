@@ -53,10 +53,28 @@ sizes of the files `index.html` references, measured on 7 November 2026:
 
 | Part | Size | Budget |
 | --- | --- | --- |
-| JavaScript (22 files) | 111.0 KB | 119.9 KB |
+| JavaScript (25 files) | 111.0 KB | 119.9 KB |
 | CSS (1 file) | 14.9 KB | 16.1 KB |
 | index.html | 11.1 KB | 12.0 KB |
 | **Total first visit** | **137.1 KB** | |
+
+## The payload after the data controls (17 November 2026)
+
+The backup, notes and "on this device" screen added one module and one screen.
+Measured with `node tools/budget.js --measure`, gzip -9:
+
+| Part | Size | Budget |
+| --- | --- | --- |
+| JavaScript (26 files) | 127.8 KB | 129.0 KB |
+| CSS (1 file) | 15.6 KB | 16.1 KB |
+| index.html | 12.3 KB | 12.8 KB |
+| **Total first visit** | **155.7 KB** | |
+
+What the 8.9 KB of JavaScript bought: `js/data.js` (4.6 KB) validates a backup
+file against a closed schema and erases what the app stored; the rest is the
+notes field on each plan card, the new screen's wiring in `app.js` (about
+3.0 KB) and its 28 strings in three languages in `messages.js` (about 1.3 KB).
+The budget was raised deliberately here, not to fit a drift.
 
 The budgets are the measured size plus eight per cent, so a feature may not
 quietly grow the download. Raising one means editing the number here and in

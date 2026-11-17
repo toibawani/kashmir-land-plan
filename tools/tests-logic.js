@@ -67,6 +67,7 @@ load(
     "schemes.js",
     "questions.js",
     "plans.js",
+    "data.js",
     "speech.js",
     "qr.js",
     "offline.js",
@@ -1137,6 +1138,155 @@ check(
   LAND.districts()
     .filter(function (name) { return TEHSIL_NAMES.covered().indexOf(name) === -1; })
     .every(function (name) { return TEHSIL_NAMES.sourceId(name) === null; })
+);
+
+/* ---- Backup files: strict, closed, and hostile by default ---- */
+
+// An imported file is the one place a stranger's bytes reach this app, so the
+// reader is tested with the shapes a real mistake or a hostile file produces:
+// unknown fields, missing answers, a script string, a value too long to store.
+var DATA = sandbox.window.MLMP_DATA;
+var DISTRICT_NAMES = sandbox.window.MLMP_REGIONS.names;
+
+function planFixture() {
+  return {
+    id: "p1abcd",
+    name: "Saffron on the karewa",
+    createdAt: "2026-11-01T09:00:00.000Z",
+    updatedAt: "2026-11-02T09:00:00.000Z",
+    chosen: false,
+    data: {
+      district: "Pulwama",
+      altitude: "valley",
+      village: "Pampore",
+      size: "2",
+      unit: "kanal",
+      landUse: "partly",
+      water: "seasonal",
+      terrain: "flat",
+      soil: "none",
+      constraint: "water",
+    },
+    interested: { saffron: true },
+    coveredQuestions: { "q-1": true },
+    options: [{ id: "saffron" }],
+    zoneId: "valley",
+    isDemo: false,
+    notes: "Officer asked for a soil test first.",
+  };
+}
+
+function backupText(plans, draft) {
+  return JSON.stringify({
+    app: "my-land-my-plan",
+    backupVersion: 1,
+    exportedAt: "2026-11-02T09:00:00.000Z",
+    plans: plans,
+    draft: draft || null,
+  });
+}
+
+var opts = { districts: DISTRICT_NAMES };
+var goodRoundTrip = DATA.validate(backupText([planFixture()], null), opts);
+check("a backup made by this app is accepted", goodRoundTrip.ok, goodRoundTrip.error);
+check(
+  "the accepted backup keeps the plan's answers and notes",
+  goodRoundTrip.ok &&
+    goodRoundTrip.plans[0].data.district === "Pulwama" &&
+    goodRoundTrip.plans[0].notes === "Officer asked for a soil test first."
+);
+
+var extraPlanField = planFixture();
+extraPlanField.owner = "someone else";
+check(
+  "a plan with an unknown field is refused",
+  !DATA.validate(backupText([extraPlanField], null), opts).ok
+);
+
+var extraAnswer = planFixture();
+extraAnswer.data.caste = "x";
+check(
+  "an answer field the form cannot produce is refused",
+  !DATA.validate(backupText([extraAnswer], null), opts).ok
+);
+
+var badEnum = planFixture();
+badEnum.data.soil = "very fertile";
+check("an invented soil answer is refused", !DATA.validate(backupText([badEnum], null), opts).ok);
+
+var badDistrict = planFixture();
+badDistrict.data.district = "Lahore";
+check("a district this app does not offer is refused", !DATA.validate(backupText([badDistrict], null), opts).ok);
+
+var scriptName = planFixture();
+scriptName.name = "<script>alert(1)</script>";
+var scriptResult = DATA.validate(backupText([scriptName], null), opts);
+check("a script string is stored as text, not rejected for being text", scriptResult.ok, scriptResult.error);
+check(
+  "a script string comes back as the same literal text, for the caller to escape",
+  scriptResult.ok && scriptResult.plans[0].name === "<script>alert(1)</script>"
+);
+
+var hugeNotes = planFixture();
+hugeNotes.notes = new Array(6000).join("x");
+var hugeResult = DATA.validate(backupText([hugeNotes], null), opts);
+check(
+  "notes longer than the limit are cut to it, not stored whole",
+  hugeResult.ok && hugeResult.plans[0].notes.length === DATA.MAX_NOTES
+);
+
+var duplicate = [planFixture(), planFixture()];
+check("two plans with one id are refused", !DATA.validate(backupText(duplicate, null), opts).ok);
+
+var tooMany = [];
+for (var p = 0; p < DATA.MAX_PLANS + 1; p++) {
+  var many = planFixture();
+  many.id = "p" + p;
+  tooMany.push(many);
+}
+check("more plans than this device keeps is refused", !DATA.validate(backupText(tooMany, null), opts).ok);
+
+check(
+  "a file from another app is refused",
+  !DATA.validate(JSON.stringify({ app: "other", backupVersion: 1, plans: [] }), opts).ok
+);
+check(
+  "a file from a later backup format is refused",
+  !DATA.validate(JSON.stringify({ app: "my-land-my-plan", backupVersion: 99, plans: [] }), opts).ok
+);
+check("plain text is refused", !DATA.validate("not json", opts).ok);
+check("an empty file is refused", !DATA.validate("", opts).ok);
+
+var draftWithNoDistrict = {
+  data: {
+    district: "",
+    altitude: "",
+    village: "",
+    size: "",
+    unit: "kanal",
+    landUse: "",
+    water: "",
+    terrain: "",
+    soil: "none",
+    constraint: "",
+  },
+  step: 1,
+};
+var draftResult = DATA.validate(backupText([], draftWithNoDistrict), opts);
+check("a draft saved before a district was chosen is accepted", draftResult.ok, draftResult.error);
+check(
+  "a saved plan with no district is refused, because a plan came from a finished form",
+  !DATA.validate(backupText([Object.assign(planFixture(), { data: Object.assign(planFixture().data, { district: "" }) })], null), opts).ok
+);
+
+var storedPlan = PLANS.upsert(planFixture());
+PLANS.setNotes(storedPlan.id, "Write down the soil test result.");
+check("a note is stored against its plan", PLANS.get(storedPlan.id).notes === "Write down the soil test result.");
+PLANS.upsert(Object.assign(planFixture(), { id: storedPlan.id, notes: "Second note" }));
+check("saving the plan again keeps the newer note", PLANS.get(storedPlan.id).notes === "Second note");
+check(
+  "a note is capped at the limit",
+  PLANS.setNotes(storedPlan.id, new Array(4000).join("y")).notes.length === DATA.MAX_NOTES
 );
 
 console.log("");
