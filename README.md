@@ -66,7 +66,12 @@ if one appears.
   service is connected, nothing is uploaded, and the switch only records whether
   you would allow it. `REVIEW_PHOTO_QUESTIONS.md` lists what has to be decided
   before that changes, and `node tools/eval-photos.js` proves the format refuses
-  crops, soil, pests, yield and advice.
+  crops, soil, pests, yield and advice. The server side is prepared too: one
+  adapter file per provider in `server/providers/`, the mock as the only enabled
+  one, `OBSERVE_MODE=off` as the default and a kill switch that makes the app say
+  "switched off" rather than fail, plus an origin allowlist, a body limit, an
+  image check, a burst limit and a daily ceiling. `DEPLOY_OBSERVE.md` is the
+  numbered setup, marked with who does each step.
 - Carries a plain-language [Privacy Policy](privacy.html) and
   [Terms of Service](terms.html) in the footer, both matching what the app does
   today. Both need a human read before they are treated as settled.
