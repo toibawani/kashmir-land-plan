@@ -5227,17 +5227,27 @@
             setStatus("observe-status", tr("observe.needPhoto", "Take a photo first."), 0);
             return;
           }
-          OBS.describe(newest.slot).then(function (result) {
-            setStatus(
-              "observe-status",
-              result.ok
-                ? ""
-                : tr(
-                    "observe.notConnected",
-                    "No description service is connected in this build, so nothing was sent."
-                  ),
-              0
-            );
+          OBS.describe(newest).then(function (result) {
+            var message;
+            if (result.ok) {
+              // Unreachable in this build: no endpoint is configured. If one is
+              // ever approved, this line is where its answer would be shown.
+              message = tr("observe.ready", "A description came back. This build does not show it yet.");
+            } else if (result.reason === "unavailable") {
+              message = tr("observe.unavailable", "The description service is switched off, so nothing was sent.");
+            } else if (result.reason === "limited") {
+              message = tr("observe.limited", "Too many descriptions have been asked for today. Nothing was sent.");
+            } else if (result.reason === "no_consent") {
+              message = tr("observe.needConsent", "Turn the switch on first. Nothing is sent without it.");
+            } else if (result.reason === "not_connected") {
+              message = tr(
+                "observe.notConnected",
+                "No description service is connected in this build, so nothing was sent."
+              );
+            } else {
+              message = tr("observe.refused", "The description service refused the request. Nothing was shown.");
+            }
+            setStatus("observe-status", message, 0);
           });
         });
       });
