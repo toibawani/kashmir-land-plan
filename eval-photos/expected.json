@@ -1,0 +1,153 @@
+{
+  "schema": "mlmp.observation.v1",
+  "about": "Cases a reviewer wants pinned. Each payload is checked against both the browser validator and the server validator; both must agree with `accept`. Add a case by copying one of these and changing what you want to argue about. Do not put a photo here: only the JSON answer is ever a fixture.",
+  "cases": [
+    {
+      "name": "a fully unclear mock answer",
+      "accept": true,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "wide" },
+        "fields": {
+          "ground_cover": "unclear",
+          "visible_water": "unclear",
+          "visible_structure": "unclear",
+          "slope_cue": "unclear"
+        },
+        "uncertain": ["ground_cover", "visible_water", "visible_structure", "slope_cue"]
+      }
+    },
+    {
+      "name": "an answer with all four fields decided",
+      "accept": true,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "ground" },
+        "fields": {
+          "ground_cover": "sparse",
+          "visible_water": "none",
+          "visible_structure": "present",
+          "slope_cue": "flat"
+        },
+        "uncertain": []
+      }
+    },
+    {
+      "name": "a named crop",
+      "accept": false,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "wide" },
+        "fields": {
+          "ground_cover": "covered",
+          "visible_water": "none",
+          "visible_structure": "none",
+          "slope_cue": "flat"
+        },
+        "uncertain": [],
+        "crop": "saffron"
+      }
+    },
+    {
+      "name": "a soil reading",
+      "accept": false,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "ground" },
+        "fields": {
+          "ground_cover": "bare",
+          "visible_water": "none",
+          "visible_structure": "none",
+          "slope_cue": "flat"
+        },
+        "uncertain": [],
+        "ph": 6.8
+      }
+    },
+    {
+      "name": "a yield estimate",
+      "accept": false,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "wide" },
+        "fields": {
+          "ground_cover": "covered",
+          "visible_water": "present",
+          "visible_structure": "none",
+          "slope_cue": "flat"
+        },
+        "uncertain": [],
+        "yield": "18 quintals per kanal"
+      }
+    },
+    {
+      "name": "a sentence of advice",
+      "accept": false,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "wide" },
+        "fields": {
+          "ground_cover": "covered",
+          "visible_water": "present",
+          "visible_structure": "none",
+          "slope_cue": "flat"
+        },
+        "uncertain": [],
+        "recommendation": "Plant maize after the first rain."
+      }
+    },
+    {
+      "name": "a value outside the four allowed words",
+      "accept": false,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "wide" },
+        "fields": {
+          "ground_cover": "very green",
+          "visible_water": "none",
+          "visible_structure": "none",
+          "slope_cue": "flat"
+        },
+        "uncertain": []
+      }
+    },
+    {
+      "name": "a field missing from the answer",
+      "accept": false,
+      "payload": {
+        "schema": "mlmp.observation.v1",
+        "provider": "mock",
+        "mock": true,
+        "createdAt": "2026-06-14T09:00:00.000Z",
+        "photo": { "slot": "wide" },
+        "fields": {
+          "ground_cover": "bare",
+          "visible_water": "none",
+          "visible_structure": "none"
+        },
+        "uncertain": []
+      }
+    }
+  ]
+}
