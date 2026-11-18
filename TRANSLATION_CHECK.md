@@ -173,6 +173,19 @@ Every string the app shows on the critical path, in the three languages it offer
 | `photos.confirmRemove` | Delete this photo from this device? | यह तस्वीर इस डिवाइस से हटाएँ? | یہ تصویر اس ڈیوائس سے ہٹائیں؟ |
 | `photos.removed` | Photo deleted from this device. | तस्वीर इस डिवाइस से हटा दी गई। | تصویر اس ڈیوائس سے ہٹا دی گئی۔ |
 | `photos.removeFailed` | This device refused to delete the photo. Try again. | डिवाइस ने तस्वीर हटाने से मना किया। फिर कोशिश करें। | ڈیوائس نے تصویر ہٹانے سے انکار کیا۔ دوبارہ کوشش کریں۔ |
+| `photos.timeline` | Photos over time | समय के साथ तस्वीरें | وقت کے ساتھ تصاویر |
+| `photos.timelineNote` | Every photo kept for this plan, newest first, with the date it was taken. Pick two to see them side by side. | इस योजना के लिए रखी हर तस्वीर, नई सबसे पहले, तारीख के साथ। दो चुनकर उन्हें साथ-साथ देखें। | اس منصوبے کے لیے رکھی ہر تصویر، نئی پہلے، تاریخ کے ساتھ۔ دو چن کر انہیں ساتھ ساتھ دیکھیں۔ |
+| `photos.compare` | Compare | तुलना करें | موازنہ کریں |
+| `photos.comparePicked` | Picked | चुनी गई | منتخب |
+| `photos.compareHint` | Pick two photos to see them side by side. | साथ-साथ देखने के लिए दो तस्वीरें चुनें। | ساتھ ساتھ دیکھنے کے لیے دو تصاویر چنیں۔ |
+| `photos.compareTitle` | Side by side | साथ-साथ | ساتھ ساتھ |
+| `photos.compareClear` | Clear the comparison | तुलना हटाएँ | موازنہ ہٹائیں |
+| `photos.photoNote` | Note | टिप्पणी | نوٹ |
+| `photos.photoNoteLabel` | Note about this photo | इस तस्वीर के बारे में टिप्पणी | اس تصویر کے بارے میں نوٹ |
+| `photos.photoNoteSave` | Save note | टिप्पणी सहेजें | نوٹ محفوظ کریں |
+| `photos.photoNoteSaved` | Note saved with this photo. | टिप्पणी तस्वीर के साथ सहेजी गई। | نوٹ تصویر کے ساتھ محفوظ ہو گیا۔ |
+| `photos.photoNoteFailed` | This device refused to store the note. Free some space and try again. | डिवाइस ने टिप्पणी सहेजने से मना किया। जगह खाली करके फिर कोशिश करें। | ڈیوائس نے نوٹ محفوظ کرنے سے انکار کیا۔ جگہ خالی کر کے دوبارہ کوشش کریں۔ |
+| `photos.full` | This plan already has the maximum of 40 photos. Delete one to take another. | इस योजना में पहले से 40 तस्वीरें हैं। एक और लेने के लिए कोई तस्वीर हटाएँ। | اس منصوبے میں پہلے سے 40 تصاویر ہیں۔ ایک اور لینے کے لیے کوئی تصویر ہٹائیں۔ |
 | `common.confirmLocally` | Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar. | फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें। | فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔ |
 | `common.notOfficial` | This is a working prototype, not a government service. It helps you prepare questions. It cannot verify land, approve a scheme, or guarantee that a crop will suit your plot. | यह एक काम करने वाला प्रोटोटाइप है, सरकारी सेवा नहीं। यह सवाल तैयार करने में मदद करता है। यह ज़मीन की पुष्टि नहीं कर सकता, योजना मंजूर नहीं कर सकता, और फसल की गारंटी नहीं दे सकता। | یہ ایک کام کرنے والا پروٹو ٹائپ ہے، سرکاری خدمت نہیں۔ یہ سوالات تیار کرنے میں مدد کرتا ہے۔ یہ زمین کی تصدیق نہیں کر سکتا، اسکیم منظور نہیں کر سکتا، اور فصل کی ضمانت نہیں دے سکتا۔ |
 | `common.illustrative` | Illustrative | उदाहरणात्मक | مثالی |

@@ -70,6 +70,23 @@ Measured with `node tools/budget.js --measure`, gzip -9:
 | index.html | 12.3 KB | 12.8 KB |
 | **Total first visit** | **155.7 KB** | |
 
+## The payload after the photo timeline (18 November 2026)
+
+`node tools/budget.js --measure`, gzip -9:
+
+| Part | Size | Budget |
+| --- | --- | --- |
+| JavaScript (27 files) | 138.6 KB | 141.4 KB |
+| CSS (1 file) | 16.1 KB | 16.5 KB |
+| index.html | 12.8 KB | 13.0 KB |
+| **Total first visit** | **167.5 KB** | |
+
+What the 3.0 KB bought: newest-first ordering, the note stored with a photo, and
+in `app.js` the timeline list and the two-photo comparison (about 2.2 KB), plus
+13 strings in three languages (about 0.5 KB) and their styles (0.25 KB CSS, not
+JS). The comparison is screen only, so the printed sheet is unchanged. The
+budget was raised deliberately to the measured size plus about two per cent.
+
 ## The payload after guided photo capture (17 November 2026)
 
 `node tools/budget.js --measure`, gzip -9:

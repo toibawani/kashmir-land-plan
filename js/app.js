@@ -4064,12 +4064,31 @@
   // twenty times holds twenty copies of the same JPEG in memory.
   var photoUrls = [];
   var pendingPhotoSlot = null;
+  // The timeline keeps every photo, so its images get their own URL list: a
+  // re-render of the list must not revoke the three card images above it.
+  var timelineUrls = [];
+  var timelineRows = [];
+  var compareIds = [];
+  var timelineNoteOpen = "";
 
   function releasePhotoUrls() {
     photoUrls.forEach(function (url) {
       URL.revokeObjectURL(url);
     });
     photoUrls = [];
+  }
+
+  function releaseTimelineUrls() {
+    timelineUrls.forEach(function (url) {
+      URL.revokeObjectURL(url);
+    });
+    timelineUrls = [];
+  }
+
+  function timelineUrl(blob) {
+    var url = URL.createObjectURL(blob);
+    timelineUrls.push(url);
+    return url;
   }
 
   function photoIssueMessage(issues) {
@@ -4104,6 +4123,10 @@
     if (!host || !list) return;
     host.hidden = false;
     releasePhotoUrls();
+    releaseTimelineUrls();
+    timelineRows = [];
+    compareIds = [];
+    timelineNoteOpen = "";
     showPhotoRetry(null);
 
     var share = $("#btn-visit-share-photos");
@@ -4173,7 +4196,138 @@
         );
       }).join("");
       if (share) share.hidden = !rows.length;
+      timelineRows = rows;
+      renderTimeline(rows);
     });
+  }
+
+  /**
+   * The timeline: every photo kept for this plan, newest first, with its date
+   * and an optional note. It is screen only. Printing shows the three card
+   * shots above, so the sheet a farmer carries keeps its shape.
+   */
+  function renderTimeline(rows) {
+    var host = $("#photo-timeline");
+    var list = $("#photo-timeline-list");
+    if (!host || !list) return;
+    releaseTimelineUrls();
+    if (!rows || !rows.length) {
+      host.hidden = true;
+      list.innerHTML = "";
+      compareIds = [];
+      return;
+    }
+    host.hidden = false;
+    var ordered = PHOTOS.sortNewest(rows);
+    // A deleted photo must not stay picked for the comparison.
+    compareIds = compareIds.filter(function (id) {
+      return ordered.some(function (row) {
+        return row.id === id;
+      });
+    });
+
+    list.innerHTML = ordered
+      .map(function (row) {
+        var title = tr("photos.slot." + row.slot, PHOTOS.slotLabel(row.slot));
+        var picked = compareIds.indexOf(row.id) !== -1;
+        var open = timelineNoteOpen === row.id;
+        return (
+          '<li class="photo-timeline-item">' +
+          '<img class="photo-timeline-thumb" src="' +
+          timelineUrl(row.blob) +
+          '" alt="" />' +
+          '<div class="photo-timeline-body">' +
+          '<p class="photo-timeline-meta">' +
+          escapeHtml(title + " · " + savedDate(row.createdAt)) +
+          "</p>" +
+          (row.note ? '<p class="photo-timeline-note">' + escapeHtml(row.note) + "</p>" : "") +
+          '<div class="photo-timeline-actions">' +
+          '<button type="button" class="btn btn-quiet btn-sm" data-photo-compare="' +
+          escapeHtml(row.id) +
+          '" aria-pressed="' +
+          (picked ? "true" : "false") +
+          '">' +
+          escapeHtml(picked ? tr("photos.comparePicked", "Picked") : tr("photos.compare", "Compare")) +
+          "</button>" +
+          '<button type="button" class="btn btn-quiet btn-sm" data-photo-note-toggle="' +
+          escapeHtml(row.id) +
+          '">' +
+          escapeHtml(tr("photos.photoNote", "Note")) +
+          "</button>" +
+          '<button type="button" class="btn btn-quiet btn-sm" data-photo-delete="' +
+          escapeHtml(row.id) +
+          '">' +
+          escapeHtml(tr("photos.remove", "Delete photo")) +
+          "</button>" +
+          "</div>" +
+          '<div class="photo-timeline-note-form" id="photo-note-form-' +
+          escapeHtml(row.id) +
+          '"' +
+          (open ? "" : " hidden") +
+          ">" +
+          '<label class="sr-only" for="photo-note-' +
+          escapeHtml(row.id) +
+          '">' +
+          escapeHtml(tr("photos.photoNoteLabel", "Note about this photo")) +
+          "</label>" +
+          '<input type="text" id="photo-note-' +
+          escapeHtml(row.id) +
+          '" maxlength="' +
+          PHOTOS.MAX_NOTE +
+          '" value="' +
+          escapeHtml(row.note || "") +
+          '" />' +
+          '<button type="button" class="btn btn-secondary btn-sm" data-photo-note-save="' +
+          escapeHtml(row.id) +
+          '">' +
+          escapeHtml(tr("photos.photoNoteSave", "Save note")) +
+          "</button>" +
+          "</div>" +
+          "</div></li>"
+        );
+      })
+      .join("");
+    renderCompare(ordered);
+  }
+
+  function refreshTimeline() {
+    renderTimeline(timelineRows);
+  }
+
+  function renderCompare(rows) {
+    var panel = $("#photo-compare");
+    var pair = $("#photo-compare-pair");
+    if (!panel || !pair) return;
+    var picked = compareIds
+      .map(function (id) {
+        return rows.filter(function (row) {
+          return row.id === id;
+        })[0];
+      })
+      .filter(Boolean);
+    if (picked.length < 2) {
+      panel.hidden = true;
+      pair.innerHTML = "";
+      return;
+    }
+    panel.hidden = false;
+    pair.innerHTML = picked
+      .map(function (row) {
+        var title = tr("photos.slot." + row.slot, PHOTOS.slotLabel(row.slot));
+        return (
+          '<figure class="photo-compare-figure">' +
+          '<img class="photo-compare-img" src="' +
+          timelineUrl(row.blob) +
+          '" alt="' +
+          escapeHtml(title + ", " + savedDate(row.createdAt)) +
+          '" />' +
+          '<figcaption class="photo-compare-caption">' +
+          escapeHtml(title + " · " + savedDate(row.createdAt)) +
+          "</figcaption>" +
+          "</figure>"
+        );
+      })
+      .join("");
   }
 
   /**
@@ -4204,6 +4358,17 @@
       if (result.rejected) {
         setStatus("photo-status", photoIssueMessage(result.issues), 0);
         showPhotoRetry(slot);
+        return;
+      }
+      if (result.full) {
+        setStatus(
+          "photo-status",
+          tr(
+            "photos.full",
+            "This plan already has the maximum of 40 photos. Delete one to take another."
+          ),
+          0
+        );
         return;
       }
       if (result.quota) {
@@ -4969,6 +5134,11 @@
     $("#btn-visit-share") && $("#btn-visit-share").addEventListener("click", shareVisitCard);
     $("#btn-visit-share-photos") &&
       $("#btn-visit-share-photos").addEventListener("click", sharePhotos);
+    $("#btn-photo-compare-clear") &&
+      $("#btn-photo-compare-clear").addEventListener("click", function () {
+        compareIds = [];
+        refreshTimeline();
+      });
     $("#btn-photo-retry") &&
       $("#btn-photo-retry").addEventListener("click", function () {
         var row = $("#photo-retry-row");
@@ -5086,6 +5256,57 @@
       var choose = e.target.closest("[data-photo-choose]");
       if (choose) {
         askForPhoto(choose.getAttribute("data-photo-choose"), false);
+        return;
+      }
+      var comparePick = e.target.closest("[data-photo-compare]");
+      if (comparePick && PHOTOS) {
+        var pickedId = comparePick.getAttribute("data-photo-compare");
+        var at = compareIds.indexOf(pickedId);
+        if (at === -1) {
+          // Two shots at a time is what a phone screen can show. Picking a third
+          // replaces the older choice rather than silently ignoring the tap.
+          if (compareIds.length >= 2) compareIds.shift();
+          compareIds.push(pickedId);
+        } else {
+          compareIds.splice(at, 1);
+        }
+        refreshTimeline();
+        if (compareIds.length === 1) {
+          setStatus(
+            "photo-timeline-status",
+            tr("photos.compareHint", "Pick two photos to see them side by side.")
+          );
+        } else {
+          setStatus("photo-timeline-status", "");
+        }
+        return;
+      }
+      var noteToggle = e.target.closest("[data-photo-note-toggle]");
+      if (noteToggle) {
+        var toggleId = noteToggle.getAttribute("data-photo-note-toggle");
+        timelineNoteOpen = timelineNoteOpen === toggleId ? "" : toggleId;
+        refreshTimeline();
+        var noteField = $("#photo-note-" + toggleId);
+        if (noteField && timelineNoteOpen) noteField.focus();
+        return;
+      }
+      var noteSave = e.target.closest("[data-photo-note-save]");
+      if (noteSave && PHOTOS) {
+        var noteId = noteSave.getAttribute("data-photo-note-save");
+        var noteInput = $("#photo-note-" + noteId);
+        PHOTOS.setNote(noteId, noteInput ? noteInput.value : "").then(function (written) {
+          setStatus(
+            "photo-timeline-status",
+            written
+              ? tr("photos.photoNoteSaved", "Note saved with this photo.")
+              : tr("photos.photoNoteFailed", "This device refused to store the note. Free some space and try again."),
+            written ? undefined : 0
+          );
+          if (written) {
+            timelineNoteOpen = "";
+            refreshTimeline();
+          }
+        });
         return;
       }
       var photoRemove = e.target.closest("[data-photo-delete]");

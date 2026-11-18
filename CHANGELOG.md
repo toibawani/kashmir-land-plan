@@ -30,8 +30,14 @@ should not, because the catalogue is still unreviewed.
 - The photos appear under the office visit card and print with it, and can be
   shared as files where the browser supports it, with a download fallback where
   it does not.
-- 26 new strings in English, Hindi and Urdu. `TRANSLATION_CHECK.md` now lists 197
-  keys, all still marked unreviewed.
+- A photo timeline under the card: every photo kept for the plan, newest first,
+  with the date it was taken, an optional 140-character note, and a side-by-side
+  comparison of any two. The comparison and the timeline are screen only, so the
+  printed sheet still carries the three card shots and nothing else.
+- A cap of 40 photos per plan. Every retake is kept, because two dates are the
+  point of the timeline, so the cap turns a full device into a clear sentence.
+- 39 new strings for photos and the timeline, in English, Hindi and Urdu.
+  `TRANSLATION_CHECK.md` now lists 210 keys, all still marked unreviewed.
 
 ### Added
 

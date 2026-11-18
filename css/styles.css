@@ -3463,6 +3463,137 @@ select:focus {
   }
 }
 
+/* The timeline under the card. Screen only: the printed sheet keeps the three
+   card shots, so adding a state does not change what an officer receives. */
+.photo-timeline {
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.photo-timeline-title {
+  margin: 0 0 var(--space-2);
+  font-size: 0.95rem;
+}
+
+.photo-timeline-note {
+  margin: 0 0 var(--space-3);
+  font-size: 0.85rem;
+}
+
+.photo-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-timeline-item {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.photo-timeline-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.photo-timeline-thumb {
+  flex: 0 0 84px;
+  width: 84px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f1eee4;
+}
+
+.photo-timeline-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.photo-timeline-meta {
+  margin: 0 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.photo-timeline-note {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.photo-timeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.photo-timeline-note-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.photo-timeline-note-form input {
+  flex: 1 1 8rem;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.photo-compare {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
+.photo-compare-title {
+  margin: 0 0 var(--space-2);
+  font-size: 0.9rem;
+}
+
+.photo-compare-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.photo-compare-figure {
+  margin: 0;
+}
+
+.photo-compare-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f1eee4;
+}
+
+.photo-compare-caption {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
 .land-chips {
   display: flex;
   flex-wrap: wrap;
