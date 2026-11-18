@@ -4613,20 +4613,27 @@
     var wrap = $("#lang-switch");
     var select = $("#lang-select");
     var langs = MSG.available();
-    if (wrap && select && langs.length > 1) {
-      wrap.hidden = false;
-      select.innerHTML = langs
-        .map(function (l) {
-          var sel = l.code === MSG.get() ? " selected" : "";
-          // The label carries the unchecked caveat for a language no native
-          // speaker has read, so the warning is on the choice itself.
-          return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(MSG.optionLabel(l.code)) + "</option>";
-        })
-        .join("");
-      select.addEventListener("change", function () {
-        MSG.set(select.value);
-        refreshForLanguage();
-      });
+    // The control is in the markup already, with the three options, so the
+    // header has its final height at first paint. It is only taken away again
+    // when a build genuinely offers one language.
+    if (wrap && select) {
+      if (langs.length < 2) {
+        wrap.hidden = true;
+      } else {
+        wrap.hidden = false;
+        select.innerHTML = langs
+          .map(function (l) {
+            var sel = l.code === MSG.get() ? " selected" : "";
+            // The label carries the unchecked caveat for a language no native
+            // speaker has read, so the warning is on the choice itself.
+            return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(MSG.optionLabel(l.code)) + "</option>";
+          })
+          .join("");
+        select.addEventListener("change", function () {
+          MSG.set(select.value);
+          refreshForLanguage();
+        });
+      }
     }
     // Paint the critical-path strings. In English this is a no-op on screen
     // (the markup already holds the same words), but it keeps the markup and

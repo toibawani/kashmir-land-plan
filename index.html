@@ -51,9 +51,18 @@
         <span class="logo-text">My Land, My Plan</span>
       </a>
       <nav class="nav" aria-label="Main">
-        <div class="lang-switch" id="lang-switch" hidden>
+        <!-- Rendered here rather than revealed by script. Hidden until boot, it
+             added a header row the moment it was shown, which moved every
+             screen down by 48px after first paint. The three options are in
+             the markup so the control has its final width before any script
+             runs; js/app.js only syncs the selected value. -->
+        <div class="lang-switch" id="lang-switch">
           <label class="sr-only" for="lang-select" data-i18n="nav.language">Language</label>
-          <select id="lang-select"></select>
+          <select id="lang-select">
+            <option value="en" selected>English</option>
+            <option value="hi">हिन्दी</option>
+            <option value="ur">اردو</option>
+          </select>
         </div>
         <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-menu">
           <span class="nav-toggle-bar"></span>
