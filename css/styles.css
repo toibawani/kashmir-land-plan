@@ -41,8 +41,10 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
-  --font-sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
-  --font-serif: "Source Serif 4", Georgia, serif;
+  /* System fonts only: no third-party host, no webfont swap, nothing to
+     reflow. Georgia keeps the heading contrast without a download. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
+  --font-serif: Georgia, "Noto Serif", "Times New Roman", serif;
   --max-width: 720px;
   --max-wide: 960px;
 }

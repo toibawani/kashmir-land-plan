@@ -10,9 +10,8 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v47";
+var CACHE_VERSION = "mlmp-v48";
 var CORE_CACHE = CACHE_VERSION + "-core";
-var FONT_CACHE = CACHE_VERSION + "-fonts";
 
 /* Everything the core flow needs. Kept as an explicit list rather than a
    wildcard so a missing file is visible instead of silently skipped. */
@@ -22,7 +21,6 @@ var CORE_ASSETS = [
   "./privacy.html",
   "./terms.html",
   "./css/styles.css",
-  "./js/fonts.js",
   "./js/regions.js",
   "./js/reviews.js",
   "./js/catalogue.js",
@@ -61,7 +59,6 @@ var CORE_ASSETS = [
    to them fall through to the network, so an offline device gets a real
    failure that the app can explain, never a stale reading. */
 var WEATHER_HOSTS = ["api.open-meteo.com", "geocoding-api.open-meteo.com"];
-var FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", function (event) {
   // Take over as soon as the new copy is ready. Without this a new version
@@ -90,7 +87,7 @@ self.addEventListener("activate", function (event) {
       .then(function (names) {
         return Promise.all(
           names.map(function (name) {
-            if (name !== CORE_CACHE && name !== FONT_CACHE) return caches.delete(name);
+            if (name !== CORE_CACHE) return caches.delete(name);
             return null;
           })
         );
@@ -103,40 +100,6 @@ self.addEventListener("activate", function (event) {
 
 function isWeatherRequest(url) {
   return WEATHER_HOSTS.indexOf(url.hostname) !== -1;
-}
-
-function isFontRequest(url) {
-  return FONT_HOSTS.indexOf(url.hostname) !== -1;
-}
-
-/* Cache first, then network, and quietly refresh the copy for next time. Used
-   only for the font files, whose URLs are versioned and therefore immutable. */
-function cacheFirst(request, cacheName) {
-  return caches.match(request).then(function (hit) {
-    if (hit) {
-      fetch(request)
-        .then(function (response) {
-          if (response && response.ok) {
-            caches.open(cacheName).then(function (cache) {
-              cache.put(request, response.clone());
-            });
-          }
-        })
-        .catch(function () {
-          // Offline is expected here. The cached copy already answered.
-        });
-      return hit;
-    }
-    return fetch(request).then(function (response) {
-      if (response && response.ok) {
-        var copy = response.clone();
-        caches.open(cacheName).then(function (cache) {
-          cache.put(request, copy);
-        });
-      }
-      return response;
-    });
-  });
 }
 
 /* Network first, cache as the offline fallback. Used for the page itself and
@@ -204,11 +167,8 @@ self.addEventListener("fetch", function (event) {
   // Weather is live or it is nothing. Never stored, never served from cache.
   if (isWeatherRequest(url)) return;
 
-  if (isFontRequest(url)) {
-    event.respondWith(cacheFirst(request, FONT_CACHE));
-    return;
-  }
-
+  // Nothing else off this origin is fetched from a third party any more: the
+  // webfonts are gone, so every remaining request is the app's own files.
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {

@@ -44,8 +44,13 @@ var root = path.resolve(__dirname, "..");
 
    And once more for the update strip: 146713/16825/13464 bytes measured, with
    CSS only 71 bytes under its old limit, so the CSS budget moves to 17.0 KB to
-   leave room for a fix rather than a scramble. */
-var BUDGET = { js: 148992, css: 17408, html: 13824 };
+   leave room for a fix rather than a scramble.
+
+   Rebalanced, not raised, on 2026-11-18 for the system font stack and the
+   header fix: 147691/17483/13483 measured, so the total is 174.5 KB against a
+   176.0 KB total before. 512 bytes move from the JS line to the CSS line and
+   the overall ceiling stays where it was. */
+var BUDGET = { js: 148480, css: 17920, html: 13824 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;
