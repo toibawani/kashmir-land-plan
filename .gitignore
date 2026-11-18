@@ -20,10 +20,12 @@ __pycache__/
 venv/
 .pytest_cache/
 
-# Environment files. This project reads no environment variables at all: it is
-# a static folder with no server, no keys and no API routes. These rules are a
-# guard so that a file someone reaches for out of habit cannot be committed,
-# rather than a description of how the app is configured.
+# Environment files. The app a phone downloads is a static folder and reads no
+# environment variables at all. The only code that does is the photo-description
+# endpoint in server/, which is not deployed and reads its values from the host
+# it would run on, never from a file here. These rules are a guard so that a file
+# someone reaches for out of habit cannot be committed, rather than a
+# description of how the app is configured.
 
 .env
 .env.local
