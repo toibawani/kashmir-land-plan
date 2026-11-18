@@ -1474,6 +1474,33 @@ SOURCES.all().forEach(function (source) {
       failures.push(where + " has no " + field + ", so the reader cannot tell what it supports");
     }
   });
+
+  // A link to a home page is not a citation: the reader who follows it has to
+  // search for the sentence it was supposed to back. This is the defect the
+  // NITI Aayog entry had, so it is now a rule rather than a note in a doc.
+  var urlPath = "";
+  try {
+    urlPath = new URL(source.url || "").pathname;
+  } catch (err) {
+    urlPath = "";
+  }
+  if (!urlPath || urlPath.replace(/\/+$/, "") === "") {
+    failures.push(where + " cites a site root instead of a document, so a reader cannot check the sentence");
+  }
+
+  // `accessed` is the day the document was opened. Without it a citation is
+  // undated: nobody can tell whether it was checked this year or years ago.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(source.accessed || "") || isNaN(Date.parse(source.accessed + "T00:00:00Z"))) {
+    failures.push(where + " has no access date (YYYY-MM-DD), so the citation is undated");
+  }
+
+  // `scope` is the visible label: how old the document is and what it covers.
+  // A four-word label is enough to separate a 2010 mission document from a
+  // current page, or the Jammu division from the valley.
+  if (!source.scope || String(source.scope).trim().length < 10) {
+    failures.push(where + " has no scope label, so a reader cannot see what it covers or how old it is");
+  }
+
   if (SOURCES.byId(source.id) !== source) {
     failures.push(where + " is not reachable by its own id");
   }

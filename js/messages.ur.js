@@ -119,6 +119,8 @@
     "visit.visitMode": "دورے کا موڈ",
     "visit.visitModeExit": "ہو گیا، دورے کے موڈ سے باہر",
 
+    "source.scope": "دائرہ",
+
     "review.badgeNot": "ابھی کسی افسر نے جانچ نہیں کی",
     "review.badgeReviewed": "{name}، {office} نے {date} کو جانچا",
     "review.notReviewed":

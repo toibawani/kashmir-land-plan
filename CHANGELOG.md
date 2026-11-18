@@ -8,6 +8,34 @@ moves for a correction that does not touch the catalogue; the minor number moves
 when a screen or the sheet format changes; the major number has not moved and
 should not, because the catalogue is still unreviewed.
 
+## [1.3.0] - 2026-11-18
+
+### Sources
+
+- The NITI Aayog citation pointed at the institute's home page, not at the
+  document it was meant to support. It now points at the Roadmap for
+  Horticulture Development in the UT of Jammu and Kashmir, which was opened and
+  read before the change. The build now refuses a citation that is a site root.
+- Every source carries an access date and a visible scope label, for example
+  "2010 mission document" or "Jammu division, not confirmed for the Kashmir
+  valley". The label is shown beside the link in the app and on the printed
+  review sheets, so an old or narrowly scoped document cannot pass as current
+  without the reader being told.
+- Four citations were checked against current alternatives. The 2016 SKUAST
+  Jammu vegetable guide was replaced by the 2020 edition of the same document,
+  still labelled Jammu division. No verified replacement was found for the 2010
+  saffron mission document or for the CSIR-IIIM page last updated in January
+  2021, so both stay, labelled. The Government of India Farmer's Guide stays,
+  labelled as predating the current districts.
+- Kitchen gardening now cites the SKUAST Jammu guide, with the Jammu-only scope
+  label attached: it is the only kitchen-garden document found, and it does not
+  cover the Kashmir valley.
+- The new scope label is translated into Hindi and Urdu and, like every other
+  string, is unreviewed.
+- The review pack is re-stamped as v1.3.0. Sheets printed from v1.2.7 are stale
+  and must not be collected: the catalogue digest has moved and the importer
+  will refuse them.
+
 ## [Unreleased]
 
 ### Performance

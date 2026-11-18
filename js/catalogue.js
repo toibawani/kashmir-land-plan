@@ -56,7 +56,10 @@
       startupCost: { status: "ask-officer" },
       timeToFirstIncome: { status: "ask-officer" },
       mainRisk: "Water running short at flowering and fruiting",
-      sources: ["dac_jk_guide", "icar_jk"],
+      // The only kitchen-garden document found covers the Jammu division, so
+      // the citation carries that scope label rather than passing as a
+      // valley-wide source. See docs/EVIDENCE.md.
+      sources: ["dac_jk_guide", "icar_jk", "skuastj_veg"],
       title: "Kitchen garden and mixed vegetables",
       zones: ["valley_temperate", "jammu_plains", "jammu_hills"],
       why:

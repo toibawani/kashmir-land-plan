@@ -50,6 +50,7 @@
           esc(s.short) +
           "</a> " +
           esc(s.usedFor) +
+          (s.scope ? ' <span class="source-scope">' + esc(t("source.scope") + ": " + s.scope) + "</span>" : "") +
           "</li>"
         );
       })

@@ -3082,6 +3082,21 @@ select:focus {
   color: #4a4a42;
 }
 
+/* How old a document is, and what it covers. Set on its own line so a long
+   label never squeezes the sentence it belongs to, and dark enough to read on
+   a phone in daylight. */
+.source-scope {
+  display: inline-block;
+  margin-top: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #8a7a52;
+  border-radius: 999px;
+  background: #f4efe0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #3d3320;
+}
+
 .visit-option-meta {
   display: block;
   margin-top: 0.2rem;

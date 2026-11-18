@@ -45,3 +45,8 @@ _site/
 # Freebuff workspace state
 
 .freebuff/
+
+# The officer visit pack is written outside the repo by default; this keeps a
+# copy made inside it from being committed by accident.
+
+officer-visit/
