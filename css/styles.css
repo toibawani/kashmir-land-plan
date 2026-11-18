@@ -3786,3 +3786,26 @@ select:focus {
 .update-strip .btn {
   min-height: 48px;
 }
+
+/* Timeline actions are three small buttons beside a thumbnail. The default
+   button padding widened them enough to wrap one per line. */
+.photo-timeline-actions .btn {
+  flex: 0 0 auto;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+/* In Urdu the page is right to left, and English prose is still shown in
+   several places (the About panel, the offline list, this app's own
+   explanations). Without this, a full stop at the end of an English sentence
+   is drawn at the start of the line. `plaintext` lets each paragraph take its
+   direction from its own first strong letter, so English reads left to right
+   and Urdu right to left in the same document. */
+[dir="rtl"] p,
+[dir="rtl"] li,
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4 {
+  unicode-bidi: plaintext;
+}

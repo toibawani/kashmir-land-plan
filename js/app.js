@@ -3777,11 +3777,17 @@
     if (!iso) return "not recorded";
     var d = new Date(iso);
     if (isNaN(d.getTime())) return "not recorded";
+    var text;
     try {
-      return d.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" });
+      text = d.toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" });
     } catch (_) {
       return "not recorded";
     }
+    // "2 Mar 2026" is Latin text inside an Urdu screen, where the leading
+    // number is reordered to the end and a photo reads "Mar 2026 2". The
+    // isolates make each date its own run, so it reads the same in every
+    // language without changing the words.
+    return "\u2068" + text + "\u2069";
   }
 
   function compareRows(plans) {
