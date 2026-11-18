@@ -242,6 +242,8 @@
     "observe.needConsent": "Turn the switch on first. Nothing is sent without it.",
     "observe.needPhoto": "Take a photo first.",
     "observe.consentOff": "Photos will not be sent from this phone.",
+    "update.ready": "A newer version of this app is ready.",
+    "update.reload": "Reload",
 
     "common.confirmLocally":
       "Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar.",
@@ -498,6 +500,8 @@
     "observe.needConsent": "पहले स्विच चालू करें। इसके बिना कुछ नहीं भेजा जाता।",
     "observe.needPhoto": "पहले एक तस्वीर लें।",
     "observe.consentOff": "इस फ़ोन से तस्वीरें नहीं भेजी जाएँगी।",
+    "update.ready": "इस ऐप का एक नया संस्करण तैयार है।",
+    "update.reload": "फिर से खोलें",
 
     "common.confirmLocally":
       "फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें।",
@@ -753,6 +757,8 @@
     "observe.needConsent": "پہلے سوئچ آن کریں۔ اس کے بغیر کچھ نہیں بھیجا جاتا۔",
     "observe.needPhoto": "پہلے ایک تصویر لیں۔",
     "observe.consentOff": "اس فون سے تصاویر نہیں بھیجی جائیں گی۔",
+    "update.ready": "اس ایپ کا ایک نیا ورژن تیار ہے۔",
+    "update.reload": "دوبارہ کھولیں",
 
     "common.confirmLocally":
       "فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔",

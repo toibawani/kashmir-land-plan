@@ -195,6 +195,8 @@ Every string the app shows on the critical path, in the three languages it offer
 | `observe.needConsent` | Turn the switch on first. Nothing is sent without it. | पहले स्विच चालू करें। इसके बिना कुछ नहीं भेजा जाता। | پہلے سوئچ آن کریں۔ اس کے بغیر کچھ نہیں بھیجا جاتا۔ |
 | `observe.needPhoto` | Take a photo first. | पहले एक तस्वीर लें। | پہلے ایک تصویر لیں۔ |
 | `observe.consentOff` | Photos will not be sent from this phone. | इस फ़ोन से तस्वीरें नहीं भेजी जाएँगी। | اس فون سے تصاویر نہیں بھیجی جائیں گی۔ |
+| `update.ready` | A newer version of this app is ready. | इस ऐप का एक नया संस्करण तैयार है। | اس ایپ کا ایک نیا ورژن تیار ہے۔ |
+| `update.reload` | Reload | फिर से खोलें | دوبارہ کھولیں |
 | `common.confirmLocally` | Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar. | फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें। | فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔ |
 | `common.notOfficial` | This is a working prototype, not a government service. It helps you prepare questions. It cannot verify land, approve a scheme, or guarantee that a crop will suit your plot. | यह एक काम करने वाला प्रोटोटाइप है, सरकारी सेवा नहीं। यह सवाल तैयार करने में मदद करता है। यह ज़मीन की पुष्टि नहीं कर सकता, योजना मंजूर नहीं कर सकता, और फसल की गारंटी नहीं दे सकता। | یہ ایک کام کرنے والا پروٹو ٹائپ ہے، سرکاری خدمت نہیں۔ یہ سوالات تیار کرنے میں مدد کرتا ہے۔ یہ زمین کی تصدیق نہیں کر سکتا، اسکیم منظور نہیں کر سکتا، اور فصل کی ضمانت نہیں دے سکتا۔ |
 | `common.illustrative` | Illustrative | उदाहरणात्मक | مثالی |

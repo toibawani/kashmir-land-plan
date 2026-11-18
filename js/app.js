@@ -4715,11 +4715,54 @@
     });
   }
 
+  function showUpdateStrip() {
+    var strip = $("#update-strip");
+    if (strip) strip.hidden = false;
+  }
+
+  /**
+   * Register the worker, and then actively look for a newer one.
+   *
+   * The browser checks a service worker script on its own schedule, which can be
+   * a day. A farmer who opens the app every morning should not wait that long,
+   * so this asks on load and whenever the app comes back to the screen. The
+   * worker itself takes over immediately (`skipWaiting` and `clients.claim`),
+   * and the page shows a strip with a Reload button rather than reloading under
+   * someone who is halfway through a plan or a photo.
+   */
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
     if (location.protocol === "file:") return;
-    navigator.serviceWorker.register("sw.js").catch(function () {
-      // Installability is optional. The app still works from index.html.
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker
+      .register("sw.js", { updateViaCache: "none" })
+      .then(function (registration) {
+        var lastCheck = 0;
+        function checkForUpdate() {
+          var now = Date.now();
+          if (now - lastCheck < 30 * 60 * 1000) return;
+          lastCheck = now;
+          registration.update().catch(function () {
+            // Offline is expected. The stored copy still runs the app.
+          });
+        }
+        checkForUpdate();
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") checkForUpdate();
+        });
+      })
+      .catch(function () {
+        // Installability is optional. The app still works from index.html.
+      });
+
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      // The very first install also fires this. Only an update is worth asking
+      // someone to act on.
+      if (!hadController) {
+        hadController = true;
+        return;
+      }
+      showUpdateStrip();
     });
   }
 
@@ -5191,6 +5234,10 @@
             );
           });
         });
+      });
+    $("#btn-update-reload") &&
+      $("#btn-update-reload").addEventListener("click", function () {
+        location.reload();
       });
     $("#btn-photo-compare-clear") &&
       $("#btn-photo-compare-clear").addEventListener("click", function () {

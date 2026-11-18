@@ -45,7 +45,12 @@ should not, because the catalogue is still unreviewed.
   field at all, and a validator on both the page and the (not deployed) server
   function refuses crops, soil, pests, yield, money, advice and free text. An
   eval harness tries each of those by name.
-- 9 new strings in English, Hindi and Urdu. `TRANSLATION_CHECK.md` now lists 219
+- A newer version is noticed rather than waited for. The app asks the service
+  worker for an update when it starts and whenever it comes back to the screen,
+  instead of leaving it to the browser's own schedule, and shows a "Reload"
+  strip once a new worker is in control. It never reloads under someone who is
+  midway through a plan, a photo or a print.
+- 11 new strings in English, Hindi and Urdu. `TRANSLATION_CHECK.md` now lists 221
   keys, all still marked unreviewed. `REVIEW_PHOTO_QUESTIONS.md` records the
   questions that have to be answered before a provider is connected.
 - 39 new strings for photos and the timeline, in English, Hindi and Urdu.
