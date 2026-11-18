@@ -70,6 +70,24 @@ Measured with `node tools/budget.js --measure`, gzip -9:
 | index.html | 12.3 KB | 12.8 KB |
 | **Total first visit** | **155.7 KB** | |
 
+## The payload after the photo description block (18 November 2026)
+
+`node tools/budget.js --measure`, gzip -9:
+
+| Part | Size | Budget |
+| --- | --- | --- |
+| JavaScript (28 files) | 142.6 KB | 145.5 KB |
+| CSS (1 file) | 16.3 KB | 16.5 KB |
+| index.html | 13.1 KB | 13.5 KB |
+| **Total first visit** | **172.0 KB** | |
+
+What the 4.6 KB bought: `js/observations.js` (about 2.9 KB) is the closed
+observation schema and the consent gate, and it ships even though no service is
+connected, so the switch on the card is the same code that would gate a
+provider; the section and its wiring add about 1.3 KB and 9 strings about
+0.4 KB. The server function and the eval harness are not in this budget: they
+are never downloaded by a visitor.
+
 ## The payload after the photo timeline (18 November 2026)
 
 `node tools/budget.js --measure`, gzip -9:

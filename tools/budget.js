@@ -33,8 +33,15 @@ var root = path.resolve(__dirname, "..");
    Raised on 2026-11-18 for the photo timeline: newest-first ordering, notes on
    each photo, the two-photo comparison in app.js, the photo cap and 13 more
    strings in messages.js. Measured 141885/16536/13082 bytes, so the budget is
-   now 141.4 KB JS, 16.5 KB CSS, 13.0 KB HTML. */
-var BUDGET = { js: 144768, css: 16896, html: 13312 };
+   now 141.4 KB JS, 16.5 KB CSS, 13.0 KB HTML.
+
+   Raised again the same day for the photo description block: js/observations.js
+   (the closed schema and the consent gate), its section and wiring in
+   index.html and app.js, and 9 more strings. Measured 146005/16675/13395 bytes,
+   so the budget is now 145.5 KB JS, 16.5 KB CSS, 13.5 KB HTML. The module ships
+   even though no service is connected, so the switch a farmer sees is the same
+   code that would gate a provider. */
+var BUDGET = { js: 148992, css: 16896, html: 13824 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;

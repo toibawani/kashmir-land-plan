@@ -574,6 +574,25 @@
             <ul class="photo-timeline-list" id="photo-timeline-list"></ul>
             <p class="inline-status" id="photo-timeline-status" role="status" hidden></p>
           </div>
+          <div class="photo-observe no-print" id="photo-observe">
+            <h3 class="photo-observe-title" data-i18n="observe.title">Description of a photo (not connected)</h3>
+            <p class="photo-observe-note" data-i18n="observe.note">
+              This build has no description service. The switch records your choice, but nothing is sent and
+              there is nothing to show yet.
+            </p>
+            <p class="photo-observe-note" data-i18n="observe.limits">
+              Even when connected, it may report only four things it can see: ground cover, water, a structure,
+              and slope. It will not name a crop, a soil, a pest or a yield, and it will not advise.
+            </p>
+            <label class="photo-observe-consent">
+              <input type="checkbox" id="observe-consent" />
+              <span data-i18n="observe.consent">I understand that a photo would leave this phone</span>
+            </label>
+            <button type="button" class="btn btn-secondary" id="btn-observe-try" data-i18n="observe.try" disabled>
+              Ask for a description
+            </button>
+            <p class="inline-status" id="observe-status" role="status" hidden></p>
+          </div>
           <label class="sr-only" for="photo-input" data-i18n="photos.take">Take photo</label>
           <input type="file" id="photo-input" accept="image/*" hidden />
         </div>
@@ -846,6 +865,7 @@
   <script src="js/plans.js" defer></script>
   <script src="js/data.js" defer></script>
   <script src="js/photos.js" defer></script>
+  <script src="js/observations.js" defer></script>
   <script src="js/speech.js" defer></script>
   <script src="js/qr.js" defer></script>
   <script src="js/offline.js" defer></script>
