@@ -60,9 +60,11 @@ jobs:
 
       # The audit needs the folder served and a Chrome to drive, exactly as it
       # does locally. Both are started here rather than inside the script so a
-      # failure says which one never came up.
+      # failure says which one never came up. The server is the app's own, which
+      # gzips the way GitHub Pages does, so what is screenshotted is what a
+      # phone downloads.
       - name: Serve the folder
-        run: python3 -m http.server 8080 --bind 127.0.0.1 &
+        run: node tools/serve.js 8080 &
 
       - name: Start headless Chrome
         run: |
@@ -101,7 +103,7 @@ jobs:
           node-version: "22"
 
       - name: Serve the folder
-        run: python3 -m http.server 8080 --bind 127.0.0.1 &
+        run: node tools/serve.js 8080 &
 
       - name: Start headless Chrome
         run: |
@@ -155,8 +157,10 @@ jobs:
         with:
           node-version: "22"
 
+      # Same gzip server as the browser job, because the compression is part of
+      # what is being measured (see LIGHTHOUSE.md).
       - name: Serve the folder
-        run: python3 -m http.server 8080 --bind 127.0.0.1 &
+        run: node tools/serve.js 8080 &
 
       - name: Wait for the server
         run: |
