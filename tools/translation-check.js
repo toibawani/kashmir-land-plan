@@ -23,16 +23,25 @@ var vm = require("vm");
 var root = path.resolve(__dirname, "..");
 var target = path.join(root, "TRANSLATION_CHECK.md");
 var checkOnly = process.argv.indexOf("--check") !== -1;
+var errors = [];
 
-var sandbox = { window: {} };
-new vm.Script(fs.readFileSync(path.join(root, "js", "messages.js"), "utf8"), {
-  filename: "js/messages.js",
-}).runInNewContext(sandbox);
+// The dictionaries live in three files now: English on the boot path, Hindi and
+// Urdu fetched on demand. The check loads all three into one sandbox, because a
+// language that never loads is exactly the failure it exists to catch.
+var MESSAGE_FILES = ["messages.js", "messages.hi.js", "messages.ur.js"];
+var sandbox = { window: {}, Promise: Promise };
+MESSAGE_FILES.forEach(function (name) {
+  var file = path.join(root, "js", name);
+  if (!fs.existsSync(file)) {
+    errors.push("js/" + name + " is missing, so " + name.replace("messages.", "").replace(".js", "") + " could never load");
+    return;
+  }
+  new vm.Script(fs.readFileSync(file, "utf8"), { filename: "js/" + name }).runInNewContext(sandbox);
+});
 var M = sandbox.window.MLMP_MESSAGES;
 
 var keys = M.keys();
 var langs = M.available();
-var errors = [];
 
 langs.forEach(function (lang) {
   var dict = M.dict(lang.code);
@@ -111,7 +120,7 @@ md.push("");
 md.push("- Every row below needs a fluent reader to confirm it says the same thing as the English, in the words a farmer in J&K would use.");
 md.push("- The agricultural nouns matter most: the words for a plot, an office, a scheme, a soil test and confirm-locally.");
 md.push("- The option text in the catalogue is still English only. That is deliberate, not a missing translation: translating agronomy without an officer reviewing it would be worse than leaving it in one language.");
-md.push("- If a language is corrected, edit `js/messages.js`, run `node tools/translation-check.js`, and commit the regenerated file.");
+md.push("- If English is corrected, edit `js/messages.js`. Hindi lives in `js/messages.hi.js` and Urdu in `js/messages.ur.js`; each is fetched only when that language is chosen. Run `node tools/translation-check.js` and commit the regenerated file.");
 md.push("");
 md.push("## Strings");
 md.push("");
@@ -135,7 +144,7 @@ md.push("## Direction");
 md.push("");
 md.push("- Urdu is right to left. The app sets `dir=\"rtl\"` on the document and the layout mirrors; the catalogue prose stays left to right inside its own block.");
 md.push("- Hindi is left to right.");
-md.push("- Adding Kashmiri later is one object in `js/messages.js` plus a `LANGS` entry. No other file needs to change.");
+md.push("- Adding Kashmiri later is one new `js/messages.ks.js`, one line in the `LANGS` table in `js/messages.js`, and one line in the loader and the service worker. No other file needs to change.");
 md.push("");
 
 var content = md.join("\n");

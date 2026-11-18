@@ -38,6 +38,10 @@
 
   <div class="translation-notice" id="translation-notice" hidden role="status"></div>
 
+  <!-- Where a language file that could not be fetched reports itself. Empty
+       until then, so it costs no space. -->
+  <div class="lazy-host" id="lang-load-error"></div>
+
   <header class="site-header" role="banner">
     <div class="header-inner">
       <a href="#home" class="logo" id="logo-link" aria-label="My Land, My Plan home">
@@ -638,6 +642,8 @@
           server copy. From here you can take a backup, restore one, or delete it all.
         </p>
 
+        <div class="lazy-host" id="data-load-error"></div>
+
         <div class="checklist-card">
           <h2 data-i18n="data.storedHeading">What is stored here</h2>
           <ul class="checklist-plain" id="data-facts"></ul>
@@ -854,6 +860,13 @@
     </div>
   </footer>
 
+  <!-- The boot path: only what the home, form and results screens use. The
+       photo store, the print layout, the QR encoder, the speech engine, the
+       feedback form, the backup tools and the other two languages are fetched
+       by js/loader.js on the click that needs them. Every one of them is
+       precached by sw.js, so a first visit that later goes offline still has
+       them. tools/verify.js fails if a lazy file is missing from that list. -->
+  <script src="js/loader.js" defer></script>
   <script src="js/regions.js" defer></script>
   <script src="js/reviews.js" defer></script>
   <script src="js/catalogue.js" defer></script>
@@ -865,17 +878,7 @@
   <script src="js/weather.js" defer></script>
   <script src="js/questions.js" defer></script>
   <script src="js/plans.js" defer></script>
-  <script src="js/data.js" defer></script>
-  <script src="js/photos.js" defer></script>
-  <script src="js/observations.js" defer></script>
-  <script src="js/speech.js" defer></script>
-  <script src="js/qr.js" defer></script>
   <script src="js/offline.js" defer></script>
-  <script src="js/visitfit.js" defer></script>
-  <script src="js/office.js" defer></script>
-  <script src="js/share.js" defer></script>
-  <script src="js/visitcard.js" defer></script>
-  <script src="js/feedback.js" defer></script>
   <script src="js/messages.js" defer></script>
   <script src="js/app.js" defer></script>
   <script src="js/landpanel.js" defer></script>

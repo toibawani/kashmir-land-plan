@@ -9,7 +9,7 @@ Every string the app shows on the critical path, in the three languages it offer
 - Every row below needs a fluent reader to confirm it says the same thing as the English, in the words a farmer in J&K would use.
 - The agricultural nouns matter most: the words for a plot, an office, a scheme, a soil test and confirm-locally.
 - The option text in the catalogue is still English only. That is deliberate, not a missing translation: translating agronomy without an officer reviewing it would be worse than leaving it in one language.
-- If a language is corrected, edit `js/messages.js`, run `node tools/translation-check.js`, and commit the regenerated file.
+- If English is corrected, edit `js/messages.js`. Hindi lives in `js/messages.hi.js` and Urdu in `js/messages.ur.js`; each is fetched only when that language is chosen. Run `node tools/translation-check.js` and commit the regenerated file.
 
 ## Strings
 
@@ -240,9 +240,11 @@ Every string the app shows on the critical path, in the three languages it offer
 | `land.sources` | Where this comes from | यह जानकारी कहाँ से है | یہ معلومات کہاں سے ہیں |
 | `land.villageCounts` | The Union Territory has {villages} villages in the 2011 census, {revenue} revenue villages and {halqas} patwar halqas. | 2011 की जनगणना में केंद्र शासित प्रदेश में {villages} गाँव, {revenue} राजस्व गाँव और {halqas} पटवार हल्के हैं। | 2011 کی مردم شماری میں مرکز کے زیر انتظام علاقے میں {villages} گاؤں، {revenue} ریونیو گاؤں اور {halqas} پٹوار حلقے ہیں۔ |
 | `land.villageSource` | Village counts: | गाँवों की गिनती: | گاؤں کی گنتی: |
+| `lazy.failed` | This part could not be loaded. Check your connection and try again. | यह हिस्सा लोड नहीं हो सका। अपना कनेक्शन जाँचें और फिर कोशिश करें। | یہ حصہ لوڈ نہیں ہو سکا۔ اپنا کنکشن دیکھیں اور دوبارہ کوشش کریں۔ |
+| `lazy.retry` | Try again | फिर कोशिश करें | دوبارہ کوشش کریں |
 
 ## Direction
 
 - Urdu is right to left. The app sets `dir="rtl"` on the document and the layout mirrors; the catalogue prose stays left to right inside its own block.
 - Hindi is left to right.
-- Adding Kashmiri later is one object in `js/messages.js` plus a `LANGS` entry. No other file needs to change.
+- Adding Kashmiri later is one new `js/messages.ks.js`, one line in the `LANGS` table in `js/messages.js`, and one line in the loader and the service worker. No other file needs to change.

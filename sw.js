@@ -10,17 +10,22 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v48";
+var CACHE_VERSION = "mlmp-v49";
 var CORE_CACHE = CACHE_VERSION + "-core";
 
-/* Everything the core flow needs. Kept as an explicit list rather than a
-   wildcard so a missing file is visible instead of silently skipped. */
+/* Every file the app can ever need, including the ones js/loader.js fetches
+   on demand. They are all stored on install, so the first click on a photo or
+   the language switch works with no signal, and the loader's fetch is answered
+   from this cache rather than the network. Kept as an explicit list rather
+   than a wildcard so a missing file is visible instead of silently skipped;
+   tools/verify.js checks it against js/loader.js in both directions. */
 var CORE_ASSETS = [
   "./index.html",
   "./feedback.html",
   "./privacy.html",
   "./terms.html",
   "./css/styles.css",
+  "./js/loader.js",
   "./js/regions.js",
   "./js/reviews.js",
   "./js/catalogue.js",
@@ -45,6 +50,8 @@ var CORE_ASSETS = [
   "./js/feedback.js",
   "./js/feedback-page.js",
   "./js/messages.js",
+  "./js/messages.hi.js",
+  "./js/messages.ur.js",
   "./js/app.js",
   "./js/landpanel.js",
   "./manifest.webmanifest",

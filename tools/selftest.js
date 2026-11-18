@@ -69,7 +69,7 @@ function load(names, sandbox) {
 // for free.
 var sandbox = { window: {} };
 sandbox.window.localStorage = makeStorage();
-load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js", "share.js", "messages.js"], sandbox);
+load(["regions.js", "catalogue.js", "activities.js", "schemes.js", "questions.js", "plans.js", "speech.js", "qr.js", "offline.js", "visitfit.js", "office.js", "share.js", "messages.js", "messages.hi.js", "messages.ur.js"], sandbox);
 
 var REGIONS = sandbox.window.MLMP_REGIONS;
 var CATALOGUE = sandbox.window.MLMP_CATALOGUE;

@@ -213,8 +213,9 @@ what a static host cannot do, is [docs/AUDIT.md](docs/AUDIT.md).
 Regional background comes from the Farmer's Guide for Jammu and Kashmir, ICAR,
 CSIR-IIIM, the National Mission on Saffron and NITI Aayog; the exact documents
 and what each supports are listed on the About screen inside the app and in
-`js/sources.js`. Weather and place lookup are Open-Meteo (CC BY 4.0). The two
-typefaces come from Google Fonts.
+`js/sources.js`. Weather and place lookup are Open-Meteo (CC BY 4.0), the only
+external service the app contacts. The interface uses the fonts the device
+already has, so a first visit makes no request to another origin.
 
 ## Licence
 

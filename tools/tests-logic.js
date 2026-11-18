@@ -78,6 +78,11 @@ load(
     "visitcard.js",
     "feedback.js",
     "messages.js",
+    // The Hi and Urdu dictionaries are separate files, fetched on demand in the
+    // browser. These tests read them directly, because they are the only place
+    // the two translations exist.
+    "messages.hi.js",
+    "messages.ur.js",
     "land.js",
   ],
   sandbox

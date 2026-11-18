@@ -75,9 +75,9 @@
 
       <h2>What leaves your device</h2>
       <p>
-        Two things, both explained below: a weather request when you ask for the forecast, and the
-        first load of the app's two typefaces. The land plan itself, the options, the visit card and
-        the checklist never leave the device.
+        One thing, explained below: a weather request when you ask for the forecast. The app uses
+        the fonts your device already has, so opening it contacts no other service. The land plan
+        itself, the options, the visit card and the checklist never leave the device.
       </p>
       <ul>
         <li>
@@ -87,10 +87,9 @@
           carries your device's IP address to that service. Nothing is sent unless you press the button.
         </li>
         <li>
-          <strong>Typefaces.</strong> The app's two fonts are loaded from Google Fonts when the page
-          first opens. That request tells Google your IP address and which page loaded the font.
-          Once the app is installed and has been opened once, the fonts are stored on the device and
-          are not requested again.
+          <strong>Typefaces.</strong> None. The app used to load two fonts from Google Fonts on the
+          first visit, which told Google your IP address and which page you opened. It now uses the
+          fonts already on your device, so that request no longer happens.
         </li>
         <li>
           <strong>Hosting.</strong> The app is served by GitHub Pages, which, like any web host,

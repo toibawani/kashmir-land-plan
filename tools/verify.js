@@ -927,13 +927,17 @@ if (catalogue && SOURCES) {
 // which is too late to be the only warning. Every unreviewed language is marked
 // in the menu label itself, from the same `reviewed` flag, so setting that flag
 // to true is the only way to remove the caveat.
-var msgSandbox = { window: {} };
+var msgSandbox = { window: {}, Promise: Promise };
+// Hindi and Urdu are separate files now, fetched only when chosen. Loading all
+// three here is what keeps the per-language label check below meaningful.
 try {
-  new vm.Script(fs.readFileSync(path.join(root, "js", "messages.js"), "utf8"), {
-    filename: "js/messages.js",
-  }).runInNewContext(msgSandbox);
+  ["messages.js", "messages.hi.js", "messages.ur.js"].forEach(function (name) {
+    new vm.Script(fs.readFileSync(path.join(root, "js", name), "utf8"), {
+      filename: "js/" + name,
+    }).runInNewContext(msgSandbox);
+  });
 } catch (err) {
-  failures.push("js/messages.js could not be loaded: " + err.message);
+  failures.push("the message files could not be loaded: " + err.message);
 }
 var MESSAGES = msgSandbox.window.MLMP_MESSAGES;
 
@@ -1648,6 +1652,15 @@ if (appCode.indexOf("\"Escape\"") === -1) {
       return fs.readFileSync(path.join(root, name), "utf8");
     })
     .join("\n");
+  var indexText = exists(path.join(root, "index.html"))
+    ? fs.readFileSync(path.join(root, "index.html"), "utf8")
+    : "";
+
+  // js/loader.js is the second way a script can be legitimately reachable: it
+  // names the files fetched on the click that needs them. Reading its map is
+  // what keeps this check honest now that eleven files are not in the markup.
+  var loaderFile = path.join(jsDir, "loader.js");
+  var loaderText = exists(loaderFile) ? fs.readFileSync(loaderFile, "utf8") : "";
 
   fs.readdirSync(jsDir)
     .filter(function (name) {
@@ -1656,15 +1669,37 @@ if (appCode.indexOf("\"Escape\"") === -1) {
     .sort()
     .forEach(function (name) {
       var script = "js/" + name;
-      if (pageText.indexOf(script) === -1) {
+      var onDemand = loaderText.indexOf('"' + script + '"') !== -1;
+      if (!onDemand && pageText.indexOf(script) === -1) {
         failures.push(
           script + " is shipped but no page loads it, so either wire it up or delete it"
+        );
+      }
+      // Both at once is the worst case: the boot download is paid and the lazy
+      // path can never trigger, because the module is already there.
+      // js/feedback.js is loaded eagerly by feedback.html, a separate page, on
+      // purpose: index.html fetches it only when the visit card shows the
+      // feedback questions. Only index.html can conflict with the loader.
+      if (onDemand && indexText.indexOf('src="' + script + '"') !== -1) {
+        failures.push(
+          script +
+            " is fetched on demand by js/loader.js and also loaded by a page, so the on-demand path for it is dead code"
         );
       }
       if (swSource.indexOf(script) === -1) {
         failures.push(script + " is shipped but sw.js does not precache it, so it is missing offline");
       }
     });
+
+  // The reverse direction: a name in the loader map with no file behind it
+  // fails at the click, in front of a farmer, which is the wrong place.
+  var mapping = /"(js\/[a-z0-9._-]+\.js)"/gi;
+  var mapped;
+  while ((mapped = mapping.exec(loaderText)) !== null) {
+    if (!exists(path.join(root, mapped[1]))) {
+      failures.push("js/loader.js names " + mapped[1] + ", which does not exist");
+    }
+  }
 })();
 
 /* ---- Report ---- */

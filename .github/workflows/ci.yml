@@ -131,6 +131,12 @@ jobs:
       - name: Service worker update flow
         run: node tools/sw-update-check.js 9333
 
+      # The files that left the boot path have to arrive on the click that
+      # needs them, including with the network off, and a blocked one has to
+      # show the message and the Retry button rather than an empty panel.
+      - name: Lazy files, languages and offline features
+        run: node tools/lazy-check.js http://127.0.0.1:8080 9333
+
       # Uploaded even when a check fails, because the images are how a failure
       # is understood.
       - name: Upload the screenshots
