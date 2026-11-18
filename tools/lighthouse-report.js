@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 /**
- * Turn a Lighthouse JSON report into a few honest lines, and fail on a floor.
+ * Turn Lighthouse JSON reports into a few honest lines, and fail on a floor.
  *
  * The scores are recorded in LIGHTHOUSE.md by hand, because a number in a doc
  * that nobody updates is worse than no number. This script prints the exact
  * figures to copy and refuses a build that drops below the floors below.
  *
- *   node tools/lighthouse-report.js /path/to/lighthouse.json
+ *   node tools/lighthouse-report.js /path/to/lighthouse.json [/path/to/2.json ...]
+ *
+ * Give it three runs and the floors are enforced on the median, not on
+ * whichever run happened to land. Lighthouse has always recommended a median
+ * of several runs; the reason is visible in this project's own history. One
+ * CI run of this exact tree measured Performance 96 with 120 ms of blocking
+ * time, and the next measured 80 with 710 ms on the same commit, on the same
+ * shared runner type. A single sample on a machine somebody else shares is a
+ * coin toss, and a floor that flips on it teaches people to ignore the floor.
+ * The median is not a lower bar: a genuinely slower build moves all three
+ * runs down.
  *
  * Lighthouse 11 is pinned in CI because 12 removed the PWA category. The PWA
  * score is therefore the old installability bundle, which is coarse; the real
@@ -17,15 +27,11 @@
 
 var fs = require("fs");
 
-var file = process.argv[2];
-if (!file || !fs.existsSync(file)) {
-  console.error("usage: node tools/lighthouse-report.js <lighthouse.json>");
+var files = process.argv.slice(2);
+if (!files.length || files.some(function (file) { return !fs.existsSync(file); })) {
+  console.error("usage: node tools/lighthouse-report.js <lighthouse.json> [more.json ...]");
   process.exit(2);
 }
-
-var report = JSON.parse(fs.readFileSync(file, "utf8"));
-var categories = report.categories || {};
-var audits = report.audits || {};
 
 // Floors, set from measured runs and recorded in LIGHTHOUSE.md. They are a
 // regression guard, not a target.
@@ -45,48 +51,109 @@ var NAMES = {
   pwa: "PWA (Lighthouse 11 installability bundle)",
 };
 
-console.log("Lighthouse " + (report.lighthouseVersion || "unknown") + ", mobile emulation");
 var failures = [];
-Object.keys(NAMES).forEach(function (key) {
-  var category = categories[key];
-  if (!category) {
-    // A run that measured nothing is not a pass. This script reported "all
-    // floors met" on a run where the browser never loaded the page, which is
-    // exactly the shape of mistake a report is meant to catch.
-    console.log("  " + NAMES[key] + ": not reported by this version");
-    failures.push(NAMES[key] + " was not measured, so this run proves nothing");
+var runs = [];
+
+files.forEach(function (file, index) {
+  var report = JSON.parse(fs.readFileSync(file, "utf8"));
+  var categories = report.categories || {};
+  var audits = report.audits || {};
+  var missing = Object.keys(NAMES).filter(function (key) {
+    return !categories[key];
+  });
+  // A run that measured nothing is not a pass. This script reported "all
+  // floors met" on a run where the browser never loaded the page, which is
+  // exactly the shape of mistake a report is meant to catch. It must never be
+  // averaged away with a good run either.
+  if (missing.length) {
+    missing.forEach(function (key) {
+      failures.push("run " + (index + 1) + ": " + NAMES[key] + " was not measured, so that run proves nothing");
+    });
     return;
   }
-  var score = category.score;
-  var percent = score === null || score === undefined ? "n/a" : String(Math.round(score * 100));
-  console.log("  " + NAMES[key] + ": " + percent);
-  if (score !== null && score !== undefined && score < FLOORS[key]) {
-    failures.push(NAMES[key] + " is " + percent + ", floor is " + Math.round(FLOORS[key] * 100));
-  }
+  runs.push({
+    index: index + 1,
+    version: report.lighthouseVersion || "unknown",
+    categories: categories,
+    audits: audits,
+    performance: categories.performance.score,
+  });
 });
 
-function metric(id) {
+function metric(audits, id) {
   var a = audits[id];
   if (!a) return "n/a";
   if (typeof a.numericValue !== "number") return a.displayValue || "n/a";
   return a.displayValue || String(Math.round(a.numericValue));
 }
-console.log(
-  "  FCP " + metric("first-contentful-paint") +
-    ", LCP " + metric("largest-contentful-paint") +
-    ", TBT " + metric("total-blocking-time") +
-    ", CLS " + metric("cumulative-layout-shift") +
-    ", Speed Index " + metric("speed-index")
-);
 
-// The three audits that decide whether this app can be installed and used with
-// no signal, named individually so a regression is not hidden inside a score.
-["installable-manifest", "service-worker", "maskable-icon"].forEach(function (id) {
-  var a = audits[id];
-  if (!a) return;
-  console.log("  " + id + ": " + (a.score === 1 ? "pass" : a.score === null ? "n/a" : "fail") +
-    (a.displayValue ? " (" + a.displayValue + ")" : ""));
+function describe(run) {
+  var audits = run.audits;
+  return (
+    "  FCP " + metric(audits, "first-contentful-paint") +
+    ", LCP " + metric(audits, "largest-contentful-paint") +
+    ", TBT " + metric(audits, "total-blocking-time") +
+    ", CLS " + metric(audits, "cumulative-layout-shift") +
+    ", Speed Index " + metric(audits, "speed-index")
+  );
+}
+
+function percent(score) {
+  return score === null || score === undefined ? "n/a" : String(Math.round(score * 100));
+}
+
+console.log("Lighthouse " + (runs.length ? runs[0].version : "unknown") + ", mobile emulation");
+
+runs.forEach(function (run) {
+  console.log(
+    "Run " + run.index + " of " + files.length + ": " +
+      Object.keys(NAMES).map(function (key) {
+        return NAMES[key].replace(/ \(.*\)$/, "") + " " + percent(run.categories[key].score);
+      }).join(", ")
+  );
+  console.log(describe(run));
 });
+
+// The median run is the one whose Performance score sits in the middle. Every
+// other category correlates with it, so the whole run is reported rather than
+// mixing categories from different runs, which would invent a sample nobody
+// measured.
+var median = runs
+  .slice()
+  .sort(function (a, b) { return (a.performance || 0) - (b.performance || 0); })[
+  Math.floor((runs.length - 1) / 2)
+];
+if (runs.length > 1) {
+  console.log(
+    "\nPerformance across " + runs.length + " runs: " +
+      runs.map(function (run) { return percent(run.performance); }).join(", ") +
+      ". Floors are enforced on the median, run " + median.index + "."
+  );
+  console.log("The median run, run " + median.index + ":");
+}
+
+Object.keys(NAMES).forEach(function (key) {
+  if (!median) return;
+  var score = median.categories[key].score;
+  console.log("  " + NAMES[key] + ": " + percent(score));
+  if (score !== null && score !== undefined && score < FLOORS[key]) {
+    failures.push(NAMES[key] + " is " + percent(score) + ", floor is " + Math.round(FLOORS[key] * 100));
+  }
+});
+
+if (median) {
+  console.log(describe(median));
+
+  // The three audits that decide whether this app can be installed and used
+  // with no signal, named individually so a regression is not hidden inside a
+  // score.
+  ["installable-manifest", "service-worker", "maskable-icon"].forEach(function (id) {
+    var a = median.audits[id];
+    if (!a) return;
+    console.log("  " + id + ": " + (a.score === 1 ? "pass" : a.score === null ? "n/a" : "fail") +
+      (a.displayValue ? " (" + a.displayValue + ")" : ""));
+  });
+}
 
 if (failures.length) {
   console.error("\nLighthouse floor not met:");

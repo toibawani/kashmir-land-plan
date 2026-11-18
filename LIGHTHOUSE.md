@@ -27,6 +27,9 @@ fetched. The split costs about 7 KB across the whole app (file headers and
 The performance floor in `tools/lighthouse-report.js` is now **0.85**, which is
 the figure this pass was asked to reach, up from 0.7.
 
+Re-measured through the same tool on the final tree, three runs: **95, 96, 96**
+with 0 ms of blocking time and a layout shift of 0.001 in all three.
+
 ### What actually caused the earlier score, and the layout shift
 
 Two separate faults. Both were measured before anything was changed, because
@@ -67,6 +70,18 @@ load now makes zero requests to another origin.
 Lighthouse 11.7.1 now runs on every pull request (`.github/workflows/ci.yml`,
 job `lighthouse`), against the project's own gzip server at 360 px mobile
 defaults. Floors live in `tools/lighthouse-report.js`.
+
+### Why CI takes three runs and enforces the median
+
+The same commit measured **96 with 120 ms of blocking time** on one CI run and
+**80 with 710 ms** on the next, on the same runner type with nothing changed in
+the app. That is the machine, not the app: a shared virtual runner is slower and
+noisier than the laptops these numbers were tuned on, and one sample there
+flips the score by sixteen points. So the job runs Lighthouse three times and
+`tools/lighthouse-report.js` enforces the floors on the **median** run, printing
+all three performance scores so the spread stays visible. The floor itself is
+unchanged at 0.85, and a genuinely slower build drags all three runs down with
+it.
 
 Before the server was fixed — the job served the folder with
 `python3 -m http.server`, which sends 183 KB of text where the host sends 46 KB:

@@ -176,21 +176,30 @@ jobs:
           done
           echo "the server never became ready"; exit 1
 
+      # Three runs, because one sample on a shared runner swings by sixteen
+      # points on the same commit. Lighthouse recommends a median; the spread
+      # this project actually saw is recorded in LIGHTHOUSE.md.
       - name: Run Lighthouse on a mobile profile
         run: |
-          npx --yes lighthouse@11.7.1 http://127.0.0.1:8080/ \
-            --only-categories=performance,accessibility,best-practices,pwa \
-            --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
-            --output=json --output-path="$RUNNER_TEMP/lighthouse.json" --quiet
+          for run in 1 2 3; do
+            npx --yes lighthouse@11.7.1 http://127.0.0.1:8080/ \
+              --only-categories=performance,accessibility,best-practices,pwa \
+              --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+              --output=json --output-path="$RUNNER_TEMP/lighthouse-$run.json" --quiet
+          done
 
       - name: Report and enforce the floors
-        run: node tools/lighthouse-report.js "$RUNNER_TEMP/lighthouse.json"
+        run: |
+          node tools/lighthouse-report.js \
+            "$RUNNER_TEMP/lighthouse-1.json" \
+            "$RUNNER_TEMP/lighthouse-2.json" \
+            "$RUNNER_TEMP/lighthouse-3.json"
 
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-mobile-report
-          path: ${{ runner.temp }}/lighthouse.json
+          path: ${{ runner.temp }}/lighthouse-*.json
           if-no-files-found: warn
           retention-days: 14
