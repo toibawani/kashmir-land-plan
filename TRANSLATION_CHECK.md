@@ -106,6 +106,7 @@ Every string the app shows on the critical path, in the three languages it offer
 | `review.badgeNot` | Not reviewed by an officer yet | अभी किसी अधिकारी ने जांच नहीं की | ابھی کسی افسر نے جانچ نہیں کی |
 | `review.badgeReviewed` | Reviewed by {name}, {office} on {date} | {name}, {office} द्वारा {date} को जांचा गया | {name}، {office} نے {date} کو جانچا |
 | `review.notReviewed` | Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting. | अभी किसी कृषि अधिकारी ने जांच नहीं की। हर सुझाव को चर्चा का सवाल मानें, करने की सलाह नहीं। करने से पहले हमेशा स्थानीय रूप से पुष्टि करें। | ابھی کسی زرعی افسر نے جانچ نہیں کی۔ ہر تجویز کو بحث کا سوال سمجھیں، کرنے کا مشورہ نہیں۔ کرنے سے پہلے ہمیشہ مقامی طور پر تصدیق کریں۔ |
+| `source.scope` | Scope | दायरा | دائرہ |
 | `review.reviewed` | Reviewed by {name}, {office} on {date}. Still confirm locally before acting. | {name}, {office} द्वारा {date} को जांचा गया। फिर भी करने से पहले स्थानीय रूप से पुष्टि करें। | {name}، {office} نے {date} کو جانچا۔ پھر بھی کرنے سے پہلے مقامی طور پر تصدیق کریں۔ |
 | `share.heading` | My land plan | मेरी ज़मीन योजना | میرا زمین منصوبہ |
 | `share.plan` | Plan | योजना | منصوبہ |

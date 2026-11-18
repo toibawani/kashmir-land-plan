@@ -46,9 +46,10 @@ function load(files) {
   return sandbox.window;
 }
 
-var win = load(["regions.js", "catalogue.js", "activities.js"]);
+var win = load(["regions.js", "catalogue.js", "activities.js", "sources.js"]);
 var REGIONS = win.MLMP_REGIONS;
 var ACT = win.MLMP_ACTIVITIES;
+var SOURCES = win.MLMP_SOURCES;
 var PACK = require("./lib/pack-version.js");
 
 /**
@@ -124,13 +125,35 @@ function estimatedLines(text, perLine) {
 }
 
 /** A row's height in millimetres, deliberately on the generous side. */
-function rowHeight(title, note, risk) {
+function rowHeight(title, note, risk, sources) {
   return (
     3.2 +
     estimatedLines(title, 45) * 4.4 +
     estimatedLines(note, 52) * 4.0 +
-    estimatedLines("Main risk: " + risk, 58) * 3.6
+    estimatedLines("Main risk: " + risk, 58) * 3.6 +
+    estimatedLines(sources, 70) * 3.2
   );
+}
+
+/**
+ * The citations for one entry, with the same scope labels the app shows.
+ *
+ * The officer is being asked whether a line is right for the district, so the
+ * documents behind that line belong on the paper: a sheet that says "source:
+ * 2010 document" invites a correction, and one that only says "source" looks
+ * more current than it is.
+ */
+function sourcesLine(a) {
+  if (!SOURCES) return "";
+  var parts = ((a && a.sources) || [])
+    .map(function (id) {
+      var s = SOURCES.byId(id);
+      if (!s) return "";
+      return s.name + (s.scope ? " (" + s.scope + ")" : "");
+    })
+    .filter(Boolean);
+  if (!parts.length) return "No public source checked for this entry yet.";
+  return "Source: " + parts.join("; ") + ".";
 }
 
 /**
@@ -242,8 +265,9 @@ function sheetSections(district) {
       (a.districtNotes && a.districtNotes[district]) ||
       (a.zoneNotes && a.zoneNotes[zone.id]) ||
       "";
+    var sources = sourcesLine(a);
     return {
-      height: rowHeight(a.title, note, a.mainRisk),
+      height: rowHeight(a.title, note, a.mainRisk, sources),
       html:
         "<tr>" +
         '<td class="num">' +
@@ -255,6 +279,9 @@ function sheetSections(district) {
         (note ? '<p class="note">' + esc(note) + "</p>" : "") +
         '<p class="meta">Main risk: ' +
         esc(a.mainRisk) +
+        "</p>" +
+        '<p class="meta">' +
+        esc(sources) +
         "</p></td>" +
         '<td class="box">&#9744;</td>' +
         '<td class="box">&#9744;</td>' +

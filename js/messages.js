@@ -144,6 +144,8 @@
     "review.badgeReviewed": "Reviewed by {name}, {office} on {date}",
     "review.notReviewed":
       "Not yet reviewed by an agriculture officer. Treat every suggestion as a question to discuss, not as advice to act on. Always confirm locally before acting.",
+    "source.scope": "Scope",
+
     "review.reviewed":
       "Reviewed by {name}, {office} on {date}. Still confirm locally before acting.",
 

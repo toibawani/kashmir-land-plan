@@ -119,6 +119,8 @@
     "visit.visitMode": "यात्रा मोड",
     "visit.visitModeExit": "हो गया, यात्रा मोड से बाहर",
 
+    "source.scope": "दायरा",
+
     "review.badgeNot": "अभी किसी अधिकारी ने जांच नहीं की",
     "review.badgeReviewed": "{name}, {office} द्वारा {date} को जांचा गया",
     "review.notReviewed":

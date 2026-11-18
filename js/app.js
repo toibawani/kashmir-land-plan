@@ -958,6 +958,21 @@
     return "Ask the officer";
   }
 
+  /**
+   * The visible scope label for a citation: its coverage and its age.
+   *
+   * A reader who never opens the link still has to be able to see that a
+   * document is from 2010, or covers the Jammu division only, or was last
+   * updated in 2021. The label sits beside the link rather than in a tooltip,
+   * because a tooltip does not exist on a printed sheet or on a phone held at
+   * arm's length.
+   */
+  function sourceScopeHtml(s) {
+    if (!s || !s.scope) return "";
+    var prefix = MSG && MSG.t ? MSG.t("source.scope") : "Scope";
+    return ' <span class="source-scope">' + escapeHtml(prefix + ": " + s.scope) + "</span>";
+  }
+
   function optionSourcesHtml(a) {
     var ids = (a && a.sources) || [];
     if (!SOURCES || !SOURCES.byId) return "";
@@ -972,7 +987,9 @@
           escapeHtml(s.short) +
           '</a> <span class="source-for">' +
           escapeHtml(s.usedFor) +
-          "</span></li>"
+          "</span>" +
+          sourceScopeHtml(s) +
+          "</li>"
         );
       })
       .filter(Boolean)

@@ -10,7 +10,7 @@
  * Bump CACHE_VERSION when any cached file changes, so old copies are dropped.
  */
 
-var CACHE_VERSION = "mlmp-v49";
+var CACHE_VERSION = "mlmp-v50";
 var CORE_CACHE = CACHE_VERSION + "-core";
 
 /* Every file the app can ever need, including the ones js/loader.js fetches

@@ -10,11 +10,26 @@
  * missing, and the field it would have backed says "ask the officer" instead.
  * Every such gap is listed in NEEDS_SOURCES.md at the repository root.
  *
+ * Three fields exist so a reader can judge a citation without opening it:
+ *
+ *   accessed  the day the page or file was opened and read by the maintainer.
+ *   scope     what the document covers and how old it is, in the reader's
+ *             words. A 2010 mission document and a page last touched in 2021
+ *             say so here rather than passing as current. A document that only
+ *             covers the Jammu division says that too.
+ *
+ * `scope` is shown beside the link in the app and on the printed review
+ * sheets, so an officer can see at a glance that a citation is old, or about a
+ * different division, without opening anything. The words are English, like
+ * the catalogue prose: they are not translated, because a mistranslated caveat
+ * is worse than an English one nobody has checked.
+ *
  * Interface
  *   MLMP_SOURCES.byId(id)      a source or null
  *   MLMP_SOURCES.ids()         every registered id
  *   MLMP_SOURCES.all()         every source, in registry order
  *   MLMP_SOURCES.tagLabel(id)  the short label shown on a tag
+ *   MLMP_SOURCES.scopeOf(id)   the visible scope label, or ""
  */
 (function () {
   "use strict";
@@ -25,6 +40,8 @@
       short: "ICAR",
       name: "ICAR, Jammu and Kashmir profile",
       url: "https://icar.org.in/en/node/17267",
+      accessed: "2026-11-18",
+      scope: "Union Territory, page current when checked",
       usedFor: "The farming systems of the two regions, including horticulture in the valley and the rice and maize rotations.",
     },
     dac_jk_guide: {
@@ -32,13 +49,17 @@
       short: "Farmer's Guide",
       name: "Government of India, Farmer's Guide for Jammu and Kashmir",
       url: "https://farmech.dac.gov.in/Content/FarmerGuide/JK/1J.html",
+      accessed: "2026-11-18",
+      scope: "Older Government of India guide; its district list predates the current districts",
       usedFor: "The agro-climatic zones, the elevation and rainfall range, and the leading crops of each zone.",
     },
     niti_horticulture: {
       id: "niti_horticulture",
       short: "NITI Aayog",
-      name: "NITI Aayog, Roadmap for Horticulture Development in Jammu and Kashmir",
-      url: "https://www.niti.gov.in/",
+      name: "NITI Aayog, Roadmap for Horticulture Development in the UT of Jammu and Kashmir",
+      url: "https://www.niti.gov.in/sites/default/files/2026-04/Roadmap-for-Horticulture-Development-in-the-UT-of-Jammu-and-Kashmir.pdf",
+      accessed: "2026-11-18",
+      scope: "2026 roadmap, all four agro-climatic zones",
       usedFor: "The zone structure of the Union Territory and which districts fall in the sub-tropical and intermediate zones.",
     },
     iiim_saffron: {
@@ -46,13 +67,26 @@
       short: "CSIR-IIIM",
       name: "CSIR Indian Institute of Integrative Medicine, saffron production",
       url: "https://iiim.res.in/saffron-production/",
+      accessed: "2026-11-18",
+      scope: "Page last updated January 2021",
       usedFor: "The districts where saffron is grown in Jammu and Kashmir.",
+    },
+    skuastj_veg: {
+      id: "skuastj_veg",
+      short: "SKUAST-J vegetables",
+      name: "SKUAST-Jammu, Package of Practices for Vegetable Crops, 2020",
+      url: "https://skuastjammu.ac.in/newsite/pdf/1693218037POP%20Vegetable%20POP%202020.pdf.pdf",
+      accessed: "2026-11-18",
+      scope: "Jammu division, not confirmed for the Kashmir valley",
+      usedFor: "Kitchen gardening as a documented use of small plots and household waste, and the vegetable zones of the Jammu division.",
     },
     ut_glance: {
       id: "ut_glance",
       short: "UT at a Glance",
       name: "Directorate of Economics and Statistics, J&K, Union Territory at a Glance",
       url: "https://ecostatjk.nic.in/pdf/publications/utglance/UT%20at%20a%20Glance%205.75%20X%209.pdf",
+      accessed: "2026-11-18",
+      scope: "Statistical publication, Union Territory figures",
       usedFor: "The number of villages, patwar halqas and the land use pattern of the Union Territory.",
     },
     jammu_hort_zones: {
@@ -60,6 +94,8 @@
       short: "Horticulture zones",
       name: "Department of Horticulture, Jammu, agro-climatic zones of the division",
       url: "https://hortijmu.jk.gov.in/agroclimate.html",
+      accessed: "2026-11-18",
+      scope: "Jammu division only",
       usedFor: "The sub-tropical, intermediate and temperate bands of the Jammu division and their altitude ranges.",
     },
     jammu_hort_districts: {
@@ -67,6 +103,8 @@
       short: "Horticulture districts",
       name: "Department of Horticulture, Jammu, district-wise focused crops",
       url: "https://hortijmu.jk.gov.in/districtwise.html",
+      accessed: "2026-11-18",
+      scope: "Jammu division only",
       usedFor: "Which zones each Jammu district spans and the fruit crops each district focuses on.",
     },
     icar_jammu_plan: {
@@ -74,6 +112,8 @@
       short: "ICAR plan",
       name: "ICAR, agriculture contingency plan for Jammu district",
       url: "https://icar-crida.res.in/CP-2012/statewiseplans/J&K%20(Pdf)/J&K14_Jammu_28.12.2013.pdf",
+      accessed: "2026-11-18",
+      scope: "2013 contingency plan, Jammu district",
       usedFor: "The rice-wheat and maize-wheat patterns of the sub-tropical and intermediate zones.",
     },
     cgwb_profiles: {
@@ -81,6 +121,8 @@
       short: "CGWB profile",
       name: "Central Ground Water Board, district ground water information booklets",
       url: "https://cgwb.gov.in/old_website/District_Profile/JandK/Udhampur.pdf",
+      accessed: "2026-11-18",
+      scope: "Older booklet series, one district at a time",
       usedFor: "The soil types and land use reported for the Jammu districts.",
     },
     fsi_cover: {
@@ -88,6 +130,8 @@
       short: "Forest survey",
       name: "Forest Survey of India, India State of Forest Report, Jammu and Kashmir",
       url: "https://fsi.nic.in/isfr19/vol2/isfr-2019-vol-ii-jammu-kashmir.pdf",
+      accessed: "2026-11-18",
+      scope: "2019 forest report",
       usedFor: "The forest share of the land and the land use pattern of the region.",
     },
     rkvy_saffron: {
@@ -95,6 +139,8 @@
       short: "RKVY saffron mission",
       name: "Rashtriya Krishi Vikas Yojana, National Mission on Saffron",
       url: "https://rkvy.da.gov.in/static/download/pdf/Saffron_Mission.pdf",
+      accessed: "2026-11-18",
+      scope: "2010 mission document; its area and production figures are historical",
       usedFor: "The place of the Pampore belt and the karewa uplands in saffron growing.",
     },
     kupwara_tehsils: {
@@ -102,6 +148,8 @@
       short: "Kupwara tehsils",
       name: "District Administration Kupwara, tehsils of the district",
       url: "https://kupwara.nic.in/tehsils/",
+      accessed: "2026-11-18",
+      scope: "Kupwara district, page as published",
       usedFor: "The names of the sixteen tehsils of Kupwara district, counted against the official table.",
     },
     budgam_tehsils: {
@@ -109,6 +157,8 @@
       short: "Budgam tehsils",
       name: "District Administration Budgam, tehsils of the district",
       url: "https://budgam.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Budgam district, page as published",
       usedFor: "The names of the nine tehsils of Budgam district, counted against the official table.",
     },
     kathua_tehsils: {
@@ -116,6 +166,8 @@
       short: "Kathua tehsils",
       name: "District Administration Kathua, tehsils of the district",
       url: "https://kathua.nic.in/tehsils/",
+      accessed: "2026-11-18",
+      scope: "Kathua district, page as published",
       usedFor: "The names of the eleven tehsils of Kathua district, counted against the official table.",
     },
     poonch_tehsils: {
@@ -123,6 +175,8 @@
       short: "Poonch tehsils",
       name: "District Administration Poonch, tehsils of the district",
       url: "https://poonch.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Poonch district, page as published",
       usedFor: "The names of the six tehsils of Poonch district, counted against the official table.",
     },
     reasi_tehsils: {
@@ -130,6 +184,8 @@
       short: "Reasi tehsils",
       name: "District Administration Reasi, tehsils of the district",
       url: "https://reasi.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Reasi district, page as published",
       usedFor: "The names of the nine tehsils of Reasi district, counted against the official table.",
     },
     srinagar_tehsils: {
@@ -137,6 +193,8 @@
       short: "Srinagar tehsils",
       name: "District Administration Srinagar, tehsils of the district",
       url: "https://srinagar.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Srinagar district, page as published",
       usedFor: "The names of the seven tehsils of Srinagar district, counted against the official table.",
     },
     anantnag_tehsils: {
@@ -144,6 +202,8 @@
       short: "Anantnag tehsils",
       name: "District Administration Anantnag, tehsils of the district",
       url: "https://anantnag.nic.in/village-directory/",
+      accessed: "2026-11-18",
+      scope: "Anantnag district, page as published",
       usedFor: "The names of the twelve tehsils of Anantnag district, taken from the tehsil column of the district's village directory and counted against the official table.",
     },
     doda_tehsils: {
@@ -151,6 +211,8 @@
       short: "Doda tehsils",
       name: "District Administration Doda, tehsils of the district",
       url: "https://doda.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Doda district, page as published",
       usedFor: "The names of the seventeen tehsils of Doda district, taken from the tehsildar designations the district publishes, and counted against the official table.",
     },
     jammu_tehsils: {
@@ -158,6 +220,8 @@
       short: "Jammu tehsils",
       name: "District Administration Jammu, tehsils of the district",
       url: "https://jammu.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Jammu district, page as published",
       usedFor: "The names of the twenty-one tehsils of Jammu district, counted against the official table.",
     },
     kishtwar_tehsils: {
@@ -165,6 +229,8 @@
       short: "Kishtwar tehsils",
       name: "District Administration Kishtwar, tehsils of the district",
       url: "https://kishtwar.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Kishtwar district, page as published",
       usedFor: "The names of the eleven tehsils of Kishtwar district, counted against the official table.",
     },
     kulgam_tehsils: {
@@ -172,6 +238,8 @@
       short: "Kulgam tehsils",
       name: "District Administration Kulgam, tehsils of the district",
       url: "https://kulgam.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Kulgam district, page as published",
       usedFor: "The names of the seven tehsils of Kulgam district, counted against the official table.",
     },
     rajouri_tehsils: {
@@ -179,6 +247,8 @@
       short: "Rajouri tehsils",
       name: "District Administration Rajouri, tehsils of the district",
       url: "https://rajouri.nic.in/tehsils/",
+      accessed: "2026-11-18",
+      scope: "Rajouri district, page as published",
       usedFor: "The names of the thirteen tehsils of Rajouri district, counted against the official table.",
     },
     shopian_tehsils: {
@@ -186,6 +256,8 @@
       short: "Shopian tehsils",
       name: "District Administration Shopian, tehsils of the district",
       url: "https://shopian.nic.in/tehsil/",
+      accessed: "2026-11-18",
+      scope: "Shopian district, page as published",
       usedFor: "The names of the seven tehsils of Shopian district, taken from the tehsildar designations the district publishes, and counted against the official table.",
     },
     pulwama_tehsils: {
@@ -193,6 +265,8 @@
       short: "Pulwama tehsils",
       name: "J&K Revenue Department, patwar halqa list for Pulwama district",
       url: "https://jkrevenue.nic.in/pthalqapul.html",
+      accessed: "2026-11-18",
+      scope: "Pulwama district, revenue department table",
       usedFor: "The names of the eight tehsils of Pulwama district, taken from the tehsil column of the Revenue Department's patwar halqa table and counted against the official table. The table prints one as \"Shahoora Litter\".",
     },
     ramban_tehsils: {
@@ -200,6 +274,8 @@
       short: "Ramban tehsils",
       name: "J&K Revenue Department, patwar halqa list for Ramban district",
       url: "https://jkrevenue.nic.in/pthalqaram.html",
+      accessed: "2026-11-18",
+      scope: "Ramban district, revenue department table",
       usedFor: "The names of the eight tehsils of Ramban district, taken from the tehsil column of the Revenue Department's patwar halqa table and counted against the official table.",
     },
   };
@@ -223,10 +299,17 @@
     return s ? s.short : "";
   }
 
+  /** The visible scope label for a source, or an empty string if unknown. */
+  function scopeOf(id) {
+    var s = byId(id);
+    return s && s.scope ? s.scope : "";
+  }
+
   window.MLMP_SOURCES = {
     byId: byId,
     ids: ids,
     all: all,
     tagLabel: tagLabel,
+    scopeOf: scopeOf,
   };
 })();

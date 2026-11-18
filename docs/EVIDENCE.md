@@ -2,8 +2,10 @@
 
 Working notes, not a review. Nothing in this file is linked from the app, and
 no catalogue entry is described anywhere as verified because of it. The review
-sheets are untouched: every one still carries `v1.2.7 · catalogue d20337e`, and
-`node tools/review-sheet.js --check` passes.
+sheets were re-stamped once, in v1.3.0, because the source labels below changed
+what a sheet prints: every sheet now carries `v1.3.0 · catalogue fd4e3f2`, and
+`node tools/review-sheet.js --check` passes. No verdict in any sheet changed,
+and nothing was marked reviewed.
 
 What this is: for each catalogue entry, the public sources I could find and
 open, and an honest verdict on whether they support what the entry says. It
@@ -48,7 +50,7 @@ entry is right for a particular farmer.
 | S5 | Economic Revival of J&K Saffron Sector (National Mission on Saffron) | Rashtriya Krishi Vikas Yojana, Government of India | <https://rkvy.da.gov.in/static/download/pdf/Saffron_Mission.pdf> | Saffron districts in the mission's own words, and why karewa uplands are used (irrigation is generally unavailable there). |
 | S6 | Agro Climatic Status of the Division | Department of Horticulture, Jammu | <https://hortijmu.jk.gov.in/agroclimate.html> | The three Jammu-division zones with altitude bands, and the fruit crops listed as suitable in each. |
 | S7 | District Wise Focused Crops | Department of Horticulture, Jammu | <https://hortijmu.jk.gov.in/districtwise.html> | Which zones each Jammu district spans, and the fruit crops the department focuses on there. |
-| S8 | Package of Practices for Vegetable Crops | SKUAST-Jammu, Directorate of Extension | <https://skuastjammu.ac.in/newsite/pdf/1646993900pop-vegetable.pdf.pdf> | Kitchen gardening as a documented practice, the three Jammu zones, and hill vegetable production out of the plains season. |
+| S8 | Package of Practices for Vegetable Crops, 2020 | SKUAST-Jammu, Directorate of Extension | <https://skuastjammu.ac.in/newsite/pdf/1693218037POP%20Vegetable%20POP%202020.pdf.pdf> | Kitchen gardening as a documented practice, the three Jammu zones, and hill vegetable production out of the plains season. The 2020 edition replaced the 2016 one during the v1.3.0 source pass; it is still a Jammu-division document. |
 | S9 | Implementation guidelines of 29 projects cleared by the apex committee (HADP) | Holistic Agriculture Development Program, J&K | <https://hadp.jk.gov.in/pdfs/ig.pdf> | Scheme support and cost norms for protected cultivation and beekeeping, and the UT's own fodder deficit figures. |
 
 Two of these are old documents and are used only for the statements above, not
@@ -150,11 +152,14 @@ Sources found:
   recommended across all zones and districts. Supports: vegetables are a
   supported direction for the UT, not only for Jammu.
 
-Verdict: **partly supported**. The practice is documented, but S8 is a
-Jammu-division document and speaks about Jammu's three zones. I found no
-official source describing kitchen-garden practice in the Kashmir valley
-specifically, which is what Baramulla needs. The entry's own claims are modest
-and its water warning is generic; the gap is the local practice, not the idea.
+Verdict: **partly supported**, and now cited in the app with that limit on
+show. The practice is documented, but S8 is a Jammu-division document and
+speaks about Jammu's three zones. I found no official source describing
+kitchen-garden practice in the Kashmir valley specifically, which is what
+Baramulla needs. Since v1.3.0 the entry cites S8 with the visible label "Jammu
+division, not confirmed for the Kashmir valley", so a reader sees the gap
+rather than having to find this file. The entry's own claims are modest and its
+water warning is generic; the gap is the local practice, not the idea.
 
 ### `protected_cultivation` — Protected cultivation: polyhouse, mushroom or nursery
 
@@ -273,28 +278,41 @@ official position is not that the crop is limited forever.
 
 ---
 
-## Gaps in the existing source registry
+## What the v1.3.0 source pass changed
 
-These are recorded because they matter for the officer conversation, not
-changed: `js/sources.js` is catalogue content and this pass does not edit it.
+This is the one round allowed to change source metadata. What moved, and what
+did not:
 
-1. The registry entry `niti_horticulture` points at `https://www.niti.gov.in/`,
-   which is the NITI Aayog home page and does not contain the roadmap. The
-   roadmap document exists and is cited above as S3. Anyone following the
-   in-app tag today lands on a home page, not on the evidence.
-2. `iiim_saffron` (S4) states on the page that it was last updated in January
-   2021. The district statement it supports has not changed in the documents I
-   read, but the page is not current.
-3. `dac_jk_guide` (S2) describes 14 districts, so it predates the current
-   district set. It is sound for zones and cropping patterns and should not be
-   used for administrative counts.
-4. `rkvy_saffron` (S5) is a 2010 project document, partly machine-read from a
-   scan. Its area and production figures are historical and should not be
-   repeated as current.
-5. No official source was found for kitchen-garden practice in the Kashmir
-   valley, and `baramulla.nic.in` publishes no horticulture page. Both gaps are
-   about availability of documents, and both argue for asking rather than
-   asserting.
+1. **`niti_horticulture` now points at the roadmap itself.** It used to point at
+   `https://www.niti.gov.in/`, the institute's home page, which contains no
+   roadmap. The entry now cites the Roadmap for Horticulture Development PDF
+   (S3 above), and the build fails a source that cites a site root.
+2. **`iiim_saffron` keeps its page and gains the label "Page last updated
+   January 2021".** No current replacement was found that states the four
+   saffron districts; the J&K Directorate of Agriculture saffron manual would be
+   the right replacement, but its file could not be opened on the day of this
+   pass, so it is not cited.
+3. **`dac_jk_guide` keeps its document and gains the label "Older Government of
+   India guide; its district list predates the current districts".** It remains
+   sound for zones and cropping patterns and is still not to be used for
+   administrative counts.
+4. **`rkvy_saffron` keeps its document and gains the label "2010 mission
+   document; its area and production figures are historical".** Its district
+   statement is the reason it is cited, not its figures.
+5. **Kitchen gardening gained a citation.** The entry had none; it now cites the
+   2020 SKUAST-Jammu vegetable guide, carrying the label "Jammu division, not
+   confirmed for the Kashmir valley". That label is the honest state of the
+   evidence: the practice is documented, but not for this district.
+6. **No wording changed.** No option, risk note, month, checklist item or
+   question was edited, and no entry was marked reviewed.
+
+Still open, and still not fixed here:
+
+- No official source describes kitchen-garden practice in the Kashmir valley,
+  and `baramulla.nic.in` publishes no horticulture page. Both gaps are about the
+  availability of documents, and both argue for asking rather than asserting.
+- The four tehsil lists and the older district booklets are unchanged by this
+  pass; they carry their own scope labels now.
 
 ---
 
