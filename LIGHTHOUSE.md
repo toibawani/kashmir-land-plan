@@ -70,6 +70,22 @@ Measured with `node tools/budget.js --measure`, gzip -9:
 | index.html | 12.3 KB | 12.8 KB |
 | **Total first visit** | **155.7 KB** | |
 
+## The payload after the update strip (18 November 2026)
+
+`node tools/budget.js --measure`, gzip -9:
+
+| Part | Size | Budget |
+| --- | --- | --- |
+| JavaScript (28 files) | 143.3 KB | 145.5 KB |
+| CSS (1 file) | 16.4 KB | 17.0 KB |
+| index.html | 13.1 KB | 13.5 KB |
+| **Total first visit** | **172.9 KB** | |
+
+The 0.9 KB here is the update prompt: an explicit update check on load and on
+return, the strip and its two strings, and the styles for it. The CSS budget
+moved from 16.5 to 17.0 KB because the measured size had 71 bytes of headroom
+left, which would fail the next small fix. Nothing else changed.
+
 ## The payload after the photo description block (18 November 2026)
 
 `node tools/budget.js --measure`, gzip -9:

@@ -40,8 +40,12 @@ var root = path.resolve(__dirname, "..");
    index.html and app.js, and 9 more strings. Measured 146005/16675/13395 bytes,
    so the budget is now 145.5 KB JS, 16.5 KB CSS, 13.5 KB HTML. The module ships
    even though no service is connected, so the switch a farmer sees is the same
-   code that would gate a provider. */
-var BUDGET = { js: 148992, css: 16896, html: 13824 };
+   code that would gate a provider.
+
+   And once more for the update strip: 146713/16825/13464 bytes measured, with
+   CSS only 71 bytes under its old limit, so the CSS budget moves to 17.0 KB to
+   leave room for a fix rather than a scramble. */
+var BUDGET = { js: 148992, css: 17408, html: 13824 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;

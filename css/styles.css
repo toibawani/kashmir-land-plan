@@ -3757,3 +3757,32 @@ select:focus {
   border-radius: 999px;
   font-size: 14px;
 }
+
+/* A newer version is waiting. Shown instead of reloading under someone who is
+   midway through a plan, a photo or a print. */
+.update-strip {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2) var(--space-3);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
+}
+
+.update-strip p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.update-strip .btn {
+  min-height: 48px;
+}
