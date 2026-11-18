@@ -60,9 +60,11 @@ jobs:
 
       # The audit needs the folder served and a Chrome to drive, exactly as it
       # does locally. Both are started here rather than inside the script so a
-      # failure says which one never came up.
+      # failure says which one never came up. The server is the app's own, which
+      # gzips the way GitHub Pages does, so what is screenshotted is what a
+      # phone downloads.
       - name: Serve the folder
-        run: python3 -m http.server 8080 --bind 127.0.0.1 &
+        run: node tools/serve.js 8080 &
 
       - name: Start headless Chrome
         run: |
@@ -82,3 +84,107 @@ jobs:
 
       - name: Audit the layout and tap targets
         run: npm run phone-check
+
+  # Screenshots, keyboard, 200% text, contrast and the service worker update.
+  # These need the same two things the phone audit needs: the folder served and
+  # a Chrome to drive, so they share one job and one browser.
+  browser:
+    name: Browser checks (screens, keyboard, contrast, update)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Serve the folder
+        run: node tools/serve.js 8080 &
+
+      - name: Start headless Chrome
+        run: |
+          google-chrome --headless=new --disable-gpu --no-first-run \
+            --remote-debugging-port=9333 --user-data-dir=/tmp/mlmp-chrome about:blank &
+
+      - name: Wait for the server and the browser
+        run: |
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:8080/ >/dev/null && \
+               curl -sf http://127.0.0.1:9333/json/version >/dev/null; then
+              echo "ready after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "the server or Chrome never became ready"; exit 1
+
+      # English, Hindi and Urdu at 360 CSS pixels, with photos drawn in the page.
+      - name: Capture 360px screenshots
+        run: node tools/shots.js http://127.0.0.1:8080 "$RUNNER_TEMP/shots" 9333
+
+      - name: Keyboard, 200% text and contrast
+        run: node tools/a11y-check.js http://127.0.0.1:8080 9333
+
+      - name: Service worker update flow
+        run: node tools/sw-update-check.js 9333
+
+      # Uploaded even when a check fails, because the images are how a failure
+      # is understood.
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-360-en-hi-ur
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: warn
+          retention-days: 14
+
+  # Lighthouse 11 is pinned because Lighthouse 12 removed the PWA category.
+  lighthouse:
+    name: Lighthouse mobile
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Same gzip server as the browser job, because the compression is part of
+      # what is being measured (see LIGHTHOUSE.md).
+      - name: Serve the folder
+        run: node tools/serve.js 8080 &
+
+      - name: Wait for the server
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8080/ >/dev/null; then echo "ready"; exit 0; fi
+            sleep 1
+          done
+          echo "the server never became ready"; exit 1
+
+      - name: Run Lighthouse on a mobile profile
+        run: |
+          npx --yes lighthouse@11.7.1 http://127.0.0.1:8080/ \
+            --only-categories=performance,accessibility,best-practices,pwa \
+            --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+            --output=json --output-path="$RUNNER_TEMP/lighthouse.json" --quiet
+
+      - name: Report and enforce the floors
+        run: node tools/lighthouse-report.js "$RUNNER_TEMP/lighthouse.json"
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-mobile-report
+          path: ${{ runner.temp }}/lighthouse.json
+          if-no-files-found: warn
+          retention-days: 14

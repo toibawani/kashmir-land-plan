@@ -10,7 +10,27 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+### Fixed
+
+- In Urdu, a photograph's date read "Mar 2026 2" and an English sentence in the
+  same screen put its full stop at the start of the line. Dates are now isolated
+  so they read the same way in every language, and each paragraph takes its
+  direction from its own first letter, so English reads left to right inside a
+  right-to-left page.
+- Picking a photo for the side-by-side comparison re-rendered the list and left
+  keyboard focus at the top of the page. Focus now returns to the button that
+  was pressed, or moves to Clear when the comparison opens.
+- The timeline's three small buttons were wide enough to wrap one per line.
+
 ### Added
+
+- CI now looks at the app as well as measuring it: 360px screenshots of home,
+  the form, the results, the visit card with three photos, the timeline with two
+  entries, the comparison and the privacy page, each in English, Hindi and Urdu,
+  uploaded as an artifact; a keyboard-only walk with visible-focus and
+  no-trap checks; 200% text; WCAG contrast in both colour schemes; the service
+  worker update flow; and Lighthouse mobile with floors recorded in
+  `LIGHTHOUSE.md`.
 
 - **Guided photos of a plot.** Three shots: a wide view, a ground close-up, and
   the nearest water source, which can be skipped. Both buttons use a file input
