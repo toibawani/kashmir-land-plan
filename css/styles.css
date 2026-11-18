@@ -41,8 +41,10 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
-  --font-sans: "Source Sans 3", system-ui, -apple-system, sans-serif;
-  --font-serif: "Source Serif 4", Georgia, serif;
+  /* System fonts only: no third-party host, no webfont swap, nothing to
+     reflow. Georgia keeps the heading contrast without a download. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
+  --font-serif: Georgia, "Noto Serif", "Times New Roman", serif;
   --max-width: 720px;
   --max-wide: 960px;
 }
@@ -120,7 +122,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-2);
+}
+
+/* One row on every width. As a block of its own inside .nav the language
+   switch added a second header row when it appeared, moving every screen
+   down: a CLS of 0.17 on a phone. A flex row keeps the height fixed. */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 0 0 auto;
 }
 
 .logo {
@@ -131,6 +145,10 @@ body {
   color: var(--color-text);
   font-weight: 600;
   font-size: 1.05rem;
+  /* The name gives way to the controls rather than pushing them off a 360px
+     screen, where the three scripts in the switcher take real width. */
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
 /* The header mark is a plot tile, not a squircle. Square corners with a single
@@ -160,6 +178,9 @@ body {
 
 .logo-text {
   letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* The language switcher sits in the header, before the menu button. It is
@@ -185,6 +206,9 @@ body {
   border-radius: var(--radius);
   padding: 0.35rem 0.5rem;
   min-height: 36px;
+  /* A ceiling, so the longest label (Urdu plus its unchecked note) cannot
+     widen the header after the strings load, and the row always fits. */
+  max-width: 7rem;
 }
 
 #lang-select:hover {
@@ -759,6 +783,26 @@ select:focus {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--color-accent);
+}
+
+/* Shown in place of a feature whose file could not be fetched. It sits where
+   the feature would have been, so an empty panel is never left behind, and
+   the Retry button is a real control rather than a suggestion to reload. */
+.lazy-fail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin: var(--space-3) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.lazy-fail-text {
+  margin: 0;
+  flex: 1 1 14rem;
 }
 
 .draft-notice {

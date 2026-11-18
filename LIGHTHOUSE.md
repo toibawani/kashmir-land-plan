@@ -1,10 +1,87 @@
 # What Lighthouse said
 
+## Measured 18 November 2026, after the boot path was split
+
+Same machine, same gzip server (`node tools/serve.js 8080`), same Lighthouse
+11.7.1, mobile defaults. Three separate runs after the change, so the spread is
+visible rather than a single lucky number.
+
+| Measure | Before | After |
+| --- | --- | --- |
+| Performance | 78 | 95, 95, 95 |
+| Accessibility | 100 | 100 |
+| Best practices | 100 | 100 |
+| PWA | 100 | 100 |
+| First contentful paint | 0.9 s | 0.9–1.6 s |
+| Largest contentful paint | 3.7 s | 2.8–2.9 s |
+| Total blocking time | 140 ms | 40 ms, 0 ms, 0 ms |
+| Cumulative layout shift | 0.204 | 0.001 |
+| Speed index | 1.4 s | 1.4 s |
+
+Payload with gzip -9, which is what the host serves: a first visit fell from
+**174.5 KB to 138.0 KB** (JavaScript 144.2 KB to 107.4 KB). The twelve
+on-demand files are 44.1 KB on top of that, and only the ones a person uses are
+fetched. The split costs about 7 KB across the whole app (file headers and
+`js/loader.js`) and saves 36 KB before the first screen is usable.
+
+The performance floor in `tools/lighthouse-report.js` is now **0.85**, which is
+the figure this pass was asked to reach, up from 0.7.
+
+Re-measured through the same tool on the final tree, three runs: **95, 96, 96**
+with 0 ms of blocking time and a layout shift of 0.001 in all three.
+
+### What actually caused the earlier score, and the layout shift
+
+Two separate faults. Both were measured before anything was changed, because
+the earlier note in this file blamed the web font for the layout shift and that
+turned out to be wrong.
+
+**The layout shift was the language switch, not the typeface.** A probe that
+recorded every layout-shift entry with the element that moved, at 360 px with
+4× CPU throttling, produced one shift of 0.1725 at 2208 ms moving `main`, `nav`,
+the logo and the home screen's first card. Sampling the header every 200 ms
+showed why: the header was 73 px through DOMContentLoaded, then 121 px as soon
+as `js/app.js` revealed `#lang-switch`, because at 360 px the newly visible
+select wrapped `.nav` onto a second row. Blocking `fonts.googleapis.com` and
+`fonts.gstatic.com` and re-running left cumulative layout shift at 0.204, which
+ruled the font swap out. The fix is that the switch ships in the markup and
+`.nav` is a flex row, so the header height is final at first paint: measured
+layout shift after the change is 0.000 on the home screen and 0.001 in
+Lighthouse.
+
+**The score was the boot path, and it was mostly one file.** Twenty-seven
+deferred scripts were evaluated before the home screen could be used.
+`js/app.js` alone was 53.8 KB of the 144.2 KB gzip of JavaScript. Splitting the
+twelve optional files out of the markup, and loading them from `js/loader.js`
+on the click that needs them, took blocking time from 140 ms to 40 ms and 0 ms
+on the two runs after.
+
+**A third-party host was removed on the way.** The page preconnected to
+`fonts.googleapis.com` and `fonts.gstatic.com`, preloaded a stylesheet and
+swapped Source Sans 3 and Source Serif 4 in after first paint. Those were the
+only third-party hosts on the critical path, and `css/styles.css` now names a
+system stack instead. The weather service (`api.open-meteo.com`) is the one
+remaining external host: it is a live lookup the weather screen asks for, it is
+disclosed in the privacy page, and it is deliberately never cached. A first
+load now makes zero requests to another origin.
+
 ## Measured in CI, 18 November 2026
 
 Lighthouse 11.7.1 now runs on every pull request (`.github/workflows/ci.yml`,
 job `lighthouse`), against the project's own gzip server at 360 px mobile
 defaults. Floors live in `tools/lighthouse-report.js`.
+
+### Why CI takes three runs and enforces the median
+
+The same commit measured **96 with 120 ms of blocking time** on one CI run and
+**80 with 710 ms** on the next, on the same runner type with nothing changed in
+the app. That is the machine, not the app: a shared virtual runner is slower and
+noisier than the laptops these numbers were tuned on, and one sample there
+flips the score by sixteen points. So the job runs Lighthouse three times and
+`tools/lighthouse-report.js` enforces the floors on the **median** run, printing
+all three performance scores so the spread stays visible. The floor itself is
+unchanged at 0.85, and a genuinely slower build drags all three runs down with
+it.
 
 Before the server was fixed — the job served the folder with
 `python3 -m http.server`, which sends 183 KB of text where the host sends 46 KB:
@@ -33,10 +110,16 @@ time 760 ms, cumulative layout shift 0, speed index 2.4 s. The compression is th
 whole of the first two fixes: the largest contentful paint halved and the layout
 shift disappeared, because the webfont no longer arrives long after the text.
 
-### What is still not met, and why the floor is 0.7
+### The earlier run, kept for the record
 
-Performance is **71**, against the 0.8 this project first wrote down by hand. It
-is the one category below its floor, and it is recorded here rather than tuned
+**Superseded by the measurements at the top of this file.** At the time,
+performance was 71 against the 0.8 this project first wrote down by hand, and
+the floor was lowered to 0.7 with the reasoning below. The boot path was split
+later the same day and the floor is now 0.85. The paragraph stays because it
+records what was known when the lower floor was set:
+
+Performance was **71**, against the 0.8 first written down by hand. It was
+the one category below its floor, and it is recorded here rather than tuned
 away:
 
 - Total blocking time is what costs the points, and it moves with the runner:

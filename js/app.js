@@ -21,19 +21,65 @@
   var WEATHER = window.MLMP_WEATHER;
   var QUESTIONS = window.MLMP_QUESTIONS;
   var PLANS = window.MLMP_PLANS;
-  var SPEECH = window.MLMP_SPEECH;
-  var QR = window.MLMP_QR;
   var OFFLINE = window.MLMP_OFFLINE;
-  var FIT = window.MLMP_FIT;
-  var OFFICE = window.MLMP_OFFICE;
-  var SHARE = window.MLMP_SHARE;
   var MSG = window.MLMP_MESSAGES;
   var SOURCES = window.MLMP_SOURCES;
-  var VISIT = window.MLMP_VISIT;
-  var FEEDBACK = window.MLMP_FEEDBACK;
-  var DATA = window.MLMP_DATA;
-  var PHOTOS = window.MLMP_PHOTOS;
-  var OBS = window.MLMP_OBSERVATIONS;
+
+  /* The optional modules are not on the boot path any more: js/loader.js
+     fetches each one on the click that needs it. They stay null until then,
+     which is why every use below is either guarded or reached through
+     ensureLazy(). A build that does preload them still works, because the
+     value is read from the page rather than assumed absent. */
+  var SPEECH = window.MLMP_SPEECH || null;
+  var QR = window.MLMP_QR || null;
+  var FIT = window.MLMP_FIT || null;
+  var OFFICE = window.MLMP_OFFICE || null;
+  var SHARE = window.MLMP_SHARE || null;
+  var VISIT = window.MLMP_VISIT || null;
+  var FEEDBACK = window.MLMP_FEEDBACK || null;
+  var DATA = window.MLMP_DATA || null;
+  var PHOTOS = window.MLMP_PHOTOS || null;
+  var OBS = window.MLMP_OBSERVATIONS || null;
+
+  /* What each screen needs, as the loader names them. Keeping the grouping
+     here rather than at every call site means a screen loads its parts once,
+     in parallel, and the retry button can simply call the same entry point. */
+  var NEEDS = {
+    visit: ["visitfit", "office", "share", "visitcard", "qr", "photos", "observations", "feedback"],
+    data: ["data", "photos"],
+    feedback: ["feedback"],
+    speech: ["speech"],
+  };
+
+  /** Pick up the modules the loader has just run. */
+  function bindLazy() {
+    SPEECH = SPEECH || window.MLMP_SPEECH || null;
+    QR = QR || window.MLMP_QR || null;
+    FIT = FIT || window.MLMP_FIT || null;
+    OFFICE = OFFICE || window.MLMP_OFFICE || null;
+    SHARE = SHARE || window.MLMP_SHARE || null;
+    VISIT = VISIT || window.MLMP_VISIT || null;
+    FEEDBACK = FEEDBACK || window.MLMP_FEEDBACK || null;
+    DATA = DATA || window.MLMP_DATA || null;
+    PHOTOS = PHOTOS || window.MLMP_PHOTOS || null;
+    OBS = OBS || window.MLMP_OBSERVATIONS || null;
+  }
+
+  /** A promise that the named modules are on the page. */
+  function ensureLazy(which) {
+    var load = window.MLMP_LOAD;
+    if (!load || !load.need) return Promise.reject(new Error("js/loader.js is not on the page"));
+    return load.need(which).then(function () {
+      bindLazy();
+      return true;
+    });
+  }
+
+  /** The translated message and Retry button, in the space the feature needs. */
+  function showLoadFailure(host, retry) {
+    var load = window.MLMP_LOAD;
+    if (load && load.showFailure) load.showFailure(host, retry);
+  }
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -1075,6 +1121,9 @@
   }
 
   function renderResults() {
+    // The read-aloud controls live on this screen, so this is the first moment
+    // the speech engine can be useful.
+    primeSpeech();
     var opts = state.options.length ? state.options : computeOptions();
     var d = state.data;
 
@@ -2826,6 +2875,22 @@
 
   function toggleRead(id, sections) {
     if (!READ_CONTROLS[id]) return;
+    // The speech engine is fetched on first use, so the button works on a
+    // phone that has never played anything, and a phone that has never opened
+    // this screen never downloaded it.
+    if (!SPEECH) {
+      var host = readStatusElement(id);
+      ensureLazy(NEEDS.speech)
+        .then(function () {
+          toggleRead(id, sections);
+        })
+        .catch(function () {
+          showLoadFailure(host && host.parentNode ? host.parentNode : host, function () {
+            toggleRead(id, sections);
+          });
+        });
+      return;
+    }
     // Tapping the active button holds or carries on. The voice carries on
     // from the held word rather than starting over.
     if (activeReadId === id && SPEECH.speaking()) {
@@ -2887,6 +2952,29 @@
   // Browsers with no voice never get a dead button. The play controls are
   // swapped for a plain sentence that says so. The sentence lives in the
   // static HTML too, so it shows even before any reading was attempted.
+  /**
+   * Fetch the speech engine once, then settle which controls the device gets.
+   * Before that the buttons must not be hidden on the strength of a module
+   * that simply has not been asked for yet.
+   */
+  var speechPrimed = false;
+  function primeSpeech() {
+    if (speechPrimed) return;
+    speechPrimed = true;
+    if (SPEECH) {
+      initReadButtons();
+      return;
+    }
+    ensureLazy(NEEDS.speech)
+      .then(function () {
+        initReadButtons();
+      })
+      .catch(function () {
+        // Leave the markup as it is. The click path reports the failure with a
+        // retry button, which a hidden control could not do.
+      });
+  }
+
   function initReadButtons() {
     var ok = speechAvailable();
     Object.keys(READ_CONTROLS).forEach(function (id) {
@@ -4613,26 +4701,57 @@
     var wrap = $("#lang-switch");
     var select = $("#lang-select");
     var langs = MSG.available();
-    if (wrap && select && langs.length > 1) {
-      wrap.hidden = false;
-      select.innerHTML = langs
-        .map(function (l) {
-          var sel = l.code === MSG.get() ? " selected" : "";
-          // The label carries the unchecked caveat for a language no native
-          // speaker has read, so the warning is on the choice itself.
-          return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(MSG.optionLabel(l.code)) + "</option>";
-        })
-        .join("");
-      select.addEventListener("change", function () {
-        MSG.set(select.value);
-        refreshForLanguage();
-      });
+    // The control is in the markup already, with the three options, so the
+    // header has its final height at first paint. It is only taken away again
+    // when a build genuinely offers one language.
+    if (wrap && select) {
+      if (langs.length < 2) {
+        wrap.hidden = true;
+      } else {
+        wrap.hidden = false;
+        select.innerHTML = langs
+          .map(function (l) {
+            var sel = l.code === MSG.get() ? " selected" : "";
+            // The label carries the unchecked caveat for a language no native
+            // speaker has read, so the warning is on the choice itself.
+            return '<option value="' + escapeHtml(l.code) + '"' + sel + ">" + escapeHtml(MSG.optionLabel(l.code)) + "</option>";
+          })
+          .join("");
+        select.addEventListener("change", function () {
+          var chosen = select.value;
+          // English paints at once. For Hindi or Urdu the chosen file is
+          // fetched, the fallback English stays on screen until it registers,
+          // and the screen is repainted in the new language when it does.
+          MSG.set(chosen);
+          refreshForLanguage();
+          MSG.use(chosen)
+            .then(refreshForLanguage)
+            .catch(function () {
+              showLoadFailure($("#lang-load-error"), function () {
+                select.dispatchEvent(new Event("change"));
+              });
+            });
+        });
+      }
     }
     // Paint the critical-path strings. In English this is a no-op on screen
     // (the markup already holds the same words), but it keeps the markup and
     // the module in step, so a translator's work shows up with no code change.
     MSG.apply();
     applyLanguageChrome();
+
+    // A language chosen on an earlier visit needs its file this time too.
+    if (MSG.get() !== "en") {
+      MSG.use(MSG.get())
+        .then(refreshForLanguage)
+        .catch(function () {
+          // The English strings are already painted; say so rather than
+          // leaving a half-translated screen and no explanation.
+          showLoadFailure($("#lang-load-error"), function () {
+            initLanguage();
+          });
+        });
+    }
   }
 
   /**
@@ -4942,10 +5061,30 @@
         setStatus("copy-status", "Finish the plot details first, then the card can be made.");
         return;
       }
-      setVisitMode(false);
-      renderVisitCard();
-      renderPhotos();
-      showScreen("visit");
+      var card = $("#visit-card");
+      var paint = function () {
+        setVisitMode(false);
+        renderVisitCard();
+        renderPhotos();
+        // The card carries a read-aloud control, so this screen settles it too.
+        primeSpeech();
+        showScreen("visit");
+      };
+      // Everything already on the page, which is the usual case from the
+      // second visit on: paint at once, with no promise and no flicker.
+      if (FIT && VISIT && OFFICE && SHARE && QR && PHOTOS && OBS && FEEDBACK) {
+        paint();
+        return;
+      }
+      ensureLazy(NEEDS.visit)
+        .then(paint)
+        .catch(function () {
+          // The card is the screen, so show the screen and put the message and
+          // the Retry button where the card would have been. A blank visit
+          // screen with a console error is exactly what this avoids.
+          showScreen("visit");
+          showLoadFailure(card, openVisitCard);
+        });
     }
 
     /**
@@ -5028,8 +5167,16 @@
     }
 
     function openData() {
-      renderData();
-      showScreen("data");
+      var host = $("#data-load-error");
+      ensureLazy(NEEDS.data)
+        .then(function () {
+          renderData();
+          showScreen("data");
+        })
+        .catch(function () {
+          showScreen("data");
+          showLoadFailure(host, openData);
+        });
     }
 
     /**
@@ -5746,8 +5893,10 @@
     initLanguage();
     updateOfflineBanner();
     initInstall();
-    initReadButtons();
     registerServiceWorker();
+    // Read-aloud is settled by primeSpeech() on the screens that offer it, not
+    // here: at boot the speech engine has not been fetched, and asking whether
+    // the device can speak before that would hide every play button.
     window.addEventListener("online", updateOfflineBanner);
     window.addEventListener("offline", function () {
       updateOfflineBanner();

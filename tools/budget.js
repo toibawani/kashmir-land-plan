@@ -44,8 +44,24 @@ var root = path.resolve(__dirname, "..");
 
    And once more for the update strip: 146713/16825/13464 bytes measured, with
    CSS only 71 bytes under its old limit, so the CSS budget moves to 17.0 KB to
-   leave room for a fix rather than a scramble. */
-var BUDGET = { js: 148992, css: 17408, html: 13824 };
+   leave room for a fix rather than a scramble.
+
+   Rebalanced, not raised, on 2026-11-18 for the system font stack and the
+   header fix: 147691/17483/13483 measured, so the total is 174.5 KB against a
+   176.0 KB total before. 512 bytes move from the JS line to the CSS line and
+   the overall ceiling stays where it was.
+
+   The same day, the boot path was split. Measured after the split: 109,935 JS,
+   17,629 CSS, 13,724 HTML, which is a 138.1 KB first visit against 174.5 KB
+   before, and 45,121 bytes of on-demand JavaScript in twelve files that are
+   fetched by js/loader.js on the click that needs them. The JS ceiling stays
+   at its old figure, so the saving is banked as headroom rather than spent.
+   The on-demand total gets its own ceiling, because a first-visit-only budget
+   would let the other half grow unwatched. Note the split costs about 7 KB in
+   total (file headers and the loader itself) while saving 36 KB on the first
+   screen: the trade is deliberate, and the on-demand figure is what keeps it
+   accounted for. */
+var BUDGET = { js: 148480, css: 17920, html: 13824, lazy: 46080 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;
@@ -68,13 +84,36 @@ refs.forEach(function (rel) {
   measured.files[rel] = size;
 });
 
+/* The files js/loader.js fetches on demand are not part of a first visit's
+   download, but they are still shipped and still have to fit on a phone that
+   uses the whole app. Measuring them separately keeps the boot figure honest
+   without letting the on-demand half grow unwatched. */
+var lazy = { total: 0, files: {} };
+var loaderFile = path.join(root, "js", "loader.js");
+if (fs.existsSync(loaderFile)) {
+  var loaderText = fs.readFileSync(loaderFile, "utf8");
+  var lazyRe = /"(js\/[a-z0-9._-]+\.js)"/gi;
+  var lazyMatch;
+  var seen = [];
+  while ((lazyMatch = lazyRe.exec(loaderText)) !== null) {
+    var rel = lazyMatch[1];
+    if (seen.indexOf(rel) !== -1 || refs.indexOf(rel) !== -1) continue;
+    seen.push(rel);
+    var bytes = gz(rel);
+    lazy.total += bytes;
+    lazy.files[rel] = bytes;
+  }
+}
+measured.lazy = lazy.total;
+measured.lazyFiles = lazy.files;
+
 if (process.argv.indexOf("--measure") !== -1) {
   console.log(JSON.stringify(measured, null, 2));
   process.exit(0);
 }
 
 var failures = [];
-[["js", "JavaScript"], ["css", "CSS"], ["html", "index.html"]].forEach(function (pair) {
+[["js", "JavaScript"], ["css", "CSS"], ["html", "index.html"], ["lazy", "On-demand JavaScript"]].forEach(function (pair) {
   var key = pair[0];
   if (BUDGET[key] && measured[key] > BUDGET[key]) {
     failures.push(
@@ -115,7 +154,11 @@ console.log(
     kb(measured.html) +
     " of " +
     kb(BUDGET.html) +
-    ", total " +
+    ", first visit " +
     kb(total) +
+    ", on demand " +
+    kb(measured.lazy) +
+    " of " +
+    kb(BUDGET.lazy) +
     "."
 );

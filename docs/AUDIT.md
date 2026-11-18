@@ -14,10 +14,11 @@ native speaker and a real device.
 3. Hosted on GitHub Pages by `.github/workflows/pages.yml`, which runs `npm test`
    before it publishes an allowlisted folder. `ci.yml` runs the same suite on
    every push and pull request.
-4. A service worker (`sw.js`) precaches the shell: network-first for app files,
-   cache-first for immutable font files, and weather is never cached.
-5. Third parties, both HTTPS and both keyless: Google Fonts (CSS and font files)
-   and Open-Meteo (place lookup and forecast).
+4. A service worker (`sw.js`) precaches the shell and every on-demand file:
+   network-first for app files, and weather is never cached.
+5. One third party, HTTPS and keyless: Open-Meteo (place lookup and forecast).
+   Google Fonts was removed on 18 November 2026, so a first load contacts no
+   other origin.
 
 Because there is no server, most of Phase 1–4 is genuinely not applicable rather
 than skipped. Each such row says why, so the absence is a decision on record.
@@ -158,12 +159,13 @@ points at Download, and the self-test drives a store that throws on write to
 prove it. The eight-plan limit is also stated in the list heading and enforced
 before a save, so no plan is dropped to make room without a word.
 
-**Low — Google Fonts is a third party on first load.**
-The CSS request reveals the visitor's IP and, until the referrer policy was
+**Closed — Google Fonts was a third party on first load.**
+The CSS request revealed the visitor's IP and, until the referrer policy was
 stated, the page URL, to Google. SRI is not possible for the user-agent-specific
-CSS. Fixed in part by `strict-origin-when-cross-origin`; self-hosting the two
-typefaces would remove the dependency, at the cost of repository weight and a
-licence note.
+CSS. It was first narrowed with `strict-origin-when-cross-origin`, and then
+removed on 18 November 2026: `css/styles.css` names a system stack, the font
+links, the preconnects and `js/fonts.js` are gone, and the CSP no longer allows
+a font host. The audit entry stays as the record of what the risk was.
 
 **Low — typed plot details sit unencrypted in `localStorage`.**
 Anyone with the unlocked phone and the browser profile can read them. The app
@@ -186,7 +188,7 @@ an officer could be misled by; effort is the size of the change, not its value.
 | Hindi and Urdu are unchecked, 142 keys | High | One fluent reviewer | Machine text next to advice reads as approval; `reviewed: false` is shown |
 | `innerHTML` templates depend on hand-written escaping | Medium | Days, plus fuzzing | Correct by reading today; `script-src 'self'` is the backstop, not a proof |
 | No village-level data | Medium | Weeks of sourcing | Three official series disagree; recorded in `issues/004-village-directory.md` |
-| Google Fonts is a third party on first load | Low | An afternoon | Self-hosting adds weight and a licence note to the repo |
+| Google Fonts is a third party on first load | Closed | — | Removed on 18 November 2026 by using the device's own fonts; a first load now contacts no other origin |
 | The verifier reported before its last four sections ran | High, because every check added after it was decorative | An hour | Fixed in 1.2.6: the report is now the last statement in `tools/verify.js`, and the link and heading rules it exposed were corrected to test their intent |
 | The review pack changes on every version bump | Low | Minutes | Churn, not risk; the `--check` keeps it from going stale |
 | No staging URL | Low | An hour | A pull request's CI run is the gate; Pages serves `main` only |

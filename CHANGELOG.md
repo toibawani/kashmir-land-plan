@@ -10,6 +10,32 @@ should not, because the catalogue is still unreviewed.
 
 ## [Unreleased]
 
+### Performance
+
+- The home screen no longer jumps down a row a moment after it appears. The
+  language switch was hidden in the markup and revealed by script, which wrapped
+  the header onto a second row at 360px and moved everything below it: a
+  measured layout shift of 0.17. The switch now ships in the markup and the
+  header is one row, so its height is final at first paint. Measured layout
+  shift after the change: 0.001 in Lighthouse, 0.000 on the home screen.
+- Eleven files left the boot path. The photo store, the timeline and
+  comparison, the description switch, the speech engine, the QR encoder, the
+  visit card parts, the office pack, the feedback form and the backup tools are
+  now fetched by `js/loader.js` on the click that needs them, and Hindi and Urdu
+  strings moved to `js/messages.hi.js` and `js/messages.ur.js`, loaded when that
+  language is chosen. A first visit fell from 174.5 KB to 138.0 KB of gzip, and
+  Lighthouse mobile performance from 78 to 95, with total blocking time from
+  140 ms to under 40 ms. Every on-demand file is still precached, so all of it
+  works offline after one visit; `tools/lazy-check.js` proves it with the
+  network switched off.
+- A file that cannot be fetched now says so in the space the feature would have
+  used, in the reader's language, with a Retry button. Before, the section was
+  simply empty. `npm test` and the browser job both check the message and the
+  retry.
+- Google Fonts is gone: no preconnect, no stylesheet, no font files, no
+  `js/fonts.js`. The interface uses the fonts the device already has. The first
+  load now makes no request to another origin.
+
 ### Fixed
 
 - In Urdu, a photograph's date read "Mar 2026 2" and an English sentence in the
