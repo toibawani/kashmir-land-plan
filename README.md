@@ -116,7 +116,7 @@ looking like a promise.
 The download is held to a measured budget: `tools/budget.js` fails the build if
 the referenced JavaScript, CSS or HTML grows past the size recorded in
 [LIGHTHOUSE.md](LIGHTHOUSE.md), so weight stays a decision rather than a drift.
-At the time of writing a first visit is 139 KB gzipped.
+At the time of writing a first visit is 138 KB gzipped.
 
 The card's labels, headings, buttons and count sentence are translated into Hindi
 and Urdu and switch with the language selector. The district sentences themselves
@@ -183,9 +183,11 @@ name or date cannot render as reviewed. Each printed sheet and each prefilled
 CSV carries the sheet version (release plus a digest of the catalogue files),
 and the importer refuses a sheet printed from a different one.
 
-Languages are one keyed object per language in `js/messages.js`. Adding Kashmiri
-later is one object, not a code change. The Urdu layout is right to left, chosen
-per language rather than per page.
+Languages are one keyed object per language: English in `js/messages.js`, Hindi
+and Urdu in `js/messages.hi.js` and `js/messages.ur.js`, fetched by
+`js/loader.js` only when that language is chosen. Adding Kashmiri later is one
+object plus one line in the loader, not a code change. The Urdu layout is right
+to left, chosen per language rather than per page.
 
 Checks: `tools/verify.js` (references, offline cache, review rules, contrast,
 event wiring), `tools/selftest.js` (172 checks), `tools/tests-logic.js` (197
@@ -194,7 +196,7 @@ summary),
 `tools/translation-check.js` (key parity and a review list),
 `tools/lint.js` (no console output, no `eval`, no secrets, no insecure links),
 `tools/phone-check.js` (360px layout and tap targets). Lighthouse on the local
-server: performance 92, accessibility 100, best practices 100, PWA 100; the
+server: performance 95, accessibility 100, best practices 100, PWA 100; the
 details and the one remaining cost are in `LIGHTHOUSE.md`.
 
 Deployment is GitHub Pages through `.github/workflows/pages.yml`, which runs
