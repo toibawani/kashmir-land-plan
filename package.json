@@ -21,6 +21,7 @@
     "offline": "node tools/offline-check.js",
     "review-sheets": "node tools/review-sheet.js",
     "review-import": "node tools/import-review.js",
-    "feedback-summary": "node tools/feedback-summary.js"
+    "feedback-summary": "node tools/feedback-summary.js",
+    "visit-pack": "node tools/visit-pack.js"
   }
 }
