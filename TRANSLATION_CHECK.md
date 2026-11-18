@@ -195,6 +195,10 @@ Every string the app shows on the critical path, in the three languages it offer
 | `observe.needConsent` | Turn the switch on first. Nothing is sent without it. | पहले स्विच चालू करें। इसके बिना कुछ नहीं भेजा जाता। | پہلے سوئچ آن کریں۔ اس کے بغیر کچھ نہیں بھیجا جاتا۔ |
 | `observe.needPhoto` | Take a photo first. | पहले एक तस्वीर लें। | پہلے ایک تصویر لیں۔ |
 | `observe.consentOff` | Photos will not be sent from this phone. | इस फ़ोन से तस्वीरें नहीं भेजी जाएँगी। | اس فون سے تصاویر نہیں بھیجی جائیں گی۔ |
+| `observe.unavailable` | The description service is switched off, so nothing was sent. | विवरण सेवा बंद है, इसलिए कुछ नहीं भेजा गया। | تفصیل کی سروس بند ہے، اس لیے کچھ نہیں بھیجا گیا۔ |
+| `observe.limited` | Too many descriptions have been asked for today. Nothing was sent. | आज के लिए बहुत सारे विवरण माँगे जा चुके हैं। कुछ नहीं भेजा गया। | آج کے لیے بہت سی تفصیلیں طلب کی جا چکی ہیں۔ کچھ نہیں بھیجا گیا۔ |
+| `observe.refused` | The description service refused the request. Nothing was shown. | विवरण सेवा ने अनुरोध ठुकरा दिया। कुछ नहीं दिखाया गया। | تفصیل کی سروس نے درخواست مسترد کر دی۔ کچھ نہیں دکھایا گیا۔ |
+| `observe.ready` | A description came back. This build does not show it yet. | विवरण आया है। यह बिल्ड इसे अभी नहीं दिखाता। | تفصیل موصول ہوئی ہے۔ یہ بلڈ اسے ابھی نہیں دکھاتا۔ |
 | `update.ready` | A newer version of this app is ready. | इस ऐप का एक नया संस्करण तैयार है। | اس ایپ کا ایک نیا ورژن تیار ہے۔ |
 | `update.reload` | Reload | फिर से खोलें | دوبارہ کھولیں |
 | `common.confirmLocally` | Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar. | फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें। | فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔ |

@@ -24,6 +24,21 @@ should not, because the catalogue is still unreviewed.
 
 ### Added
 
+- The photo description endpoint is prepared but not deployed: a provider
+  adapter interface in `server/providers/` where the mock is the only enabled
+  entry, `OBSERVE_MODE` defaulting to `off` with a kill switch that makes the app
+  say the feature is unavailable instead of failing, an origin allowlist, a body
+  size limit, an image check that reads the first bytes rather than trusting a
+  name, a per-client burst limit, a daily ceiling, and validation that refuses a
+  model answer naming a crop, soil, a pest, a yield or advice. Nothing is
+  uploaded: no endpoint is configured in this build. `DEPLOY_OBSERVE.md` is the
+  numbered setup, marked with who does each step, and `eval-photos/README.md`
+  explains how to write the expected-answer cases the harness reads.
+- `node tools/eval-photos.js` now drives the endpoint itself: wrong origin,
+  missing consent, an oversize body, bytes that are not an image, a burst, the
+  daily ceiling, a provider that strays and the kill switch. 89 checks, no
+  network, no key.
+
 - CI now looks at the app as well as measuring it: 360px screenshots of home,
   the form, the results, the visit card with three photos, the timeline with two
   entries, the comparison and the privacy page, each in English, Hindi and Urdu,

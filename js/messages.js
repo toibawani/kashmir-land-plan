@@ -242,6 +242,10 @@
     "observe.needConsent": "Turn the switch on first. Nothing is sent without it.",
     "observe.needPhoto": "Take a photo first.",
     "observe.consentOff": "Photos will not be sent from this phone.",
+    "observe.unavailable": "The description service is switched off, so nothing was sent.",
+    "observe.limited": "Too many descriptions have been asked for today. Nothing was sent.",
+    "observe.refused": "The description service refused the request. Nothing was shown.",
+    "observe.ready": "A description came back. This build does not show it yet.",
     "update.ready": "A newer version of this app is ready.",
     "update.reload": "Reload",
 
@@ -500,6 +504,10 @@
     "observe.needConsent": "पहले स्विच चालू करें। इसके बिना कुछ नहीं भेजा जाता।",
     "observe.needPhoto": "पहले एक तस्वीर लें।",
     "observe.consentOff": "इस फ़ोन से तस्वीरें नहीं भेजी जाएँगी।",
+    "observe.unavailable": "विवरण सेवा बंद है, इसलिए कुछ नहीं भेजा गया।",
+    "observe.limited": "आज के लिए बहुत सारे विवरण माँगे जा चुके हैं। कुछ नहीं भेजा गया।",
+    "observe.refused": "विवरण सेवा ने अनुरोध ठुकरा दिया। कुछ नहीं दिखाया गया।",
+    "observe.ready": "विवरण आया है। यह बिल्ड इसे अभी नहीं दिखाता।",
     "update.ready": "इस ऐप का एक नया संस्करण तैयार है।",
     "update.reload": "फिर से खोलें",
 
@@ -757,6 +765,10 @@
     "observe.needConsent": "پہلے سوئچ آن کریں۔ اس کے بغیر کچھ نہیں بھیجا جاتا۔",
     "observe.needPhoto": "پہلے ایک تصویر لیں۔",
     "observe.consentOff": "اس فون سے تصاویر نہیں بھیجی جائیں گی۔",
+    "observe.unavailable": "تفصیل کی سروس بند ہے، اس لیے کچھ نہیں بھیجا گیا۔",
+    "observe.limited": "آج کے لیے بہت سی تفصیلیں طلب کی جا چکی ہیں۔ کچھ نہیں بھیجا گیا۔",
+    "observe.refused": "تفصیل کی سروس نے درخواست مسترد کر دی۔ کچھ نہیں دکھایا گیا۔",
+    "observe.ready": "تفصیل موصول ہوئی ہے۔ یہ بلڈ اسے ابھی نہیں دکھاتا۔",
     "update.ready": "اس ایپ کا ایک نیا ورژن تیار ہے۔",
     "update.reload": "دوبارہ کھولیں",
 

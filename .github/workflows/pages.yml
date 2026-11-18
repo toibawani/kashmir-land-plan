@@ -53,6 +53,8 @@ jobs:
             --exclude '.freebuff' \
             --exclude 'node_modules' \
             --exclude 'tools' \
+            --exclude 'server' \
+            --exclude 'eval-photos' \
             --exclude 'review-sheets' \
             --exclude '_site' \
             --exclude '*.md' \

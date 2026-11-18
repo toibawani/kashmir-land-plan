@@ -23,7 +23,14 @@
  *   MLMP_OBSERVATIONS.connected()            whether an endpoint is configured
  *   MLMP_OBSERVATIONS.hasConsent()           whether this device opted in
  *   MLMP_OBSERVATIONS.setConsent(bool)       Promise-free, reports success
- *   MLMP_OBSERVATIONS.describe(slot)         Promise<{ok, reason}>
+ *   MLMP_OBSERVATIONS.describe(photo)        Promise<{ok, reason, observation}>
+ *
+ * A word on `describe(photo)`: when — and only when — an endpoint has been
+ * configured on the page *and* the person has switched consent on, it posts the
+ * photo and the server's answer is validated here before it is used. This build
+ * configures no endpoint, so that branch cannot run: the screen says the
+ * feature is not connected. The server's own kill switch (OBSERVE_MODE=off)
+ * answers 503, which this module turns into "unavailable" rather than an error.
  */
 (function () {
   "use strict";
@@ -195,19 +202,58 @@
     }
   }
 
+  function blobToBase64(blob) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        resolve(String(reader.result).replace(/^data:[^;]+;base64,/, ""));
+      };
+      reader.onerror = function () {
+        reject(new Error("unreadable image"));
+      };
+      reader.readAsDataURL(blob);
+    });
+  }
+
   /**
-   * Ask for an observation. Every early return is a refusal with a reason the
-   * screen can say in a sentence, and there is no path that sends a photo from
-   * this build.
+   * Ask for an observation. Every return is a refusal or an answer with a
+   * reason the screen can say in a sentence; nothing here throws, because a
+   * failed description must never look like a broken app.
    */
-  function describe(slot) {
-    if (SLOTS.indexOf(slot) === -1) {
+  function describe(photo) {
+    var slot = photo && photo.slot;
+    if (SLOTS.indexOf(slot) === -1 || !photo.blob) {
       return Promise.resolve({ ok: false, reason: "no_photo" });
     }
     if (!hasConsent()) {
       return Promise.resolve({ ok: false, reason: "no_consent" });
     }
-    return Promise.resolve({ ok: false, reason: "not_connected" });
+    if (!connected()) {
+      return Promise.resolve({ ok: false, reason: "not_connected" });
+    }
+    return blobToBase64(photo.blob)
+      .then(function (base64) {
+        return fetch(endpoint(), {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-mlmp-consent": "yes" },
+          body: JSON.stringify({ slot: slot, imageBase64: base64 }),
+        });
+      })
+      .then(function (response) {
+        if (response.status === 503) return { ok: false, reason: "unavailable" };
+        if (response.status === 429) return { ok: false, reason: "limited" };
+        if (response.status === 403) return { ok: false, reason: "no_consent" };
+        if (!response.ok) return { ok: false, reason: "refused" };
+        return response.json().then(function (body) {
+          var payload = body && body.observation;
+          var verdict = validate(payload);
+          if (!verdict.ok) return { ok: false, reason: "refused" };
+          return { ok: true, observation: payload };
+        });
+      })
+      .catch(function () {
+        return { ok: false, reason: "offline" };
+      });
   }
 
   window.MLMP_OBSERVATIONS = {
