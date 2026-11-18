@@ -1,147 +1,33 @@
 /**
- * Server side of photo observations. Deliberately not deployed.
+ * The photo-observation endpoint. Not deployed, and off by default.
  *
- * The app is served as static files from GitHub Pages, so there is no function
- * runtime behind it and no place a key could safely live. This file exists to
- * make the contract testable before anyone approves a provider: it validates
- * the request, refuses without consent, validates the answer against the same
- * closed vocabulary the client uses, and can return the labelled mock payload
- * so the whole path is exercised in `tools/eval-photos.js`.
+ * Every check below is the difference between a careful feature and a hole:
  *
- * It never calls a provider. Wiring one in means, in this order:
- *   1. REVIEW_PHOTO_QUESTIONS.md signed off by an agriculture officer.
- *   2. A host that can keep a key server-side.
- *   3. A provider behind OBSERVE_PROVIDER, with its own eval run.
+ *   method      POST only; OPTIONS is answered for the allowlisted origin
+ *   origin      a browser origin not on OBSERVE_ALLOWED_ORIGINS is refused
+ *   consent     an explicit `x-mlmp-consent: yes` header, or nothing happens
+ *   size        the body is refused before it is parsed if it is too big
+ *   image       the bytes must start like a JPEG, PNG or WebP, not be a file
+ *               that merely claims to be one
+ *   mode        OBSERVE_MODE=off answers 503 and the app says "unavailable";
+ *               that is the kill switch, no deploy needed
+ *   limits      a short burst per client and a hard daily ceiling
+ *   output      the provider's answer is validated against the closed schema
+ *               before anyone sees it; a model that names a crop is a 502
  *
- * The validator is written out again here rather than shared, because the
- * client copy is loaded as a plain browser script and the promise that matters
- * is that the same payloads pass on both sides. The eval harness asserts that
- * agreement on every case it tries.
+ * Errors are codes, never messages from a provider, a stack, or an env value.
  *
- *   respond({ method, headers, body }, env)  ->  { status, body }
+ *   respond({ method, headers, body, clientId, origin }, env, now)
+ *     -> { status, body, headers }
  */
 "use strict";
 
-var SCHEMA = "mlmp.observation.v1";
-var SLOTS = ["wide", "ground", "water"];
-var TOP_KEYS = ["schema", "provider", "mock", "createdAt", "photo", "fields", "uncertain"];
-var FIELDS = {
-  ground_cover: ["bare", "sparse", "covered", "unclear"],
-  visible_water: ["none", "present", "unclear"],
-  visible_structure: ["none", "present", "unclear"],
-  slope_cue: ["flat", "sloped", "unclear"],
-};
-var FORBIDDEN = [
-  "soil",
-  "soil_type",
-  "ph",
-  "fertility",
-  "crop",
-  "crop_id",
-  "crop_name",
-  "pest",
-  "disease",
-  "weed",
-  "yield",
-  "income",
-  "water_table",
-  "ownership",
-  "boundary",
-  "suitability",
-  "recommendation",
-  "recommendations",
-  "advice",
-  "next_steps",
-  "summary",
-  "description",
-  "text",
-  "note",
-  "prose",
-];
+var schema = require("./schema.js");
+var providers = require("./providers/index.js");
+var limits = require("./limits.js");
 
-/* What a provider would be asked for. Kept beside the validator so the prompt
-   and the schema cannot drift apart. */
-var OUTPUT_CONTRACT =
-  "Return only JSON with schema, provider and mock, a photo object with slot, a " +
-  "fields object containing exactly ground_cover, visible_water, " +
-  "visible_structure and slope_cue, and an uncertain list. Use only the listed " +
-  "values and prefer unclear. Do not name a crop, soil type, pest, disease or " +
-  "yield, do not estimate income, and do not give advice or any prose.";
-
-function validateOutput(payload) {
-  var errors = [];
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-    return { ok: false, errors: ["the observation must be an object"] };
-  }
-  Object.keys(payload).forEach(function (key) {
-    var lower = key.toLowerCase();
-    if (FORBIDDEN.indexOf(lower) !== -1) errors.push("forbidden field: " + key);
-    else if (TOP_KEYS.indexOf(key) === -1) errors.push("unexpected field: " + key);
-  });
-  if (payload.schema !== SCHEMA) errors.push("schema must be " + SCHEMA);
-  if (payload.provider !== "mock") {
-    errors.push("provider must be one of mock: no real provider has been approved");
-  }
-  if (payload.mock !== true) {
-    errors.push("mock must be true: no real provider has been approved");
-  }
-  if (typeof payload.createdAt !== "string" || isNaN(new Date(payload.createdAt).getTime())) {
-    errors.push("createdAt must be a date");
-  }
-  var photo = payload.photo;
-  if (!photo || typeof photo !== "object" || SLOTS.indexOf(photo.slot) === -1) {
-    errors.push("photo.slot must be one of " + SLOTS.join(", "));
-  } else if (Object.keys(photo).some(function (key) {
-    return key !== "slot";
-  })) {
-    errors.push("unexpected photo field");
-  }
-  var fields = payload.fields;
-  if (!fields || typeof fields !== "object" || Array.isArray(fields)) {
-    errors.push("fields must be an object");
-  } else {
-    var names = Object.keys(FIELDS);
-    names.forEach(function (name) {
-      if (!Object.prototype.hasOwnProperty.call(fields, name)) {
-        errors.push("missing field: " + name);
-        return;
-      }
-      if (FIELDS[name].indexOf(fields[name]) === -1) {
-        errors.push(name + " must be one of " + FIELDS[name].join(", "));
-      }
-    });
-    Object.keys(fields).forEach(function (key) {
-      if (names.indexOf(key) === -1) errors.push("unexpected field: fields." + key);
-    });
-  }
-  if (!Array.isArray(payload.uncertain)) {
-    errors.push("uncertain must be a list");
-  } else {
-    payload.uncertain.forEach(function (name) {
-      if (Object.keys(FIELDS).indexOf(name) === -1) {
-        errors.push("uncertain names a field that does not exist: " + name);
-      }
-    });
-  }
-  return { ok: errors.length === 0, errors: errors };
-}
-
-function mock(slot) {
-  var fields = {};
-  var names = Object.keys(FIELDS);
-  names.forEach(function (name) {
-    fields[name] = "unclear";
-  });
-  return {
-    schema: SCHEMA,
-    provider: "mock",
-    mock: true,
-    createdAt: new Date().toISOString(),
-    photo: { slot: SLOTS.indexOf(slot) === -1 ? "wide" : slot },
-    fields: fields,
-    uncertain: names.slice(),
-  };
-}
+var MAX_BYTES = 2000000;
+var DAILY_CAP = 100;
 
 function header(headers, name) {
   if (!headers) return "";
@@ -153,48 +39,154 @@ function header(headers, name) {
   return found;
 }
 
-function respond(request, env) {
+function allowedOrigins(env) {
+  return String((env && env.OBSERVE_ALLOWED_ORIGINS) || "")
+    .split(",")
+    .map(function (value) {
+      return value.trim().replace(/\/$/, "");
+    })
+    .filter(Boolean);
+}
+
+function corsHeaders(origin, env) {
+  if (!origin) return {};
+  if (allowedOrigins(env).indexOf(origin.replace(/\/$/, "")) === -1) return null;
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type, x-mlmp-consent",
+    "Access-Control-Max-Age": "600",
+    Vary: "Origin",
+  };
+}
+
+function maxBytes(env) {
+  var value = Number((env && env.OBSERVE_MAX_BYTES) || MAX_BYTES);
+  return isFinite(value) && value > 0 ? value : MAX_BYTES;
+}
+
+function dailyCap(env) {
+  var value = Number((env && env.OBSERVE_DAILY_CAP) || DAILY_CAP);
+  return isFinite(value) && value > 0 ? value : DAILY_CAP;
+}
+
+/** A file is what its first bytes say it is, not what its name says. */
+function imageType(bytes) {
+  if (!bytes || bytes.length < 12) return "";
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "image/png";
+  if (
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return "image/webp";
+  }
+  return "";
+}
+
+function respond(request, env, now) {
   env = env || {};
   request = request || {};
-  if (String(request.method || "").toUpperCase() !== "POST") {
-    return { status: 405, body: { error: "use POST" } };
+  var method = String(request.method || "").toUpperCase();
+  var origin = header(request.headers, "origin") || request.origin || "";
+  var cors = corsHeaders(origin, env);
+
+  if (method === "OPTIONS") {
+    if (!cors) return { status: 403, body: { error: "origin_not_allowed" }, headers: {} };
+    return { status: 204, body: null, headers: cors };
   }
-  // Consent is checked before the body is read, so a request that carries a
-  // photo without it never reaches any provider code.
+  if (method !== "POST") return { status: 405, body: { error: "use_post" }, headers: {} };
+  if (!cors) return { status: 403, body: { error: "origin_not_allowed" }, headers: {} };
   if (header(request.headers, "x-mlmp-consent").toLowerCase() !== "yes") {
-    return { status: 403, body: { error: "no consent for this photo" } };
+    return { status: 403, body: { error: "no_consent" }, headers: cors };
   }
+
   var body = request.body;
+  var raw = typeof body === "string" ? body : JSON.stringify(body || {});
+  if (raw.length > maxBytes(env)) {
+    return { status: 413, body: { error: "body_too_large" }, headers: cors };
+  }
   if (typeof body === "string") {
     try {
       body = JSON.parse(body);
     } catch (_) {
-      return { status: 400, body: { error: "body must be JSON" } };
+      return { status: 400, body: { error: "body_not_json" }, headers: cors };
     }
   }
-  var slot = body && body.slot;
-  if (SLOTS.indexOf(slot) === -1) {
-    return { status: 400, body: { error: "slot must be one of " + SLOTS.join(", ") } };
+  body = body || {};
+
+  if (schema.SLOTS.indexOf(body.slot) === -1) {
+    return { status: 400, body: { error: "bad_slot" }, headers: cors };
   }
-  // Only the mock path exists. There is no branch here that can reach a network,
-  // which is the point: approving a provider means adding one, deliberately.
-  if (env.OBSERVE_MODE !== "mock") {
-    return { status: 501, body: { error: "no description service is connected" } };
+
+  var base64 = String(body.imageBase64 || "").replace(/^data:[^;]+;base64,/, "");
+  var bytes = base64 ? Buffer.from(base64, "base64") : Buffer.alloc(0);
+  if (!bytes.length) return { status: 400, body: { error: "no_image" }, headers: cors };
+  if (bytes.length > maxBytes(env)) {
+    return { status: 413, body: { error: "image_too_large" }, headers: cors };
   }
-  var payload = mock(slot);
-  var verdict = validateOutput(payload);
-  if (!verdict.ok) {
-    return { status: 500, body: { error: "the mock payload failed its own schema" } };
+  var contentType = imageType(bytes);
+  if (!contentType) return { status: 415, body: { error: "not_an_image" }, headers: cors };
+
+  var state = providers.enabled(env);
+  if (!state.on) {
+    if (state.mode === "unconfigured") {
+      return { status: 501, body: { error: "provider_not_configured" }, headers: cors };
+    }
+    // The kill switch. Deliberately indistinguishable from "not set up yet": a
+    // caller learns the feature is unavailable and nothing about the internals.
+    return { status: 503, body: { error: "unavailable" }, headers: cors };
   }
-  return { status: 200, body: payload };
+
+  var client = request.clientId || header(request.headers, "x-forwarded-for") || "anonymous";
+  var burst = limits.allow(client, now);
+  if (!burst.ok) {
+    return {
+      status: 429,
+      body: { error: "rate_limited", retryAfter: burst.retryAfter },
+      headers: Object.assign({ "Retry-After": String(burst.retryAfter) }, cors),
+    };
+  }
+  var daily = limits.underDailyCap(dailyCap(env), now);
+  if (!daily.ok) {
+    return { status: 429, body: { error: "daily_cap_reached" }, headers: cors };
+  }
+
+  var output;
+  try {
+    output = state.provider.analyse({ slot: body.slot, bytes: bytes, contentType: contentType }, env);
+  } catch (_) {
+    return { status: 502, body: { error: "provider_failed" }, headers: cors };
+  }
+  if (output && typeof output.then === "function") {
+    return Promise.resolve(output).then(function (resolved) {
+      return finish(resolved);
+    });
+  }
+  return finish(output);
+
+  function finish(payload) {
+    var verdict = schema.validate(payload);
+    if (!verdict.ok) {
+      // The model strayed. Nothing is shown to the farmer; the codes are kept
+      // server-side in a real deployment, not returned.
+      return { status: 502, body: { error: "invalid_observation" }, headers: cors };
+    }
+    return { status: 200, body: { ok: true, observation: payload }, headers: cors };
+  }
 }
 
 module.exports = {
-  SCHEMA: SCHEMA,
-  FIELDS: FIELDS,
-  FORBIDDEN: FORBIDDEN,
-  OUTPUT_CONTRACT: OUTPUT_CONTRACT,
-  validateOutput: validateOutput,
-  mock: mock,
   respond: respond,
+  imageType: imageType,
+  allowedOrigins: allowedOrigins,
+  schema: schema,
+  providers: providers,
+  limits: limits,
 };
