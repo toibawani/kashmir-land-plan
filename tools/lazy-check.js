@@ -72,6 +72,18 @@ async function main() {
 
   /* -------------------------------------------------- 1. What boot fetches */
 
+  /* A real first visit has nothing stored on the device. This tool can be run
+     after another one that chose Urdu and left it in localStorage (the
+     screenshot pass does exactly that in CI), and then the boot path would
+     honestly load Urdu and look like a regression. So the stored choice is
+     cleared first and checked, rather than assumed. */
+  await H.navigate(cdp, BASE + "/");
+  await H.evaluate(cdp, "(function(){localStorage.clear();return true;})()");
+  check(
+    "the device starts with no stored language",
+    (await H.evaluate(cdp, "localStorage.getItem('mlmp_lang_v1')")) === null
+  );
+
   console.log("\nBoot path");
   await H.navigate(cdp, BASE + "/");
   await H.sleep(1200);
