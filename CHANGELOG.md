@@ -36,8 +36,19 @@ should not, because the catalogue is still unreviewed.
   printed sheet still carries the three card shots and nothing else.
 - A cap of 40 photos per plan. Every retake is kept, because two dates are the
   point of the timeline, so the cap turns a full device into a clear sentence.
+- A description block on the visit card with a switch that has to be on before a
+  photo could ever leave the phone. No service is connected in this build, the
+  screen says so in as many words, and the switch only records the choice on
+  this device.
+- The observation format is closed and tiny: ground cover, visible water, a
+  visible structure and a slope cue, each with an "unclear". There is no prose
+  field at all, and a validator on both the page and the (not deployed) server
+  function refuses crops, soil, pests, yield, money, advice and free text. An
+  eval harness tries each of those by name.
+- 9 new strings in English, Hindi and Urdu. `TRANSLATION_CHECK.md` now lists 219
+  keys, all still marked unreviewed. `REVIEW_PHOTO_QUESTIONS.md` records the
+  questions that have to be answered before a provider is connected.
 - 39 new strings for photos and the timeline, in English, Hindi and Urdu.
-  `TRANSLATION_CHECK.md` now lists 210 keys, all still marked unreviewed.
 
 ### Added
 

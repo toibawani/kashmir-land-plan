@@ -231,6 +231,17 @@
     "photos.photoNoteSaved": "Note saved with this photo.",
     "photos.photoNoteFailed": "This device refused to store the note. Free some space and try again.",
     "photos.full": "This plan already has the maximum of 40 photos. Delete one to take another.",
+    "observe.title": "Description of a photo (not connected)",
+    "observe.note":
+      "This build has no description service. The switch records your choice, but nothing is sent and there is nothing to show yet.",
+    "observe.limits":
+      "Even when connected, it may report only four things it can see: ground cover, water, a structure, and slope. It will not name a crop, a soil, a pest or a yield, and it will not advise.",
+    "observe.consent": "I understand that a photo would leave this phone",
+    "observe.try": "Ask for a description",
+    "observe.notConnected": "No description service is connected in this build, so nothing was sent.",
+    "observe.needConsent": "Turn the switch on first. Nothing is sent without it.",
+    "observe.needPhoto": "Take a photo first.",
+    "observe.consentOff": "Photos will not be sent from this phone.",
 
     "common.confirmLocally":
       "Always confirm crop choices, costs, and current scheme rules with your local agriculture office or Kisan Khidmat Ghar.",
@@ -478,6 +489,15 @@
     "photos.photoNoteSaved": "टिप्पणी तस्वीर के साथ सहेजी गई।",
     "photos.photoNoteFailed": "डिवाइस ने टिप्पणी सहेजने से मना किया। जगह खाली करके फिर कोशिश करें।",
     "photos.full": "इस योजना में पहले से 40 तस्वीरें हैं। एक और लेने के लिए कोई तस्वीर हटाएँ।",
+    "observe.title": "तस्वीर का विवरण (अभी जुड़ा नहीं)",
+    "observe.note": "इस बिल्ड में विवरण सेवा नहीं है। स्विच आपका चुनाव दर्ज करता है, पर कुछ नहीं भेजा जाता और दिखाने के लिए कुछ नहीं है।",
+    "observe.limits": "जुड़ने पर भी यह केवल चार दिखने वाली बातें बता सकता है: ज़मीन का ढकाव, पानी, कोई ढाँचा और ढलान। यह फसल, मिट्टी, कीट या उपज का नाम नहीं लेगा, और सलाह नहीं देगा।",
+    "observe.consent": "मैं समझता हूँ कि तस्वीर इस फ़ोन से बाहर जाएगी",
+    "observe.try": "विवरण माँगें",
+    "observe.notConnected": "इस बिल्ड में कोई विवरण सेवा नहीं जुड़ी, इसलिए कुछ नहीं भेजा गया।",
+    "observe.needConsent": "पहले स्विच चालू करें। इसके बिना कुछ नहीं भेजा जाता।",
+    "observe.needPhoto": "पहले एक तस्वीर लें।",
+    "observe.consentOff": "इस फ़ोन से तस्वीरें नहीं भेजी जाएँगी।",
 
     "common.confirmLocally":
       "फसल की पसंद, लागत और वर्तमान योजना नियमों की पुष्टि हमेशा अपने स्थानीय कृषि कार्यालय या किसान खिदमत घर से करें।",
@@ -724,6 +744,15 @@
     "photos.photoNoteSaved": "نوٹ تصویر کے ساتھ محفوظ ہو گیا۔",
     "photos.photoNoteFailed": "ڈیوائس نے نوٹ محفوظ کرنے سے انکار کیا۔ جگہ خالی کر کے دوبارہ کوشش کریں۔",
     "photos.full": "اس منصوبے میں پہلے سے 40 تصاویر ہیں۔ ایک اور لینے کے لیے کوئی تصویر ہٹائیں۔",
+    "observe.title": "تصویر کی تفصیل (ابھی منسلک نہیں)",
+    "observe.note": "اس بلڈ میں تفصیل کی سروس نہیں ہے۔ سوئچ آپ کا انتخاب محفوظ کرتا ہے، مگر کچھ نہیں بھیجا جاتا اور دکھانے کے لیے کچھ نہیں ہے۔",
+    "observe.limits": "منسلک ہونے پر بھی یہ صرف چار نظر آنے والی باتیں بتا سکتا ہے: زمین کا ڈھانپ، پانی، کوئی ڈھانچہ اور ڈھلوان۔ یہ فصل، مٹی، کیڑے یا پیداوار کا نام نہیں لے گا، اور مشورہ نہیں دے گا۔",
+    "observe.consent": "میں سمجھتا ہوں کہ تصویر اس فون سے باہر جائے گی",
+    "observe.try": "تفصیل طلب کریں",
+    "observe.notConnected": "اس بلڈ میں کوئی تفصیل سروس منسلک نہیں، اس لیے کچھ نہیں بھیجا گیا۔",
+    "observe.needConsent": "پہلے سوئچ آن کریں۔ اس کے بغیر کچھ نہیں بھیجا جاتا۔",
+    "observe.needPhoto": "پہلے ایک تصویر لیں۔",
+    "observe.consentOff": "اس فون سے تصاویر نہیں بھیجی جائیں گی۔",
 
     "common.confirmLocally":
       "فصل کی پسند، لاگت اور موجودہ اسکیم قواعد کی تصدیق ہمیشہ اپنے مقامی زراعت کے دفتر یا کسان خدمت گھر سے کریں۔",

@@ -62,6 +62,11 @@ if one appears.
   optional short note on each, and compares any two side by side so the same
   plot can be seen in two seasons. The timeline and the comparison are screen
   only: the printed card still carries the three card shots.
+- Carries a photo description block that is switched off in every sense: no
+  service is connected, nothing is uploaded, and the switch only records whether
+  you would allow it. `REVIEW_PHOTO_QUESTIONS.md` lists what has to be decided
+  before that changes, and `node tools/eval-photos.js` proves the format refuses
+  crops, soil, pests, yield and advice.
 - Carries a plain-language [Privacy Policy](privacy.html) and
   [Terms of Service](terms.html) in the footer, both matching what the app does
   today. Both need a human read before they are treated as settled.

@@ -33,6 +33,7 @@
   var FEEDBACK = window.MLMP_FEEDBACK;
   var DATA = window.MLMP_DATA;
   var PHOTOS = window.MLMP_PHOTOS;
+  var OBS = window.MLMP_OBSERVATIONS;
 
   /** The four kinds of information this app mixes together. Kept explicit so
    *  a farmer can always tell which one they are looking at. */
@@ -4124,6 +4125,7 @@
     host.hidden = false;
     releasePhotoUrls();
     releaseTimelineUrls();
+    syncObserveGate();
     timelineRows = [];
     compareIds = [];
     timelineNoteOpen = "";
@@ -4292,6 +4294,15 @@
 
   function refreshTimeline() {
     renderTimeline(timelineRows);
+  }
+
+  /** The description switch remembers a choice and nothing else. */
+  function syncObserveGate() {
+    var box = $("#observe-consent");
+    var button = $("#btn-observe-try");
+    if (!OBS || !box || !button) return;
+    box.checked = OBS.hasConsent();
+    button.disabled = !box.checked;
   }
 
   function renderCompare(rows) {
@@ -5134,6 +5145,53 @@
     $("#btn-visit-share") && $("#btn-visit-share").addEventListener("click", shareVisitCard);
     $("#btn-visit-share-photos") &&
       $("#btn-visit-share-photos").addEventListener("click", sharePhotos);
+    $("#observe-consent") &&
+      $("#observe-consent").addEventListener("change", function () {
+        if (!OBS) return;
+        var box = $("#observe-consent");
+        OBS.setConsent(!!(box && box.checked));
+        syncObserveGate();
+        if (box && !box.checked) {
+          setStatus("observe-status", tr("observe.consentOff", "Photos will not be sent from this phone."));
+        } else {
+          setStatus("observe-status", "");
+        }
+      });
+    $("#btn-observe-try") &&
+      $("#btn-observe-try").addEventListener("click", function () {
+        if (!OBS || !PHOTOS) return;
+        if (!state.currentPlanId) {
+          setStatus("observe-status", tr("observe.needPhoto", "Take a photo first."), 0);
+          return;
+        }
+        if (!OBS.hasConsent()) {
+          setStatus(
+            "observe-status",
+            tr("observe.needConsent", "Turn the switch on first. Nothing is sent without it."),
+            0
+          );
+          return;
+        }
+        PHOTOS.list(state.currentPlanId).then(function (rows) {
+          var newest = PHOTOS.sortNewest(rows)[0];
+          if (!newest) {
+            setStatus("observe-status", tr("observe.needPhoto", "Take a photo first."), 0);
+            return;
+          }
+          OBS.describe(newest.slot).then(function (result) {
+            setStatus(
+              "observe-status",
+              result.ok
+                ? ""
+                : tr(
+                    "observe.notConnected",
+                    "No description service is connected in this build, so nothing was sent."
+                  ),
+              0
+            );
+          });
+        });
+      });
     $("#btn-photo-compare-clear") &&
       $("#btn-photo-compare-clear").addEventListener("click", function () {
         compareIds = [];
