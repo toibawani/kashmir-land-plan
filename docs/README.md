@@ -8,6 +8,7 @@ that matches why you are here.
 | Wanting the whole job, not one change | [MASTER-BRIEF.md](MASTER-BRIEF.md): the brief that defines what "done" means |
 | A farmer, or showing the app to one | the app itself; the [README](../README.md) for what it does and does not claim |
 | An agriculture officer with a sheet in hand | [REVIEW.md](../REVIEW.md): what a tick means and how it is recorded |
+| Preparing for a visit to an agriculture office | [EVIDENCE.md](EVIDENCE.md): the public sources behind each catalogue entry and the questions still to ask. Working notes, not a review |
 | Running the first field test | [FIELD_TEST.md](../FIELD_TEST.md): the script and the one-page form |
 | Checking a Hindi or Urdu translation | [TRANSLATION_CHECK.md](../TRANSLATION_CHECK.md): every string, side by side |
 | Asking why a figure is missing | [NEEDS_SOURCES.md](../NEEDS_SOURCES.md): each gap and who could close it |
