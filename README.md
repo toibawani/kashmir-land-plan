@@ -58,6 +58,10 @@ if one appears.
   nearest water source — resizes each to 1280px and drops its location data,
   checks it for light, blur and size, and keeps it in this browser against the
   plan. Photos print under the visit card. They are never uploaded.
+- Lists every photo kept for a plan as a dated timeline, newest first, with an
+  optional short note on each, and compares any two side by side so the same
+  plot can be seen in two seasons. The timeline and the comparison are screen
+  only: the printed card still carries the three card shots.
 - Carries a plain-language [Privacy Policy](privacy.html) and
   [Terms of Service](terms.html) in the footer, both matching what the app does
   today. Both need a human read before they are treated as settled.

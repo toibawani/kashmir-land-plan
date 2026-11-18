@@ -560,6 +560,20 @@
           <div class="photo-retry no-print" id="photo-retry-row" hidden>
             <button type="button" class="btn btn-secondary" id="btn-photo-retry" data-i18n="photos.retake">Retake</button>
           </div>
+          <div class="photo-timeline no-print" id="photo-timeline" hidden>
+            <h3 class="photo-timeline-title" data-i18n="photos.timeline">Photos over time</h3>
+            <p class="photo-timeline-note" data-i18n="photos.timelineNote">
+              Every photo kept for this plan, newest first, with the date it was taken. Pick two to see them
+              side by side.
+            </p>
+            <div class="photo-compare" id="photo-compare" hidden>
+              <h4 class="photo-compare-title" data-i18n="photos.compareTitle">Side by side</h4>
+              <div class="photo-compare-pair" id="photo-compare-pair"></div>
+              <button type="button" class="btn btn-quiet" id="btn-photo-compare-clear" data-i18n="photos.compareClear">Clear the comparison</button>
+            </div>
+            <ul class="photo-timeline-list" id="photo-timeline-list"></ul>
+            <p class="inline-status" id="photo-timeline-status" role="status" hidden></p>
+          </div>
           <label class="sr-only" for="photo-input" data-i18n="photos.take">Take photo</label>
           <input type="file" id="photo-input" accept="image/*" hidden />
         </div>

@@ -20,11 +20,18 @@
  * Interface
  *   MLMP_PHOTOS.SLOTS                       the three guided shots
  *   MLMP_PHOTOS.prepare(file)               Promise<{ok, blob, width, height, issues}>
- *   MLMP_PHOTOS.save(planId, slot, file)    Promise<{ok, photo, issues, quota}>
+ *   MLMP_PHOTOS.save(planId, slot, file)    Promise<{ok, photo, issues, quota, full}>
  *   MLMP_PHOTOS.list(planId)                Promise<array of records, oldest first>
  *   MLMP_PHOTOS.remove(id)                  Promise<boolean>
+ *   MLMP_PHOTOS.setNote(id, text)           Promise<boolean>
+ *   MLMP_PHOTOS.sortNewest(rows)            pure, newest first, for the timeline
  *   MLMP_PHOTOS.count()                     Promise<number>
  *   MLMP_PHOTOS.assess(pixels, w, h, src)   pure quality check, for the tests
+ *
+ * Every retake is kept rather than replacing the shot, because a photo taken in
+ * March and one taken in June are the point of the timeline. That also means a
+ * plan can accumulate photos, so a cap per plan turns "the phone is full" into
+ * a clear message instead of a failed write.
  */
 (function () {
   "use strict";
@@ -34,6 +41,8 @@
   var STORE = "photos";
   var MAX_EDGE = 1280;
   var JPEG_QUALITY = 0.8;
+  var MAX_NOTE = 140;
+  var MAX_PER_PLAN = 40;
   var SLOTS = ["wide", "ground", "water"];
   var SLOT_LABELS = {
     wide: "Wide view of the plot",
@@ -266,6 +275,14 @@
     if (!planId || !isSlot(slot)) {
       return Promise.resolve({ ok: false, issues: [], failed: true });
     }
+    return list(planId)
+      .then(function (existing) {
+        if (existing.length >= MAX_PER_PLAN) return { ok: false, full: true, issues: [] };
+        return savePrepared(planId, slot, file);
+      });
+  }
+
+  function savePrepared(planId, slot, file) {
     return prepare(file)
       .then(function (prepared) {
         if (!prepared.blob) return { ok: false, issues: prepared.issues, failed: true };
@@ -316,6 +333,56 @@
       .catch(function () {
         return [];
       });
+  }
+
+  /**
+   * Keep one short note with one photo. The text is squeezed onto one line and
+   * capped, so a pasted paragraph cannot turn into a wall of text on the card.
+   * Resolves false when the photo is gone or the device refuses the write.
+   */
+  function setNote(id, text) {
+    if (!id) return Promise.resolve(false);
+    var value = String(text == null ? "" : text)
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, MAX_NOTE);
+    return openDb()
+      .then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(STORE, "readwrite");
+          var store = tx.objectStore(STORE);
+          var get = store.get(id);
+          var found = false;
+          get.onsuccess = function () {
+            var row = get.result;
+            if (!row) return;
+            found = true;
+            row.note = value;
+            store.put(row);
+          };
+          tx.oncomplete = function () {
+            resolve(found);
+          };
+          tx.onerror = function () {
+            reject(tx.error || new Error("storage failed"));
+          };
+          tx.onabort = function () {
+            reject(tx.error || new Error("storage aborted"));
+          };
+        });
+      })
+      .catch(function () {
+        return false;
+      });
+  }
+
+  /** Newest first, for the timeline. Copies, so callers keep their own order. */
+  function sortNewest(rows) {
+    return (rows || []).slice().sort(function (a, b) {
+      var byDate = String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+      if (byDate !== 0) return byDate;
+      return String(b.id || "").localeCompare(String(a.id || ""));
+    });
   }
 
   function remove(id) {
@@ -385,12 +452,16 @@
 
   window.MLMP_PHOTOS = {
     SLOTS: SLOTS,
+    MAX_NOTE: MAX_NOTE,
+    MAX_PER_PLAN: MAX_PER_PLAN,
     slotLabel: slotLabel,
     isSlot: isSlot,
     assess: assess,
     prepare: prepare,
     save: save,
     list: list,
+    sortNewest: sortNewest,
+    setNote: setNote,
     remove: remove,
     removeByPlan: removeByPlan,
     clearAll: clearAll,

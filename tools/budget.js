@@ -28,8 +28,13 @@ var root = path.resolve(__dirname, "..");
    the same day for guided photo capture: js/photos.js (IndexedDB, resize and
    the quality check), the visit-card photo section in app.js and index.html,
    its 26 strings in messages.js and the photo styles. The budget is now
-   138.0 KB JS, 16.5 KB CSS, 13.0 KB HTML. */
-var BUDGET = { js: 141312, css: 16896, html: 13312 };
+   138.0 KB JS, 16.5 KB CSS, 13.0 KB HTML.
+
+   Raised on 2026-11-18 for the photo timeline: newest-first ordering, notes on
+   each photo, the two-photo comparison in app.js, the photo cap and 13 more
+   strings in messages.js. Measured 141885/16536/13082 bytes, so the budget is
+   now 141.4 KB JS, 16.5 KB CSS, 13.0 KB HTML. */
+var BUDGET = { js: 144768, css: 16896, html: 13312 };
 
 function gz(file) {
   return zlib.gzipSync(fs.readFileSync(path.join(root, file)), { level: 9 }).length;

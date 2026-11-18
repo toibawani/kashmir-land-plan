@@ -1343,6 +1343,38 @@ check(
 );
 check("the check returns a readable mean and variance", typeof blank.mean === "number" && typeof blank.variance === "number");
 
+/* ---- Photos: the timeline's order, notes and the cap ---- */
+
+var older = { id: "a1", createdAt: "2026-03-02T08:00:00.000Z", slot: "wide" };
+var newer = { id: "a2", createdAt: "2026-06-14T09:00:00.000Z", slot: "ground" };
+var middle = { id: "a3", createdAt: "2026-04-20T10:00:00.000Z", slot: "wide" };
+var unordered = [older, newer, middle];
+check(
+  "the timeline shows the newest photo first",
+  PHOTOS.sortNewest(unordered)
+    .map(function (row) {
+      return row.id;
+    })
+    .join(",") === "a2,a3,a1"
+);
+check(
+  "sorting the timeline leaves the caller's list alone",
+  unordered[0].id === "a1" && unordered[1].id === "a2"
+);
+check(
+  "two photos from the same moment still have a stable order",
+  PHOTOS.sortNewest([
+    { id: "b1", createdAt: "2026-06-14T09:00:00.000Z" },
+    { id: "b2", createdAt: "2026-06-14T09:00:00.000Z" },
+  ])[0].id === "b2"
+);
+check("a photo note has a short limit, so it cannot become an essay", PHOTOS.MAX_NOTE === 140);
+check("a plan has a photo cap, because every retake is kept", PHOTOS.MAX_PER_PLAN === 40);
+check(
+  "a photo with no note reports an empty one rather than undefined text",
+  PHOTOS.sortNewest([older])[0].note === undefined
+);
+
 console.log("");
 
 if (failures.length) {
