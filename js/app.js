@@ -5382,6 +5382,17 @@
           compareIds.splice(at, 1);
         }
         refreshTimeline();
+        // The list is re-rendered, so the button that was pressed no longer
+        // exists and focus falls back to the top of the page. Put it back:
+        // on the button that was pressed, or on the comparison's own button
+        // once it opens, which is where the next action is.
+        if (compareIds.length === 2) {
+          var clear = $("#btn-photo-compare-clear");
+          if (clear) clear.focus();
+        } else {
+          var again = document.querySelector('[data-photo-compare="' + pickedId + '"]');
+          if (again) again.focus();
+        }
         if (compareIds.length === 1) {
           setStatus(
             "photo-timeline-status",
