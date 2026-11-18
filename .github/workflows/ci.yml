@@ -141,7 +141,7 @@ jobs:
       # is understood.
       - name: Upload the screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: screenshots-360-en-hi-ur
           path: ${{ runner.temp }}/shots
@@ -197,7 +197,7 @@ jobs:
 
       - name: Upload the report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lighthouse-mobile-report
           path: ${{ runner.temp }}/lighthouse-*.json
